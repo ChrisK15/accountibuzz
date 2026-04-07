@@ -4,7 +4,8 @@ import {
   sendEmailVerification,
   UserCredential,
 } from 'firebase/auth';
-import { auth } from './config';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './config';
 import { UserProfile } from '../../types/user';
 
 export async function register(email: string, password: string): Promise<UserCredential> {
@@ -22,7 +23,9 @@ export async function sendVerificationEmail(): Promise<void> {
   }
 }
 
-// Stub — full implementation in SCRUM-11
-export async function getUserProfile(_uid: string): Promise<UserProfile | null> {
-  return null;
+// Fetch user profile from Firestore — returns null if not set up yet
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const snapshot = await getDoc(doc(db, 'users', uid));
+  if (!snapshot.exists()) return null;
+  return snapshot.data() as UserProfile;
 }

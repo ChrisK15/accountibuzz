@@ -36,6 +36,7 @@ export default function RegisterScreen({ navigation }: Props) {
     const err = await registerUser(data.email, data.password);
     if (err?.target === 'email') setError('email', { message: err.message });
     if (err?.target === 'password') setError('password', { message: err.message });
+    if (!err) navigation.navigate('SetupProfile');
   }
 
   return (
