@@ -1,16 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Text } from 'react-native';
+import HomeStackNavigator from './HomeStackNavigator';
+import ProfileStackNavigator from './ProfileStackNavigator';
+import { MainTabParamList } from '@/types/navigation';
+import { COLORS } from '@/utils/constants';
 
-// Stub — full implementation deferred until group/home screens are built
-export default function MainNavigator() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Main App — coming soon</Text>
-    </View>
-  );
+const Tab = createBottomTabNavigator<MainTabParamList>();
+
+function TabIcon({ label, focused }: { label: string; focused: boolean }) {
+  const icons: Record<string, string> = { HomeTab: '🏠', ProfileTab: '👤' };
+  return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{icons[label]}</Text>;
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { fontSize: 16, color: '#6b7280' },
-});
+export default function MainNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused }) => <TabIcon label={route.name} focused={focused} />,
+        tabBarStyle: { backgroundColor: COLORS.bgSurface, borderTopColor: COLORS.border },
+        tabBarActiveTintColor: COLORS.textPrimary,
+        tabBarInactiveTintColor: COLORS.textMuted,
+      })}
+    >
+      <Tab.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: 'Groups' }} />
+      <Tab.Screen name="ProfileTab" component={ProfileStackNavigator} options={{ title: 'Profile' }} />
+    </Tab.Navigator>
+  );
+}

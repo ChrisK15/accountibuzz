@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const profileComplete = userProfile !== null && userProfile.displayName.length > 0;
+  const profileComplete = userProfile !== null && userProfile.displayName.trim().length > 0;
 
   async function signOut() {
     const { signOut: firebaseSignOut } = await import('firebase/auth');

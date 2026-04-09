@@ -17,3 +17,14 @@ export type HomeStackParamList = {
   Leaderboard: { groupId: string };
   CompletionBoard: { groupId: string };
 };
+
+export type ProfileStackParamList = {
+  Profile: undefined;
+  EditProfile: undefined;
+  NotificationSettings: undefined;
+};
+
+export type MainTabParamList = {
+  HomeTab: undefined;
+  ProfileTab: undefined;
+};
