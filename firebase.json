@@ -1,0 +1,10 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "bucket": "accountibuzz.firebasestorage.app",
+    "rules": "storage.rules"
+  }
+}

@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -13,14 +13,22 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Capture whether this is the first initialization before calling initializeApp
+if (__DEV__) {
+  const missing = Object.entries(firebaseConfig)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+  if (missing.length > 0) {
+    throw new Error(`Missing Firebase env vars: ${missing.join(', ')}. Check your .env file.`);
+  }
+}
+
 const isFirstInit = getApps().length === 0;
 const app = isFirstInit ? initializeApp(firebaseConfig) : getApp();
 
-// Use initializeAuth with AsyncStorage persistence on first init only;
-// getAuth reuses the existing auth instance on hot reloads
 export const auth = isFirstInit
   ? initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) })
   : getAuth(app);
-export const db = getFirestore(app);
+export const db = isFirstInit
+  ? initializeFirestore(app, { experimentalForceLongPolling: __DEV__ })
+  : getFirestore(app);
 export const storage = getStorage(app);

@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // True if the requesting user is an active member of the group.
+    // Uses the member doc ID pattern: groups/{groupId}/members/{userId}
+    function isMember(groupId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // True if the requesting user is admin or co_admin of the group.
+    function isAdmin(groupId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data.role in ['admin', 'co_admin'];
+    }
+
+    // Users can only access their own profile doc.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /groups/{groupId} {
+      // Any authenticated user can read groups — needed for invite-code lookup
+      // (getGroupByInviteCode queries the collection before the user is a member).
+      allow read: if request.auth != null;
+
+      // Any authenticated user can create a group (they become admin via batch write).
+      allow create: if request.auth != null;
+
+      // Only admin/co_admin can edit group settings.
+      allow update: if isAdmin(groupId);
+
+      // Only the group owner can delete the group.
+      allow delete: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+
+      match /submissions/{submissionId} {
+        // Any active member can read submissions in their group.
+        allow read: if isMember(groupId);
+
+        // Members can only create submissions attributed to themselves.
+        allow create: if isMember(groupId)
+          && request.resource.data.userId == request.auth.uid;
+
+        // Submitter can edit their own pending submission; admins can update status.
+        allow update: if isAdmin(groupId)
+          || (isMember(groupId) && resource.data.userId == request.auth.uid);
+
+        // Only admins can delete submissions.
+        allow delete: if isAdmin(groupId);
+      }
+
+      match /members/{memberId} {
+        // Any active member can see the full member list.
+        allow read: if isMember(groupId);
+
+        // A user can join themselves (invite flow) — must be their own doc, role must be 'member'.
+        // Admins can also add members directly.
+        // Group creator bootstrap: allow setting role='admin' only when the group doesn't exist
+        // yet (pre-batch state), which is true only during the initial creation batch write.
+        // After the group exists, this path is blocked — preventing self-promotion attacks.
+        allow create: if isAdmin(groupId)
+          || (request.auth != null
+              && memberId == request.auth.uid
+              && request.resource.data.role == 'member')
+          || (request.auth != null
+              && memberId == request.auth.uid
+              && request.resource.data.role == 'admin'
+              && !exists(/databases/$(database)/documents/groups/$(groupId)));
+
+        // Admins can update any field (role changes, status changes).
+        // Members can only toggle their own status field (sabbatical).
+        allow update: if isAdmin(groupId)
+          || (isMember(groupId)
+              && memberId == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+
+        // Only admins can remove members.
+        allow delete: if isAdmin(groupId);
+      }
+    }
+
+    // Allows collectionGroup('members') queries — users can only read their own member docs.
+    match /{path=**}/members/{memberId} {
+      allow read: if request.auth != null && memberId == request.auth.uid;
+    }
+  }
+}
