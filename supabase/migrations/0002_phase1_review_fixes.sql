@@ -137,3 +137,56 @@ create policy "invites_mark_used_as_self"
   to authenticated
   using (used_at is null)
   with check (used_by = auth.uid() and used_at is not null);
+
+-- -----------------------------------------------------------------------------
+-- WR-04: group_members SELECT / INSERT / DELETE / UPDATE policies each used
+-- a subquery against public.group_members itself — flagged by the Supabase RLS
+-- guide for reason-ability + query-plan reasons. Helpers `is_group_member`
+-- (SECURITY DEFINER, reads group_members) and `is_group_admin` (SECURITY
+-- DEFINER, reads groups.admin_user_id) exist in 0001; they bypass RLS and are
+-- safe to call from the group_members policies.
+--
+-- Also folds in IN-04: group_members_update_admin gets an explicit WITH CHECK.
+--
+-- Note on semantic shift: the old "admin" branch matched via
+-- group_members.role='admin'; the new branch matches via groups.admin_user_id.
+-- The two agree today (the only admin is the group creator, who is the row
+-- keyed by admin_user_id). P2's create-group flow is responsible for keeping
+-- them in sync (see IN-01 for context).
+-- -----------------------------------------------------------------------------
+
+drop policy if exists "group_members_select_own_or_same_group" on public.group_members;
+drop policy if exists "group_members_insert_self_or_admin" on public.group_members;
+drop policy if exists "group_members_delete_own_or_admin" on public.group_members;
+drop policy if exists "group_members_update_admin" on public.group_members;
+
+create policy "group_members_select_own_or_same_group"
+  on public.group_members
+  for select
+  using (
+    user_id = auth.uid()
+    OR public.is_group_member(group_id)
+  );
+
+create policy "group_members_insert_self_or_admin"
+  on public.group_members
+  for insert
+  to authenticated
+  with check (
+    user_id = auth.uid()
+    OR public.is_group_admin(group_id)
+  );
+
+create policy "group_members_delete_own_or_admin"
+  on public.group_members
+  for delete
+  using (
+    user_id = auth.uid()
+    OR public.is_group_admin(group_id)
+  );
+
+create policy "group_members_update_admin"
+  on public.group_members
+  for update
+  using (public.is_group_admin(group_id))
+  with check (public.is_group_admin(group_id));
