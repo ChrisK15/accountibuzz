@@ -57,8 +57,13 @@ jest.mock('expo-image-manipulator', () => ({
   SaveFormat: { JPEG: 'jpeg' },
 }));
 
-// expo-file-system — minimal mock (plan 05 avatar upload pipeline)
+// expo-file-system — minimal mock (plan 05 avatar upload pipeline).
+// SDK 55 deprecated the top-level API; the production code imports from
+// `expo-file-system/legacy`, so mock both paths.
 jest.mock('expo-file-system', () => ({
+  readAsStringAsync: jest.fn(async () => 'base64data'),
+}));
+jest.mock('expo-file-system/legacy', () => ({
   readAsStringAsync: jest.fn(async () => 'base64data'),
 }));
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Text, View } from 'react-native';
-import { Link } from 'expo-router';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { Link, useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '../../src/lib/supabase';
@@ -18,8 +18,8 @@ import { useTheme } from '../../src/theme/useTheme';
 
 export default function ForgotPassword() {
   const t = useTheme();
+  const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
   const {
     control,
     handleSubmit,
@@ -33,13 +33,8 @@ export default function ForgotPassword() {
   const onSubmit = handleSubmit(async ({ email }) => {
     setSubmitError(null);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'accountibuzz://reset-password',
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) {
-        // Supabase intentionally doesn't distinguish missing vs present emails in this call.
-        // Render the UI-SPEC's generic not-found copy only for obvious not-found signals;
-        // otherwise surface the generic network error.
         const msg = error.message || '';
         if (/not found|no user|no account/i.test(msg)) {
           setSubmitError("We couldn't find an account with that email.");
@@ -50,7 +45,10 @@ export default function ForgotPassword() {
         }
         return;
       }
-      setSent(true);
+      router.replace({
+        pathname: '/(auth)/reset-password',
+        params: { email },
+      });
     } catch {
       setSubmitError(
         'Something went sideways. Check your connection and try again.',
@@ -67,7 +65,7 @@ export default function ForgotPassword() {
         <Logo />
         <ScreenHeader
           title="Forgot password?"
-          subtitle="Enter your email and we'll send you a reset link."
+          subtitle="Enter your email and we'll send you a 6-digit code."
         />
         <Controller
           control={control}
@@ -88,22 +86,12 @@ export default function ForgotPassword() {
           )}
         />
         {submitError && <FormError>{submitError}</FormError>}
-        {sent && (
-          <Text
-            style={[
-              t.fonts.body,
-              { color: t.colors.text, marginTop: t.spacing.sm },
-            ]}
-          >
-            Check your inbox for a link.
-          </Text>
-        )}
         <View style={{ marginTop: t.spacing.md }}>
           <PrimaryButton
-            label="Send reset link"
+            label="Send reset code"
             onPress={onSubmit}
             loading={isSubmitting}
-            disabled={!isValid || sent}
+            disabled={!isValid}
           />
         </View>
         <View style={{ alignItems: 'center', marginTop: t.spacing.lg }}>

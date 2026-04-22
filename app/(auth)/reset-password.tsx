@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '../../src/lib/supabase';
-import { resetSchema, type ResetInput } from '../../src/features/auth/schemas';
+import {
+  otpSchema,
+  resetSchema,
+  type OtpInput,
+  type ResetInput,
+} from '../../src/features/auth/schemas';
 import {
   ScreenContainer,
   ScreenHeader,
@@ -16,41 +21,143 @@ import {
 } from '../../src/components';
 import { useTheme } from '../../src/theme/useTheme';
 
+type Step = 'verify' | 'setpw';
+
 export default function ResetPassword() {
   const t = useTheme();
   const router = useRouter();
-  const params = useLocalSearchParams<{
-    token?: string;
-    token_hash?: string;
-    access_token?: string;
-    refresh_token?: string;
-    type?: string;
-  }>();
+  const { email } = useLocalSearchParams<{ email?: string }>();
+  const [step, setStep] = useState<Step>('verify');
+
+  if (!email) {
+    return (
+      <ScreenContainer>
+        <Logo />
+        <ScreenHeader
+          title="Missing email"
+          subtitle="Start from the forgot-password screen."
+        />
+        <View style={{ alignItems: 'center', marginTop: t.spacing.md }}>
+          <Link href="/(auth)/forgot-password" asChild>
+            <GhostButton label="Request a code" onPress={() => {}} />
+          </Link>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+    >
+      <ScreenContainer>
+        <Logo />
+        {step === 'verify' ? (
+          <VerifyStep
+            email={email}
+            onVerified={() => setStep('setpw')}
+          />
+        ) : (
+          <SetPasswordStep onDone={() => router.replace('/(app)/profile')} />
+        )}
+      </ScreenContainer>
+    </KeyboardAvoidingView>
+  );
+}
+
+function VerifyStep({
+  email,
+  onVerified,
+}: {
+  email: string;
+  onVerified: () => void;
+}) {
+  const t = useTheme();
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [linkExpired, setLinkExpired] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<OtpInput>({
+    resolver: zodResolver(otpSchema),
+    mode: 'onBlur',
+    defaultValues: { token: '' },
+  });
 
-  // If the deep link carried a recovery token hash, exchange it for a session
-  // so the subsequent updateUser call authenticates as that user.
-  useEffect(() => {
-    let cancelled = false;
-    async function bootstrapFromDeepLink() {
-      const tokenHash = params.token_hash ?? params.token;
-      if (!tokenHash) return; // Session may already be established by detectSessionInUrl alt flow.
+  const onSubmit = handleSubmit(async ({ token }) => {
+    setSubmitError(null);
+    try {
       const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
         type: 'recovery',
-        token_hash: tokenHash,
       });
-      if (cancelled) return;
       if (error) {
-        setLinkExpired(true);
+        const msg = error.message || '';
+        if (/expired|invalid|token/i.test(msg)) {
+          setSubmitError(
+            "That code didn't work. It may have expired — request a new one.",
+          );
+        } else {
+          setSubmitError(
+            'Something went sideways. Check your connection and try again.',
+          );
+        }
+        return;
       }
+      onVerified();
+    } catch {
+      setSubmitError(
+        'Something went sideways. Check your connection and try again.',
+      );
     }
-    bootstrapFromDeepLink();
-    return () => {
-      cancelled = true;
-    };
-  }, [params.token_hash, params.token]);
+  });
 
+  return (
+    <>
+      <ScreenHeader
+        title="Enter your code"
+        subtitle={`We sent a 6-digit code to ${email}.`}
+      />
+      <Controller
+        control={control}
+        name="token"
+        render={({ field }) => (
+          <TextInput
+            label="Reset code"
+            placeholder="123456"
+            keyboardType="number-pad"
+            autoComplete="one-time-code"
+            textContentType="oneTimeCode"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            error={errors.token?.message}
+          />
+        )}
+      />
+      {submitError && <FormError>{submitError}</FormError>}
+      <View style={{ marginTop: t.spacing.md }}>
+        <PrimaryButton
+          label="Verify code"
+          onPress={onSubmit}
+          loading={isSubmitting}
+          disabled={!isValid}
+        />
+      </View>
+      <View style={{ alignItems: 'center', marginTop: t.spacing.lg }}>
+        <Link href="/(auth)/forgot-password" asChild>
+          <GhostButton label="Request a new code" onPress={() => {}} />
+        </Link>
+      </View>
+    </>
+  );
+}
+
+function SetPasswordStep({ onDone }: { onDone: () => void }) {
+  const t = useTheme();
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
@@ -66,18 +173,12 @@ export default function ResetPassword() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
-        const msg = error.message || '';
-        if (/expired|invalid|jwt|token/i.test(msg)) {
-          setLinkExpired(true);
-        } else {
-          setSubmitError(
-            'Something went sideways. Check your connection and try again.',
-          );
-        }
+        setSubmitError(
+          'Something went sideways. Check your connection and try again.',
+        );
         return;
       }
-      // Success — AuthProvider session listener already has us logged in; redirect to app.
-      router.replace('/(app)/profile');
+      onDone();
     } catch {
       setSubmitError(
         'Something went sideways. Check your connection and try again.',
@@ -86,79 +187,55 @@ export default function ResetPassword() {
   });
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1 }}
-    >
-      <ScreenContainer>
-        <Logo />
-        <ScreenHeader
-          title="Set a new password"
-          subtitle="Choose something memorable but strong."
-        />
-        {linkExpired ? (
-          <>
-            <FormError>
-              This reset link has expired. Request a new one.
-            </FormError>
-            <View style={{ alignItems: 'center', marginTop: t.spacing.md }}>
-              <Link href="/(auth)/forgot-password" asChild>
-                <GhostButton
-                  label="Request a new link"
-                  onPress={() => {}}
-                />
-              </Link>
-            </View>
-          </>
-        ) : (
-          <>
-            <Controller
-              control={control}
-              name="password"
-              render={({ field }) => (
-                <TextInput
-                  label="New password"
-                  placeholder="At least 8 characters"
-                  helper="Use 8+ characters with a number and a symbol."
-                  secureTextEntry
-                  autoComplete="new-password"
-                  textContentType="newPassword"
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  error={errors.password?.message}
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <TextInput
-                  label="Confirm password"
-                  placeholder="Repeat password"
-                  secureTextEntry
-                  autoComplete="new-password"
-                  textContentType="newPassword"
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  error={errors.confirmPassword?.message}
-                />
-              )}
-            />
-            {submitError && <FormError>{submitError}</FormError>}
-            <View style={{ marginTop: t.spacing.md }}>
-              <PrimaryButton
-                label="Reset password"
-                onPress={onSubmit}
-                loading={isSubmitting}
-                disabled={!isValid}
-              />
-            </View>
-          </>
+    <>
+      <ScreenHeader
+        title="Set a new password"
+        subtitle="Choose something memorable but strong."
+      />
+      <Controller
+        control={control}
+        name="password"
+        render={({ field }) => (
+          <TextInput
+            label="New password"
+            placeholder="At least 8 characters"
+            helper="Use 8+ characters with a number and a symbol."
+            secureTextEntry
+            autoComplete="new-password"
+            textContentType="newPassword"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            error={errors.password?.message}
+          />
         )}
-      </ScreenContainer>
-    </KeyboardAvoidingView>
+      />
+      <Controller
+        control={control}
+        name="confirmPassword"
+        render={({ field }) => (
+          <TextInput
+            label="Confirm password"
+            placeholder="Repeat password"
+            secureTextEntry
+            autoComplete="new-password"
+            textContentType="newPassword"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            error={errors.confirmPassword?.message}
+          />
+        )}
+      />
+      {submitError && <FormError>{submitError}</FormError>}
+      <View style={{ marginTop: t.spacing.md }}>
+        <PrimaryButton
+          label="Reset password"
+          onPress={onSubmit}
+          loading={isSubmitting}
+          disabled={!isValid}
+        />
+      </View>
+    </>
   );
 }

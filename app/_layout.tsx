@@ -12,9 +12,10 @@ function useProtectedRoute() {
   useEffect(() => {
     if (loading) return;
     const inAuth = segments[0] === '(auth)';
+    const inApp = segments[0] === '(app)';
     if (!session && !inAuth) {
       router.replace('/(auth)/login');
-    } else if (session && inAuth) {
+    } else if (session && !inApp) {
       router.replace('/(app)/profile');
     }
   }, [session, loading, segments, router]);

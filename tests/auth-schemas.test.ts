@@ -2,6 +2,7 @@ import {
   loginSchema,
   signupSchema,
   forgotSchema,
+  otpSchema,
   resetSchema,
 } from '../src/features/auth/schemas';
 
@@ -44,6 +45,13 @@ describe('auth Zod schemas', () => {
   it('forgotSchema requires valid email', () => {
     expect(forgotSchema.safeParse({ email: 'nope' }).success).toBe(false);
     expect(forgotSchema.safeParse({ email: 'a@b.co' }).success).toBe(true);
+  });
+  it('otpSchema requires a 6-digit numeric code', () => {
+    expect(otpSchema.safeParse({ token: '123456' }).success).toBe(true);
+    expect(otpSchema.safeParse({ token: '12345' }).success).toBe(false);
+    expect(otpSchema.safeParse({ token: '1234567' }).success).toBe(false);
+    expect(otpSchema.safeParse({ token: 'abc123' }).success).toBe(false);
+    expect(otpSchema.safeParse({ token: '' }).success).toBe(false);
   });
   it('resetSchema validates new password + match', () => {
     expect(
