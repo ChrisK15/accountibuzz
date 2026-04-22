@@ -115,27 +115,58 @@ Explicitly excluded.
 
 ## Traceability
 
-Filled in during roadmap creation.
+Every v1 requirement maps to exactly one phase in ROADMAP.md.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01…04 | TBD | Pending |
-| GRP-01…05 | TBD | Pending |
-| INV-01…03 | TBD | Pending |
-| SUB-01…06 | TBD | Pending |
-| ADM-01…04 | TBD | Pending |
-| PTS-01…03 | TBD | Pending |
-| LB-01…02 | TBD | Pending |
-| FEED-01…03 | TBD | Pending |
-| NOTIF-01…05 | TBD | Pending |
-| ROLL-01…02 | TBD | Pending |
-| PLAT-01…03 | TBD | Pending |
+| AUTH-01 | Phase 1 — Foundation | Pending |
+| AUTH-02 | Phase 1 — Foundation | Pending |
+| AUTH-03 | Phase 1 — Foundation | Pending |
+| AUTH-04 | Phase 1 — Foundation | Pending |
+| PLAT-01 | Phase 1 — Foundation | Pending |
+| PLAT-02 | Phase 1 — Foundation | Pending |
+| GRP-01 | Phase 2 — Groups & Invites | Pending |
+| GRP-02 | Phase 2 — Groups & Invites | Pending |
+| GRP-03 | Phase 2 — Groups & Invites | Pending |
+| GRP-04 | Phase 2 — Groups & Invites | Pending |
+| GRP-05 | Phase 2 — Groups & Invites | Pending |
+| INV-01 | Phase 2 — Groups & Invites | Pending |
+| INV-02 | Phase 2 — Groups & Invites | Pending |
+| INV-03 | Phase 2 — Groups & Invites | Pending |
+| SUB-01 | Phase 3 — Capture & Admin Review | Pending |
+| SUB-02 | Phase 3 — Capture & Admin Review | Pending |
+| SUB-03 | Phase 3 — Capture & Admin Review | Pending |
+| SUB-04 | Phase 3 — Capture & Admin Review | Pending |
+| SUB-05 | Phase 3 — Capture & Admin Review | Pending |
+| SUB-06 | Phase 3 — Capture & Admin Review | Pending |
+| ADM-01 | Phase 3 — Capture & Admin Review | Pending |
+| ADM-02 | Phase 3 — Capture & Admin Review | Pending |
+| ADM-03 | Phase 3 — Capture & Admin Review | Pending |
+| ADM-04 | Phase 3 — Capture & Admin Review | Pending |
+| PLAT-03 | Phase 3 — Capture & Admin Review | Pending |
+| PTS-01 | Phase 4 — Social Surfaces | Pending |
+| PTS-02 | Phase 4 — Social Surfaces | Pending |
+| PTS-03 | Phase 4 — Social Surfaces | Pending |
+| LB-01 | Phase 4 — Social Surfaces | Pending |
+| LB-02 | Phase 4 — Social Surfaces | Pending |
+| FEED-01 | Phase 4 — Social Surfaces | Pending |
+| FEED-02 | Phase 4 — Social Surfaces | Pending |
+| FEED-03 | Phase 4 — Social Surfaces | Pending |
+| NOTIF-01 | Phase 5 — Push & Daily Rollover | Pending |
+| NOTIF-02 | Phase 5 — Push & Daily Rollover | Pending |
+| NOTIF-03 | Phase 5 — Push & Daily Rollover | Pending |
+| NOTIF-04 | Phase 5 — Push & Daily Rollover | Pending |
+| NOTIF-05 | Phase 5 — Push & Daily Rollover | Pending |
+| ROLL-01 | Phase 5 — Push & Daily Rollover | Pending |
+| ROLL-02 | Phase 5 — Push & Daily Rollover | Pending |
+
+**Phase 6 — Pre-Rollout Hardening** owns no v1 requirements directly; it hardens retention (addresses v2 items RE-01..RE-04 in v1-safe form) and performs a final RLS/security audit that reinforces PLAT-02 and PLAT-03.
 
 **Coverage:**
-- v1 requirements: 35 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 35
+- v1 requirements: 40 total
+- Mapped to phases: 40
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-21*
-*Last updated: 2026-04-21 after initial definition*
+*Last updated: 2026-04-21 with phase traceability after roadmap creation*
