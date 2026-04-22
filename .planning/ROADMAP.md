@@ -6,7 +6,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Foundation** — Expo + Supabase scaffold, auth, profiles, schema, RLS, server-side timezone derivation
+- [x] **Phase 1: Foundation** — Expo + Supabase scaffold, auth, profiles, schema, RLS, server-side timezone derivation
 - [ ] **Phase 2: Groups & Invites** — Create groups, deep-link invite flow, membership
 - [ ] **Phase 3: Capture & Admin Review** — Daily photo/video submissions with resilient upload + admin approval queue
 - [ ] **Phase 4: Social Surfaces** — Live leaderboard, points/streaks, group feed with tombstones
@@ -26,12 +26,12 @@
   4. User can create/edit a profile with display name and avatar
   5. Every public-schema table has RLS enabled, enforced by a CI check that fails builds otherwise
 **Plans**: 6 plans
-- [ ] 01-01-PLAN.md — Expo scaffold + Supabase client singleton + encrypted session storage + Jest harness
-- [ ] 01-02-PLAN.md — Full Postgres schema migration + RLS + helpers + storage buckets + pgTAP + CI workflows + `supabase db push` [BLOCKING]
-- [ ] 01-03-PLAN.md — Theme tokens + ThemeProvider + 11 UI primitives (per 01-UI-SPEC.md)
-- [ ] 01-04-PLAN.md — Root layout + AuthProvider + four auth screens (login / signup / forgot / reset) with deep link
-- [ ] 01-05-PLAN.md — Profile screen (view / edit / onboarding) + avatar upload pipeline + logout
-- [ ] 01-06-PLAN.md — Types regen + README + manual iOS+Android walkthrough checkpoint
+- [x] 01-01-PLAN.md — Expo scaffold + Supabase client singleton + encrypted session storage + Jest harness
+- [x] 01-02-PLAN.md — Full Postgres schema migration + RLS + helpers + storage buckets + pgTAP + CI workflows + `supabase db push` [BLOCKING]
+- [x] 01-03-PLAN.md — Theme tokens + ThemeProvider + 11 UI primitives (per 01-UI-SPEC.md)
+- [x] 01-04-PLAN.md — Root layout + AuthProvider + four auth screens (login / signup / forgot / reset) with deep link
+- [x] 01-05-PLAN.md — Profile screen (view / edit / onboarding) + avatar upload pipeline + logout
+- [x] 01-06-PLAN.md — Types regen + README + manual iOS+Android walkthrough checkpoint
 **UI hint**: yes
 
 ### Phase 2: Groups & Invites
@@ -102,7 +102,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/6 | Not started | - |
+| 1. Foundation | 6/6 | Complete (iOS UAT PASS; Android UAT deferred) | 2026-04-22 |
 | 2. Groups & Invites | 0/? | Not started | - |
 | 3. Capture & Admin Review | 0/? | Not started | - |
 | 4. Social Surfaces | 0/? | Not started | - |
