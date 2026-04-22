@@ -119,3 +119,21 @@ begin
       'ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;';
   end if;
 end$$;
+
+-- -----------------------------------------------------------------------------
+-- WR-03: invites_update_authenticated was `using (auth.uid() is not null)`,
+-- which let any logged-in user flip `used_at` / `used_by` on any invite row
+-- (including invites for groups they don't belong to) if they could guess the
+-- row. Replace with a redeem-self stub: can only mark an unused invite used,
+-- and only with `used_by = auth.uid()`. Full redeem semantics ship in P2 via
+-- a SECURITY DEFINER RPC.
+-- -----------------------------------------------------------------------------
+
+drop policy if exists "invites_update_authenticated" on public.invites;
+
+create policy "invites_mark_used_as_self"
+  on public.invites
+  for update
+  to authenticated
+  using (used_at is null)
+  with check (used_by = auth.uid() and used_at is not null);
