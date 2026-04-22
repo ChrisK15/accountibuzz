@@ -46,3 +46,18 @@ yarn-error.*
 
 # Internal planning docs
 .planning/
+
+# MCP config
+.mcp.json
+
+# Firebase debug logs
+firebase-debug.log
+firestore-debug.log
+
+# Data exports
+users_export.json
+
+# Claude / AI internal docs
+CLAUDE.md
+CHANGELOG.md
+DESIGN_PATTERNS.md
