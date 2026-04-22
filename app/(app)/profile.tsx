@@ -35,9 +35,13 @@ export default function Profile() {
   const { data: profile, isPending } = useProfile(user?.id);
   const [mode, setMode] = useState<'view' | 'edit'>('view');
 
+  // WR-08: append `?v={profile.updated_at}` so expo-image busts its URL cache
+  // after an upsert to the stable `{userId}/avatar.jpg` path.
   const avatarUrl = profile?.avatar_path
-    ? supabase.storage.from('avatars').getPublicUrl(profile.avatar_path).data
-        .publicUrl
+    ? `${
+        supabase.storage.from('avatars').getPublicUrl(profile.avatar_path).data
+          .publicUrl
+      }?v=${encodeURIComponent(profile.updated_at)}`
     : null;
 
   const upload = useAvatarUpload(user?.id);
@@ -64,7 +68,16 @@ export default function Profile() {
         text: 'Log out',
         style: 'destructive',
         onPress: async () => {
-          await supabase.auth.signOut();
+          // WR-07: signOut returns { error } — surfacing it avoids the stuck
+          // state where AuthProvider never receives SIGNED_OUT (Supabase only
+          // emits on success) and the user keeps tapping with no feedback.
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            Alert.alert(
+              'Sign out failed',
+              'Check your connection and try again.',
+            );
+          }
         },
       },
     ]);
