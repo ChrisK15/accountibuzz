@@ -28,7 +28,16 @@ See `.planning/phases/01-foundation/01-CONTEXT.md` for the full architectural de
    - `EXPO_PUBLIC_SUPABASE_ANON_KEY` — Project Settings → API → `anon` / `public` key
 4. In the Supabase Dashboard → **Authentication**:
    - Providers → Email → **Disable "Confirm email"** (decision D-09 in `01-CONTEXT.md`)
-   - URL Configuration → add `accountibuzz://reset-password` to the Redirect URLs list
+   - **Email Templates → Reset Password → replace the body so it uses
+     `{{ .Token }}` (6-digit code) instead of `{{ .ConfirmationURL }}`.**
+     Phase 01 uses an OTP code flow, not a deep-link — the user pastes the
+     code into `/(auth)/reset-password`. See
+     `.planning/phases/01-foundation/01-06-SUMMARY.md` for the design note.
+     A fresh project pointed at the default template will send a link email,
+     and `verifyOtp` will fail with "invalid token" with no code to paste.
+   - URL Configuration → add `accountibuzz://reset-password` to the Redirect
+     URLs list (reserved for the P2 invite universal-link flow; not used by
+     reset in P1).
 5. Link the CLI to your remote project:
    ```bash
    npx supabase link --project-ref <your-project-ref>
