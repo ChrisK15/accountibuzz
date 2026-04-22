@@ -84,19 +84,7 @@ create policy "groups_insert_authenticated"
   to authenticated
   with check (auth.uid() = admin_user_id);
 
--- Select: members of the group can read it. P1-safe correlated subquery
--- (helpers don't exist yet at this point in the file). Tightened in P2.
-create policy "groups_select_member"
-  on public.groups
-  for select
-  using (
-    exists (
-      select 1
-      from public.group_members gm
-      where gm.group_id = groups.id
-        and gm.user_id = auth.uid()
-    )
-  );
+-- (groups_select_member policy is declared AFTER group_members table exists — see below)
 
 -- Update / delete: admin only
 create policy "groups_update_admin"
@@ -186,6 +174,21 @@ create policy "group_members_update_admin"
       where gm.group_id = group_members.group_id
         and gm.user_id = auth.uid()
         and gm.role = 'admin'
+    )
+  );
+
+-- Deferred from section 3 (groups): members of the group can read it.
+-- Placed here because it references public.group_members which is declared above.
+-- Tightened in P2 once is_group_member helper is available.
+create policy "groups_select_member"
+  on public.groups
+  for select
+  using (
+    exists (
+      select 1
+      from public.group_members gm
+      where gm.group_id = groups.id
+        and gm.user_id = auth.uid()
     )
   );
 
