@@ -85,3 +85,37 @@ drop trigger if exists submissions_owner_immutable_trigger on public.submissions
 create trigger submissions_owner_immutable_trigger
   before update on public.submissions
   for each row execute function public.submissions_owner_immutable();
+
+-- -----------------------------------------------------------------------------
+-- WR-02: storage.objects RLS was never explicitly enabled by 0001 — the
+-- policies worked only because the Supabase-hosted/local defaults ship it on.
+-- Assert the invariant so a non-Supabase Postgres fork or a future CLI change
+-- does not silently deactivate every storage policy.
+--
+-- Note: `storage.objects` is owned by `supabase_storage_admin`, and the
+-- migration role (`postgres`) cannot `ALTER TABLE ... ENABLE ROW LEVEL
+-- SECURITY` directly. Instead we (a) assert the invariant by reading
+-- `pg_tables.rowsecurity` and raising if it is off, and (b) back it up with
+-- a CI probe in `.github/workflows/rls-check.yml` (added in the same fix).
+-- -----------------------------------------------------------------------------
+
+do $$
+declare
+  rls_on boolean;
+begin
+  select rowsecurity
+    into rls_on
+    from pg_tables
+   where schemaname = 'storage'
+     and tablename  = 'objects';
+
+  if rls_on is null then
+    raise exception 'storage.objects not found — is the Supabase storage schema installed?';
+  end if;
+
+  if not rls_on then
+    raise exception
+      'storage.objects RLS is disabled. Re-enable as supabase_storage_admin: '
+      'ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;';
+  end if;
+end$$;
