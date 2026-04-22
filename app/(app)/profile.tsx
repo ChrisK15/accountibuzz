@@ -40,8 +40,8 @@ export default function Profile() {
         .publicUrl
     : null;
 
-  const upload = useAvatarUpload(user?.id ?? '');
-  const update = useUpdateProfile(user?.id ?? '');
+  const upload = useAvatarUpload(user?.id);
+  const update = useUpdateProfile(user?.id);
 
   const {
     control,

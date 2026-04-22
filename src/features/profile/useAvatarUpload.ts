@@ -14,8 +14,11 @@ import { supabase } from '../../lib/supabase';
  * uploaded to Supabase Storage (see 01-RESEARCH.md Pitfall, line 597).
  */
 export async function pickAndUploadAvatar(
-  userId: string,
+  userId: string | undefined,
 ): Promise<string | null> {
+  // WR-06: reject on missing identity instead of producing a leading-slash
+  // storage path that trips RLS silently.
+  if (!userId) throw new Error('pickAndUploadAvatar: no userId');
   const pick = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     allowsEditing: true,
@@ -50,10 +53,12 @@ export async function pickAndUploadAvatar(
   return path;
 }
 
-export function useAvatarUpload(userId: string) {
+export function useAvatarUpload(userId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => pickAndUploadAvatar(userId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['profile', userId] }),
+    onSuccess: () => {
+      if (userId) qc.invalidateQueries({ queryKey: ['profile', userId] });
+    },
   });
 }

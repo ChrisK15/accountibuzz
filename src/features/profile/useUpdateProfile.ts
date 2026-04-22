@@ -1,10 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 
-export function useUpdateProfile(userId: string) {
+export function useUpdateProfile(userId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { display_name: string }) => {
+      // WR-06: reject on missing identity instead of silently no-op'ing
+      // (.eq('id', '') would match zero rows and report success).
+      if (!userId) throw new Error('useUpdateProfile: no userId');
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -15,7 +18,7 @@ export function useUpdateProfile(userId: string) {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['profile', userId] });
+      if (userId) qc.invalidateQueries({ queryKey: ['profile', userId] });
     },
   });
 }
