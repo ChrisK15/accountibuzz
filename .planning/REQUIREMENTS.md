@@ -12,7 +12,8 @@ Requirements for initial MVP release to friend groups.
 - [ ] **AUTH-01**: User can sign up for an account on a mobile device (email + password)
 - [ ] **AUTH-02**: User can log in and their session persists across app restarts
 - [ ] **AUTH-03**: User can log out from the app
-- [ ] **AUTH-04**: User can create a profile with a display name and avatar
+- [x] **AUTH-04
+**: User can create a profile with a display name and avatar
 
 ### Groups
 
@@ -73,7 +74,8 @@ Requirements for initial MVP release to friend groups.
 
 ### Platform / Security
 
-- [ ] **PLAT-01**: App runs on iOS and Android via Expo (SDK 55)
+- [x] **PLAT-01
+**: App runs on iOS and Android via Expo (SDK 55)
 - [ ] **PLAT-02**: All data access is gated by Supabase Row-Level Security; a CI check fails builds if a table has RLS disabled
 - [ ] **PLAT-03**: Group admin can only approve/reject submissions for groups they admin (enforced by RLS)
 

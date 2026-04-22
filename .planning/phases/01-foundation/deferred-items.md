@@ -1,0 +1,1 @@
+- 2026-04-22 (01-03): Stale worktree `.claude/worktrees/agent-a00b0e89/` contains copy of tests that fail jest (AsyncStorage v3 mock issue). Out of scope for 01-03. Cleanup: remove the stale worktree dir OR add it to `testPathIgnorePatterns` in `jest.config.js`. Not a regression from this plan — failures pre-date it.
