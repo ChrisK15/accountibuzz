@@ -118,7 +118,7 @@ function VerifyStep({
     <>
       <ScreenHeader
         title="Enter your code"
-        subtitle={`We sent a 6-digit code to ${email}.`}
+        subtitle={`We sent a code to ${email}.`}
       />
       <Controller
         control={control}

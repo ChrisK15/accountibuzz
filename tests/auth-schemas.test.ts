@@ -46,10 +46,11 @@ describe('auth Zod schemas', () => {
     expect(forgotSchema.safeParse({ email: 'nope' }).success).toBe(false);
     expect(forgotSchema.safeParse({ email: 'a@b.co' }).success).toBe(true);
   });
-  it('otpSchema requires a 6-digit numeric code', () => {
+  it('otpSchema accepts numeric codes between 4 and 10 digits', () => {
     expect(otpSchema.safeParse({ token: '123456' }).success).toBe(true);
-    expect(otpSchema.safeParse({ token: '12345' }).success).toBe(false);
-    expect(otpSchema.safeParse({ token: '1234567' }).success).toBe(false);
+    expect(otpSchema.safeParse({ token: '12345678' }).success).toBe(true);
+    expect(otpSchema.safeParse({ token: '123' }).success).toBe(false);
+    expect(otpSchema.safeParse({ token: '12345678901' }).success).toBe(false);
     expect(otpSchema.safeParse({ token: 'abc123' }).success).toBe(false);
     expect(otpSchema.safeParse({ token: '' }).success).toBe(false);
   });
