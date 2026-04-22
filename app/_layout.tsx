@@ -16,7 +16,7 @@ function useProtectedRoute() {
     // Recovery session exemption: after verifyOtp with type=recovery, a session
     // exists but the user still needs to call updateUser on the reset screen.
     // Keep them on /(auth)/reset-password until they set a new password.
-    const onResetPassword = inAuth && segments[1] === 'reset-password';
+    const onResetPassword = inAuth && (segments as string[])[1] === 'reset-password';
     if (!session && !inAuth) {
       router.replace('/(auth)/login');
     } else if (session && !inApp && !onResetPassword) {
