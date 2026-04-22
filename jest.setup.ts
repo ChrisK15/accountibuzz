@@ -51,6 +51,17 @@ jest.mock('expo-image-picker', () => ({
   MediaTypeOptions: { Images: 'Images' },
 }));
 
+// expo-image-manipulator — minimal mock (plan 05 avatar upload pipeline)
+jest.mock('expo-image-manipulator', () => ({
+  manipulateAsync: jest.fn(async (uri: string) => ({ uri: `${uri}.resized` })),
+  SaveFormat: { JPEG: 'jpeg' },
+}));
+
+// expo-file-system — minimal mock (plan 05 avatar upload pipeline)
+jest.mock('expo-file-system', () => ({
+  readAsStringAsync: jest.fn(async () => 'base64data'),
+}));
+
 // Ensure crypto.getRandomValues exists in jsdom/node env for aes-js
 if (
   typeof (globalThis as { crypto?: Crypto }).crypto === 'undefined' ||
