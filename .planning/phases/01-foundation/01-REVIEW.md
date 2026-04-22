@@ -56,8 +56,8 @@ files_reviewed_list:
   - src/types/database.ts
   - jest.config.js
 findings:
-  critical: 1
-  warning: 7
+  critical: 0
+  warning: 8
   info: 9
   total: 17
 status: issues_found
@@ -76,7 +76,7 @@ Phase 01 ships a solid foundation: schema + RLS baseline, auth flow (email/passw
 
 Key concerns worth addressing before Phase 2 tightening:
 
-1. **One critical correctness gap** in the password-reset UX: `resetPasswordForEmail()` is called with no options, which defaults to a **magic-link** email. The UI claims the user will receive a 6-digit code. Unless the Supabase email template was manually switched to expose `{{ .Token }}`, the verifyOtp call will always fail.
+1. **Undocumented dashboard prerequisite for password reset.** The OTP flow is implemented correctly end-to-end in code (verifyOtp + updateUser) and passed AUTH-03 UAT on the reviewed project. The gap is that `resetPasswordForEmail()` relies on the Supabase dashboard "Reset Password" email template using `{{ .Token }}` rather than Supabase's default `{{ .ConfirmationURL }}` — and the README setup steps don't call this out. A fresh clone + fresh Supabase project will hit invalid-token errors until the template is manually edited. (Downgraded from Critical → Warning after maintainer clarified that Phase 01 pivoted to OTP intentionally; see WR-08.)
 2. **Overly permissive `invites_update_authenticated` policy** — any authenticated user can update any invite row, even for groups they don't belong to. Marked P1-safe in a comment, but it is a real cross-tenant write primitive today.
 3. **Self-referential RLS on `group_members`** creates latent recursion risk. The helper pattern (`is_group_member`) is already declared in the same file; the initial policies should use it even in P1 to avoid the footgun noted in Supabase's own RLS best-practices docs.
 4. Several small bugs in async/error handling (unhandled promise rejection in `AuthProvider.useEffect`, silent no-op on empty `userId` in profile mutations, un-awaited `signOut()` errors).
@@ -85,41 +85,7 @@ Skills consulted: `supabase:supabase`, `supabase:supabase-postgres-best-practice
 
 ## Critical Issues
 
-### CR-01: Password reset UI promises OTP code, but `resetPasswordForEmail` sends magic link by default
-
-**File:** `app/(auth)/forgot-password.tsx:36`, `app/(auth)/reset-password.tsx:91-95`, `README.md:29-31`
-
-**Issue:** `supabase.auth.resetPasswordForEmail(email)` is called with no second argument. In the Supabase client the default behavior is to send a **password-recovery magic link**, not an OTP token. The default `recovery` email template contains `{{ .ConfirmationURL }}`, not `{{ .Token }}`. The UI (`forgot-password.tsx` line 68: *"Enter your email and we'll send you a 6-digit code"*) and the follow-up screen (`reset-password.tsx` line 121: *"We sent a code to {email}"*) then call `verifyOtp({ email, token, type: 'recovery' })`, which will fail unless the email template has been manually edited in the Supabase Dashboard to include `{{ .Token }}`.
-
-There is also no mention in `README.md` of editing the recovery email template — step 4 only mentions disabling Confirm email and adding the deep-link redirect URL.
-
-The commit history (`5ccb9c6`) confirms this is the intended OTP-pivot flow, so the gap is in both the call site and the setup docs.
-
-**Fix:**
-
-Either (a) document the email-template edit in the README setup section and keep the current call, or (b) make the intent explicit in code:
-
-```ts
-// Option A — document in README the required email template change
-// (Dashboard → Authentication → Email Templates → Reset Password → replace
-//  {{ .ConfirmationURL }} with {{ .Token }})
-
-// Option B — add an end-to-end smoke test that hits verifyOtp in CI against
-// the local inbucket inbox, so a misconfigured template fails CI instead of
-// production.
-```
-
-At minimum, add a README section similar to:
-
-```markdown
-4. In the Supabase Dashboard → Authentication:
-   - Providers → Email → Disable "Confirm email" (D-09)
-   - **Email Templates → Reset Password → replace `{{ .ConfirmationURL }}` with `{{ .Token }}`**
-     so the recovery email contains the 6-digit OTP (see 01-04 summary).
-   - URL Configuration → add `accountibuzz://reset-password` to Redirect URLs
-```
-
-This is Critical because the flow is end-to-end broken against a stock Supabase project. Any dev who clones the repo and follows the README will hit an invalid-token error after entering the emailed link URL as a "code."
+_None. (CR-01 was reclassified to WR-08 after maintainer confirmed the OTP pivot is intentional and UAT passes against the configured project — the gap is documentation of an external dashboard prerequisite, not broken code.)_
 
 ## Warnings
 
@@ -314,6 +280,39 @@ MISSING=$(PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres
     );
 ")
 ```
+
+### WR-08: Password reset depends on an undocumented Supabase dashboard email-template edit
+
+**File:** `app/(auth)/forgot-password.tsx:36`, `app/(auth)/reset-password.tsx:91-95`, `README.md:29-31`
+
+**Issue:** The OTP reset flow is implemented correctly in code — `resetPasswordForEmail(email)` then a two-step `verifyOtp({ email, token, type: 'recovery' })` → `updateUser({ password })`. AUTH-03 passed manual UAT on the reviewed project, so the flow *works* there. The gap is that it works **only because the maintainer's Supabase project has the "Reset Password" email template switched from Supabase's default `{{ .ConfirmationURL }}` to `{{ .Token }}`**. That template edit is a dashboard-side state that isn't in version control (not in `supabase/config.toml`, no `[auth.email.template.recovery]` block) and the README setup section (`README.md:29-31`) doesn't document it.
+
+A fresh clone pointed at a fresh Supabase project will follow the README, hit the OTP-entry screen, paste the magic-link URL out of the email, and get an invalid-token error with no indication why.
+
+Reclassified from Critical (original CR-01) to Warning after maintainer confirmed the OTP pivot is intentional — Phase 01 plan 06 summary documents it as a deliberate pivot from deep-link reset to OTP flow (Gmail strips custom-scheme URLs, link-prefetch crawlers consume single-use tokens, `expo-router` doesn't surface URL fragments). The code is correct; the setup docs are the gap.
+
+**Fix:** Add the dashboard step to the README, and ideally check the template into `supabase/config.toml` so local dev matches prod:
+
+```markdown
+<!-- README.md step 4 -->
+4. In the Supabase Dashboard → Authentication:
+   - Providers → Email → Disable "Confirm email" (D-09)
+   - **Email Templates → Reset Password → replace the body so it contains
+     `{{ .Token }}` (6–8 digit code) instead of `{{ .ConfirmationURL }}`.**
+     Phase 01 pivoted from deep-link reset to OTP (see `.planning/phases/01-foundation/01-06-SUMMARY.md`).
+   - URL Configuration → add `accountibuzz://reset-password` to Redirect URLs
+     (reserved for future invite flow; not used by reset in Phase 1).
+```
+
+Optionally, pin the template in `supabase/config.toml` so `supabase db reset` applies it locally and there is no drift:
+
+```toml
+[auth.email.template.recovery]
+subject = "Your Accountibuzz password reset code"
+content_path = "./supabase/templates/recovery.html"
+```
+
+A CI smoke test against the local `inbucket` inbox would also catch a regression if anyone reverts the template.
 
 ## Info
 
