@@ -1,0 +1,87 @@
+-- =============================================================================
+-- 0002_phase1_review_fixes.sql
+--
+-- Review-fix follow-up to 0001_foundation.sql. Addresses findings from the
+-- deep-pass review (see .planning/phases/01-foundation/01-REVIEW.md).
+--
+-- This migration is append-only relative to 0001 — it drops/recreates policies
+-- and uses `create or replace` for functions so it is idempotent against the
+-- already-applied state (local + remote).
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- CR-01: submissions UPDATE policy lacked WITH CHECK — owner could self-flip
+-- `status` from 'pending' → 'approved'. Split the single policy into an
+-- owner-pending-content lane and an admin-review lane, both with explicit
+-- WITH CHECK. Add a BEFORE UPDATE trigger that pins immutable columns on
+-- owner edits (columns Postgres RLS cannot constrain directly).
+-- -----------------------------------------------------------------------------
+
+drop policy if exists "submissions_update_admin_or_owner_pending" on public.submissions;
+
+-- Owners: may edit only their own still-pending row. USING gates the pre-image;
+-- WITH CHECK gates the post-image (row must still be owned + pending).
+-- Column-level immutability (status, user_id, group_id, local_date, review
+-- metadata) is enforced by submissions_owner_immutable() below.
+create policy "submissions_update_owner_pending_content"
+  on public.submissions
+  for update
+  to authenticated
+  using (user_id = auth.uid() and status = 'pending')
+  with check (user_id = auth.uid() and status = 'pending');
+
+-- Admins: full review lane. Both USING and WITH CHECK require admin on the
+-- target group — admin cannot move a row into a group they do not admin.
+create policy "submissions_update_admin_review"
+  on public.submissions
+  for update
+  to authenticated
+  using (public.is_group_admin(group_id))
+  with check (public.is_group_admin(group_id));
+
+-- Belt-and-suspenders: enforce column-level immutability on owner edits.
+-- If the UPDATE is being issued by the owner (auth.uid() = old.user_id) AND
+-- the caller is NOT also the group admin, then status / user_id / group_id /
+-- local_date / reviewed_by / reviewed_at / rejection_reason may not change.
+create or replace function public.submissions_owner_immutable()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  is_admin boolean;
+begin
+  -- If auth context is absent (e.g. service_role/superuser via definer path),
+  -- skip the check entirely.
+  if auth.uid() is null then
+    return new;
+  end if;
+
+  -- Admin branch bypasses immutability; admin-review policy already gates shape.
+  is_admin := public.is_group_admin(old.group_id);
+  if is_admin then
+    return new;
+  end if;
+
+  -- Owner branch: pin immutable columns.
+  if auth.uid() = old.user_id then
+    if new.status is distinct from old.status
+       or new.user_id is distinct from old.user_id
+       or new.group_id is distinct from old.group_id
+       or new.local_date is distinct from old.local_date
+       or new.reviewed_by is distinct from old.reviewed_by
+       or new.reviewed_at is distinct from old.reviewed_at
+       or new.rejection_reason is distinct from old.rejection_reason then
+      raise exception 'owner may not modify key/status/review columns on submissions';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists submissions_owner_immutable_trigger on public.submissions;
+create trigger submissions_owner_immutable_trigger
+  before update on public.submissions
+  for each row execute function public.submissions_owner_immutable();
