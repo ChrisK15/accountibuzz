@@ -5,8 +5,17 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
+
+// WR-01 (iter 2): persist recovery intent across cold start. `PASSWORD_RECOVERY`
+// does not fire on cold start — only `INITIAL_SESSION` does — so if a user
+// kills the app mid-reset we restore the session, find `recoveryPending=false`,
+// and auto-promote into /(app). Persisting the flag to AsyncStorage lets us
+// restore it alongside the session on getSession and keep the reset gate closed.
+// AsyncStorage (not SecureStore): this is a boolean flag, not a secret.
+export const RECOVERY_PENDING_KEY = 'accountibuzz.recoveryPending';
 
 interface AuthContextValue {
   session: Session | null;
@@ -30,10 +39,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (mounted) setSession(data.session);
+    // WR-01 (iter 2): restore persisted recovery intent before flipping
+    // `loading` off, so the gate effect in `app/_layout.tsx` sees the flag on
+    // the same render as the session. Otherwise the first post-loading render
+    // would route into /(app) before the flag arrived.
+    Promise.all([
+      supabase.auth.getSession(),
+      AsyncStorage.getItem(RECOVERY_PENDING_KEY).catch(() => null),
+    ])
+      .then(([{ data }, pending]) => {
+        if (!mounted) return;
+        setSession(data.session);
+        // Only treat the flag as live if we also have a session. A stale flag
+        // with no session (e.g. user cleared data) should not pin /(auth).
+        if (data.session && pending === '1') setRecoveryPending(true);
       })
       .catch((err) => {
         // Storage adapter or hex-decode failures should not leave the
@@ -46,8 +65,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     const { data: listener } = supabase.auth.onAuthStateChange((e, s) => {
       setSession(s);
-      if (e === 'PASSWORD_RECOVERY') setRecoveryPending(true);
-      if (e === 'USER_UPDATED' || e === 'SIGNED_OUT') setRecoveryPending(false);
+      if (e === 'PASSWORD_RECOVERY') {
+        setRecoveryPending(true);
+        AsyncStorage.setItem(RECOVERY_PENDING_KEY, '1').catch(() => {});
+      }
+      if (e === 'USER_UPDATED' || e === 'SIGNED_OUT') {
+        setRecoveryPending(false);
+        AsyncStorage.removeItem(RECOVERY_PENDING_KEY).catch(() => {});
+      }
     });
     return () => {
       mounted = false;
