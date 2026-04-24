@@ -67,6 +67,23 @@ jest.mock('expo-file-system/legacy', () => ({
   readAsStringAsync: jest.fn(async () => 'base64data'),
 }));
 
+// expo-clipboard — plan 03 InviteCodeChip.tsx calls setStringAsync on Copy tap.
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn().mockResolvedValue(true),
+  getStringAsync: jest.fn().mockResolvedValue(''),
+}));
+
+// expo-haptics — plan 03 InviteCodeChip.tsx fires a Success haptic after copy.
+// Must expose the NotificationFeedbackType enum used by callers.
+jest.mock('expo-haptics', () => ({
+  notificationAsync: jest.fn().mockResolvedValue(undefined),
+  NotificationFeedbackType: {
+    Success: 'success',
+    Warning: 'warning',
+    Error: 'error',
+  },
+}));
+
 // Ensure crypto.getRandomValues exists in jsdom/node env for aes-js
 if (
   typeof (globalThis as { crypto?: Crypto }).crypto === 'undefined' ||
