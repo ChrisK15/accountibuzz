@@ -306,15 +306,50 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_group: {
+        Args: {
+          p_goal: string
+          p_name: string
+          p_submission_type: string
+          p_timezone: string
+        }
+        Returns: {
+          group_id: string
+          invite_code: string
+        }[]
+      }
+      delete_group: { Args: { p_group_id: string }; Returns: undefined }
+      generate_invite_code: { Args: never; Returns: string }
+      get_invite_preview: {
+        Args: { code_input: string }
+        Returns: Database["public"]["CompositeTypes"]["invite_preview"]
+        SetofOptions: {
+          from: "*"
+          to: "invite_preview"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       handle_daily_rollover: { Args: never; Returns: undefined }
       is_group_admin: { Args: { g: string }; Returns: boolean }
       is_group_member: { Args: { g: string }; Returns: boolean }
+      leave_group: { Args: { p_group_id: string }; Returns: undefined }
+      redeem_invite: { Args: { code_input: string }; Returns: string }
+      regenerate_invite: { Args: { p_group_id: string }; Returns: string }
+      transfer_admin: {
+        Args: { p_group_id: string; p_new_admin_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      invite_preview: {
+        group_name: string | null
+        member_count: number | null
+        admin_display_name: string | null
+      }
     }
   }
   storage: {
