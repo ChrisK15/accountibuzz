@@ -1,10 +1,11 @@
 ---
 phase: 2
 slug: groups-invites
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-24
+reviewed_at: 2026-04-24
 ---
 
 # Phase 2 — UI Design Contract
@@ -20,8 +21,8 @@ created: 2026-04-24
 
 - Design system (hand-rolled RN primitives, no shadcn, Manrope font, `@expo/vector-icons`)
 - Full color palette (yellow `#FFDE42` primary, cyan `#53CBF3` accent, `hsl(4 78% 56%)` destructive, warm off-white / near-black dual theme)
-- Full typography scale (Display 32/800, H1 24/700, H2 20/700, Body 16/500, Caption 13/500)
-- Full spacing scale (4 / 8 / 12 / 16 / 24 / 32)
+- Full typography scale (Display 32/800, H1 24/700, H2 20/700, Body 16/500, Caption 13/500) — see **Typography §Locked Exceptions** below for justification of the 5-size / 3-weight scale
+- Full spacing scale (4 / 8 / 12 / 16 / 24 / 32) — includes 12px (user-locked exception documented in Phase 1)
 - All radii (6 / 12 / 20 / pill) and elevations (e1 / e2)
 - All button, input, and avatar primitives
 - Copywriting voice: **warm, energetic, concise — never corporate.**
@@ -55,13 +56,26 @@ created: 2026-04-24
 | xl | 24px | Screen horizontal padding, section breaks |
 | 2xl | 32px | Hero-to-content gaps on create-group screen |
 
-**Exceptions:** none. All P2 surfaces use the inherited scale.
+**Exceptions:** none new in P2. Phase 1's 12px inclusion (not a pure 4/8/16 progression) remains a user-locked exception from `design_refs/design_token_2.png`; all declared values remain multiples of 4.
 
 ---
 
 ## Typography
 
-**Inherited from Phase 1 — unchanged.** New P2 roles that use existing tokens:
+**Inherited from Phase 1 — unchanged.**
+
+### Locked Exceptions (user decision, documented so future checkers don't re-flag)
+
+Phase 1's typography scale contains **5 sizes** (Display 32, H1 24, H2 20, Body 16, Caption 13) and **3 weights** (500 Medium, 700 Bold, 800 ExtraBold). The standard design-quality heuristic caps these at 4 sizes and 2 weights respectively. Both values are **user-locked decisions sourced from `design_refs/design_token_2.png` (Lovable-generated, user-supplied 2026-04-21)** — the same origin as the user-locked 12px spacing exception.
+
+| Deviation | Standard cap | Actual value | Justification |
+|-----------|--------------|--------------|---------------|
+| Font sizes | 4 | **5** (Display 32, H1 24, H2 20, Body 16, Caption 13) | User-supplied Lovable tokens; Phase 1 is already shipped against this scale. Each role has distinct usage: Display for screen heroes, H1 for section headers, H2 for modal titles / secondary headers, Body for UI/copy, Caption for metadata. Collapsing would force either hero-to-header flattening or metadata/body collision — both visible regressions vs. the reference design. |
+| Font weights | 2 | **3** (500 Medium, 700 Bold, 800 ExtraBold) | Manrope is a variable font — the third weight costs zero at runtime (no extra font file). User-supplied Lovable tokens reserve 800 specifically for Display-size hero titles, where 700 alongside 32px size reads thin against warm-off-white / near-black backgrounds at device scale. 500/700 carry all UI + heading hierarchy; 800 is Display-only. |
+
+**This is an explicit override of the dimension-4 checker defaults.** The rule does not apply because the scale was user-locked in Phase 1 and ratified by the Phase 1 checker (analogous to the 12px spacing exception). Phase 2 inherits without modification.
+
+### P2 roles that reuse the inherited scale
 
 | P2 Surface | Role Applied | Rationale |
 |-----------|--------------|-----------|
@@ -141,6 +155,8 @@ created: 2026-04-24
 
 Voice reminder: **warm, energetic, concise — never corporate.** Use *we* / *your group* / *friends*, not *user* / *organization*.
 
+**Dismiss-label rule (applies to every modal in this phase):** The word `Cancel` is banned as a dismiss label. Every modal ships with a context-specific dismiss label that tells the user what they are *not* doing (e.g. `Stay in group`, `Keep my admin role`). This is enforced in the `Modal` primitive — `cancelLabel` has **no default**; callers must pass a context-specific string.
+
 ### Screen-level copy
 
 | Screen | Title | Subtitle |
@@ -180,7 +196,16 @@ Voice reminder: **warm, energetic, concise — never corporate.** Use *we* / *yo
 | Regenerate invite confirmation | `Regenerate` (primary — not destructive; yellow because the action is recoverable by re-sharing) |
 | Admin-leave modal path 1 | `Transfer admin instead` (primary) |
 | Admin-leave modal path 2 | `Delete the group` (destructive text) |
-| All modals dismiss | `Cancel` (ghost, left-aligned or default iOS position) |
+
+**Modal dismiss labels (context-specific — never `Cancel`):**
+
+| Modal | Dismiss label |
+|-------|---------------|
+| Member: Leave group confirmation | `Stay in group` |
+| Admin: Transfer admin picker | `Keep my admin role` |
+| Admin: Delete group confirmation | `Keep the group` |
+| Admin: Regenerate invite confirmation | `Keep current code` |
+| Admin-leave branching modal | `Never mind` |
 
 ### Form labels and placeholders (create-group)
 
@@ -252,15 +277,15 @@ Every typed error from `redeem_invite` maps to an explicit string. Color: `--des
 
 ### Destructive action confirmations
 
-All confirmations use a **centered modal sheet** (not native `Alert.alert`) because they carry more context than `Alert` can show comfortably. Modal pattern is defined below.
+All confirmations use a **centered modal sheet** (not native `Alert.alert`) because they carry more context than `Alert` can show comfortably. Modal pattern is defined below. **Every dismiss label is context-specific — `Cancel` is banned in this phase.**
 
-| Action | Modal title | Body | Primary button | Cancel |
-|--------|-------------|------|----------------|--------|
-| Member: Leave group | `Leave {group_name}?` | `You'll lose access to the group's feed and your streak resets if you come back.` | `Leave group` (destructive filled) | `Stay` (ghost) |
-| Admin: Leave group (branching) | `Admins can't just leave` | `Hand the group to someone else, or delete it entirely.` | `Transfer admin instead` (primary) | `Delete the group` (destructive text, stacked below primary) + `Cancel` (ghost) |
-| Admin: Transfer admin (picker) | `Pick a new admin` | `They'll take over the group. You'll stay as a member.` | `Transfer to {name}` (primary, disabled until a member is selected) | `Cancel` (ghost) |
-| Admin: Delete group | `Delete this group?` | `Everyone loses access. Submissions, members, and invites are gone. This can't be undone.` | `Delete group` (destructive filled) | `Cancel` (ghost) |
-| Admin: Regenerate invite | `Make a new code?` | `The current code stops working right away. Anyone who hasn't joined yet will need the new one.` | `Regenerate` (primary — recoverable) | `Cancel` (ghost) |
+| Action | Modal title | Body | Primary button | Dismiss |
+|--------|-------------|------|----------------|---------|
+| Member: Leave group | `Leave {group_name}?` | `You'll lose access to the group's feed and your streak resets if you come back.` | `Leave group` (destructive filled) | `Stay in group` (ghost) |
+| Admin: Leave group (branching) | `Admins can't just leave` | `Hand the group to someone else, or delete it entirely.` | `Transfer admin instead` (primary) | Secondary `Delete the group` (destructive text, stacked below primary) + `Never mind` (ghost) |
+| Admin: Transfer admin (picker) | `Pick a new admin` | `They'll take over the group. You'll stay as a member.` | `Transfer to {name}` (primary, disabled until a member is selected) | `Keep my admin role` (ghost) |
+| Admin: Delete group | `Delete this group?` | `Everyone loses access. Submissions, members, and invites are gone. This can't be undone.` | `Delete group` (destructive filled) | `Keep the group` (ghost) |
+| Admin: Regenerate invite | `Make a new code?` | `The current code stops working right away. Anyone who hasn't joined yet will need the new one.` | `Regenerate` (primary — recoverable) | `Keep current code` (ghost) |
 
 ### Native share-sheet message (from CONTEXT §D-19, locked)
 
@@ -303,14 +328,14 @@ Visuals: background `--surface-muted`, 1px `--border`, radius `md`, vertical pad
 | Prop | Type | Notes |
 |------|------|-------|
 | `visible` | `boolean` | — |
-| `onDismiss` | `() => void` | Called on scrim tap and Cancel |
+| `onDismiss` | `() => void` | Called on scrim tap and dismiss button |
 | `title` | `string` | Heading 2, centered |
 | `body` | `ReactNode` | Body-16, `--text`, centered |
 | `primaryAction` | `{ label: string; onPress: () => void; variant: 'primary' \| 'destructive'; loading?: boolean }` | Full-width button |
 | `secondaryAction?` | `{ label: string; onPress: () => void; variant: 'destructive-text' \| 'ghost' }` | Optional stacked below primary |
-| `cancelLabel?` | `string` | Default `Cancel`; renders as ghost text button |
+| `cancelLabel` | `string` | **No default — caller must supply a context-specific dismiss label** (e.g. `Stay in group`, `Keep the group`). The generic word `Cancel` is disallowed by the phase copywriting contract; the component throws a dev-mode warning if the supplied label is `Cancel` (case-insensitive). |
 
-Visuals: scrim `rgba(0,0,0,0.45)` light / `rgba(0,0,0,0.65)` dark. Sheet centered, max width 400pt, `lg` radius, padding `xl`, `e2-raised` elevation in light / 1px `--border` in dark. Content stack gap `lg`. Buttons stack full-width, `lg` gap between primary and secondary. Cancel centered below at `2xl` margin.
+Visuals: scrim `rgba(0,0,0,0.45)` light / `rgba(0,0,0,0.65)` dark. Sheet centered, max width 400pt, `lg` radius, padding `xl`, `e2-raised` elevation in light / 1px `--border` in dark. Content stack gap `lg`. Buttons stack full-width, `lg` gap between primary and secondary. Dismiss button centered below at `2xl` margin.
 
 Additional primitives that **do not need new components** — reuse P1:
 
@@ -337,7 +362,7 @@ Body: FlatList of group rows. Each row tappable → `/groups/{id}`. Row layout p
 
 ### `app/(app)/groups/new.tsx` — Create group
 
-Nav bar: `← Cancel` (back chevron) left, title `Start a group` center-left (H2). Form fields in order:
+Nav bar: `← Back` (back chevron) left, title `Start a group` center-left (H2). Form fields in order:
 
 1. `Group name` — TextInput
 2. `What's the daily goal?` — TextInput with `multiline`, `numberOfLines={3}`, char counter below (right-aligned caption, turns destructive at 0 or ≥140)
@@ -375,7 +400,7 @@ Nav bar: `← Back` chevron left, kebab right (contains contextual items dependi
 
 ### `app/(app)/groups/join.tsx` — Join with code
 
-Nav bar: `← Cancel` left, title `Got a code?` left. Body: Display header + subtitle copy (see Copywriting). Single TextInput with the invite-code treatment (see Typography): autocapitalize=`characters`, autocorrect=off, maxLength=9 (8 chars + 1 optional dash). Client-side normalization: strips non-alphanumeric, uppercases, inserts dash after 4 for display. Helper caption: `8 letters and numbers. Dashes optional.` Below input, sticky PrimaryButton `Join group` (disabled until 8 valid chars entered). Inline error rendering under input for all typed errors.
+Nav bar: `← Back` left, title `Got a code?` left. Body: Display header + subtitle copy (see Copywriting). Single TextInput with the invite-code treatment (see Typography): autocapitalize=`characters`, autocorrect=off, maxLength=9 (8 chars + 1 optional dash). Client-side normalization: strips non-alphanumeric, uppercases, inserts dash after 4 for display. Helper caption: `8 letters and numbers. Dashes optional.` Below input, sticky PrimaryButton `Join group` (disabled until 8 valid chars entered). Inline error rendering under input for all typed errors.
 
 On success → `router.replace('/groups/{group_id}')`.
 
@@ -393,18 +418,20 @@ On success → `router.replace('/groups/{group_id}')`.
 
 ### Modals (all invoked from group-detail)
 
-**Admin-leave branching modal** — invoked when admin taps "Leave group" (kebab or bottom button). Uses P2 `Modal` primitive with a secondary action:
+All modals use the P2 `Modal` primitive. **Every `cancelLabel` is context-specific per the copywriting contract.**
+
+**Admin-leave branching modal** — invoked when admin taps "Leave group" (kebab or bottom button).
 - Primary: `Transfer admin instead` → closes this modal, opens Transfer-admin picker.
 - Secondary (destructive-text, stacked): `Delete the group` → closes this modal, opens Delete-group confirmation.
-- Cancel: dismiss.
+- Dismiss (`cancelLabel`): `Never mind`.
 
-**Transfer admin picker modal** — Full P2 `Modal` with custom body: list of current group members (excluding self). Each row = Avatar + name + radio circle on the right. Tap selects. Selection highlights row with `--surface-muted` bg. Primary button enabled once a row is selected: `Transfer to {name}`. On success → close modal + banner on group-detail: `{name} is now the admin.` Current user's destructive zone changes to non-admin `Leave group` only.
+**Transfer admin picker modal** — Full P2 `Modal` with custom body: list of current group members (excluding self). Each row = Avatar + name + radio circle on the right. Tap selects. Selection highlights row with `--surface-muted` bg. Primary button enabled once a row is selected: `Transfer to {name}`. Dismiss (`cancelLabel`): `Keep my admin role`. On success → close modal + banner on group-detail: `{name} is now the admin.` Current user's destructive zone changes to non-admin `Leave group` only.
 
-**Delete group confirmation** — P2 `Modal`: title `Delete this group?`, body copy per table above, primary destructive filled `Delete group`, cancel ghost. On success → `router.replace('/')` + caption toast `Group deleted.`
+**Delete group confirmation** — P2 `Modal`: title `Delete this group?`, body copy per table above, primary destructive filled `Delete group`. Dismiss (`cancelLabel`): `Keep the group`. On success → `router.replace('/')` + caption toast `Group deleted.`
 
-**Regenerate invite confirmation** — P2 `Modal`: title `Make a new code?`, primary `Regenerate` (primary, not destructive), cancel ghost. On success → close + new banner `New code ready — share it with anyone who hasn't joined yet.` + invite chip updates with new code.
+**Regenerate invite confirmation** — P2 `Modal`: title `Make a new code?`, primary `Regenerate` (primary, not destructive). Dismiss (`cancelLabel`): `Keep current code`. On success → close + new banner `New code ready — share it with anyone who hasn't joined yet.` + invite chip updates with new code.
 
-**Member leave confirmation** — P2 `Modal`: title `Leave {group_name}?`, primary destructive `Leave group`, cancel ghost. On success → `router.replace('/')`, group disappears silently.
+**Member leave confirmation** — P2 `Modal`: title `Leave {group_name}?`, primary destructive `Leave group`. Dismiss (`cancelLabel`): `Stay in group`. On success → `router.replace('/')`, group disappears silently.
 
 ---
 
@@ -421,7 +448,8 @@ Inherited from Phase 1 plus P2-specific additions:
 | Code-entry normalization | On every keystroke: strip non-alphanumeric, uppercase, re-render with dash after char 4. Preserve caret position at the logical end. |
 | Segmented control press | Scale 0.98 on active segment, instant swap, 100ms ease. No press animation on inactive segments beyond standard Pressable opacity. |
 | Modal presentation | iOS: `presentationStyle="pageSheet"` for full-screen modals (timezone picker), standard `Modal` for centered confirmations. Android: standard `Modal` with `transparent={true}` + scrim view. |
-| Modal scrim tap | Dismisses modal (calls `onDismiss`). Destructive modals (Delete group) should still scrim-dismiss — the primary button is the confirmation, scrim-tap = cancel. |
+| Modal scrim tap | Dismisses modal (calls `onDismiss`). Destructive modals (Delete group) should still scrim-dismiss — the primary button is the confirmation, scrim-tap = dismiss. |
+| Modal dismiss labels | Every modal passes a context-specific `cancelLabel`; the generic word `Cancel` is banned by the copywriting contract and is dev-mode-warned by the `Modal` component. |
 | Keyboard handling | `KeyboardAvoidingView` on create-group and join-with-code screens (inherited P1 pattern). Tapping outside dismisses keyboard. |
 | Deep-link arrival | `app/invite/[code].tsx` is the Expo Router target for `accountibuzz://invite/*`. Root layout checks `pending_invite_code` in `expo-secure-store` post-auth and re-routes. |
 | Auth detour | Before routing to `/login`, `await SecureStore.setItemAsync('pending_invite_code', code)`. On post-auth root-layout mount, if key exists, `SecureStore.getItemAsync` → `router.replace('/invite/{code}')` → clear key on successful redemption only (preserve on failure so user can retry). |
@@ -442,7 +470,7 @@ Inherited from Phase 1. P2-specific additions:
 | Invite code readability | `accessibilityLabel` on code chip reads the code letter-by-letter: `"Invite code: A, B, C, D, dash, E, F, 1, 2"` for screen readers. Otherwise VoiceOver reads "ABCD-EF12" as a word. |
 | Segmented control | Each segment has `accessibilityRole="button"` and `accessibilityState={{ selected: boolean }}`. The whole control has `accessibilityLabel="Submission type"`. |
 | Admin badge | Badge gets `accessibilityLabel="Admin"` — readers hear "ADMIN" not "A-D-M-I-N". |
-| Modal | `accessibilityViewIsModal={true}` on sheet; title gets `accessibilityRole="header"`. Primary action gets `accessibilityRole="button"`. |
+| Modal | `accessibilityViewIsModal={true}` on sheet; title gets `accessibilityRole="header"`. Primary action gets `accessibilityRole="button"`. Dismiss button's `accessibilityLabel` is the context-specific `cancelLabel` (e.g. "Stay in group") — never a generic "Cancel". |
 | Dismiss × icons | `accessibilityLabel="Close"` + `accessibilityRole="button"` + 44×44pt hit slop. |
 | Member-cap state copy | Read by screen reader as part of the member list section — not hidden decoration. |
 | Color-only cues forbidden | Error under code-entry is red border + red helper text + error icon (Feather `alert-circle`). Success (code-copied) is `--success` color + checkmark icon. |
@@ -475,7 +503,7 @@ No token changes. `src/theme/tokens.ts` is unchanged — P2 screens import and c
 - [ ] Dimension 1 Copywriting: PASS
 - [ ] Dimension 2 Visuals: PASS
 - [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
+- [ ] Dimension 4 Typography: PASS (5 sizes / 3 weights are user-locked exceptions from Phase 1 — see Typography §Locked Exceptions)
 - [ ] Dimension 5 Spacing: PASS
 - [ ] Dimension 6 Registry Safety: PASS
 
@@ -487,15 +515,17 @@ No token changes. `src/theme/tokens.ts` is unchanged — P2 screens import and c
 
 | Source | Decisions Used |
 |--------|---------------|
-| `01-UI-SPEC.md` | Full token inheritance: color palette, typography, spacing, radii, elevation, button/input/avatar primitives, voice, tap-feedback contract, a11y baseline |
+| `01-UI-SPEC.md` | Full token inheritance: color palette, typography (5 sizes / 3 weights — user-locked), spacing (incl. 12px exception), radii, elevation, button/input/avatar primitives, voice, tap-feedback contract, a11y baseline |
+| `01-CONTEXT.md` | Confirms Phase 1 typography + spacing tokens are user-locked from `design_refs/design_token_2.png` (Lovable-generated, user-supplied 2026-04-21) — ratifies the locked-exception path for the size-count and weight-count deviations |
 | `02-CONTEXT.md` | D-01 through D-20 (all locked) — invite model, deep-link strategy, code format, share message, screen inventory, form fields, segmented control choice, timezone default, create-group post-destination, admin-can't-leave branching |
 | `REQUIREMENTS.md` | GRP-01..05, INV-01..03 (screens and states trace 1:1) |
 | `ROADMAP.md` | Phase 2 success criteria binding — soft cap 10, leave-group flow, drill into detail |
 | `src/theme/tokens.ts` | Verified all referenced tokens exist; no additions needed |
 | `src/components/` | Inventoried P1 primitives reused: PrimaryButton, SecondaryButton, GhostButton, DestructiveTextButton, TextInput, FormLabel, FormError, ScreenContainer, ScreenHeader, Avatar, AvatarInitials, Logo |
-| Claude's discretion (per CONTEXT) | Error-state copy strings (full mapping above), loading skeletons (3-row pattern for list, block-line-block for detail), deep-link auth-detour routing (secure-store + root-layout replay), IANA picker choice (hand-rolled, no lib) |
+| Claude's discretion (per CONTEXT) | Error-state copy strings (full mapping above), loading skeletons (3-row pattern for list, block-line-block for detail), deep-link auth-detour routing (secure-store + root-layout replay), IANA picker choice (hand-rolled, no lib), context-specific modal dismiss labels (`Stay in group`, `Keep my admin role`, `Keep the group`, `Keep current code`, `Never mind`) |
 
 ---
 
 *Phase: 02-groups-invites*
 *UI-SPEC drafted: 2026-04-24*
+*Revised: 2026-04-24 — fixed modal dismiss labels (no more `Cancel`); documented typography 5-sizes / 3-weights as user-locked exception from Phase 1 Lovable tokens*
