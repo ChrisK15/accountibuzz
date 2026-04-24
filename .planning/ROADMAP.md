@@ -45,8 +45,8 @@
   4. Group membership is capped at 10 members (soft cap enforced)
   5. User can leave a group they belong to
 **Plans**: 7 plans
-- [ ] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
-- [ ] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
+- [x] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
+- [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [ ] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [ ] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
@@ -65,8 +65,8 @@
   4. Admin sees a swipe-style queue of pending submissions for groups they admin and can approve or reject (with optional reason) — RLS prevents non-admins from reviewing
   5. Rejected submitters are notified so they can resubmit before cutoff
 **Plans**: 7 plans
-- [ ] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
-- [ ] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
+- [x] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
+- [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [ ] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [ ] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
@@ -85,8 +85,8 @@
   4. Feed surfaces which members have not submitted yet today, and shows missed-day tombstones for yesterday's misses
   5. Streak logic is consistent with the group's IANA timezone (server `local_date`, unique `(group_id, user_id, local_date)` constraint)
 **Plans**: 7 plans
-- [ ] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
-- [ ] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
+- [x] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
+- [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [ ] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [ ] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
@@ -105,8 +105,8 @@
   4. At each group's local midnight, `pg_cron` rolls over the day — members without an approved submission have their streak reset and a tombstone is created; the job is idempotent and DST-safe
   5. Push delivery goes through the `notifications_outbox` → `push-dispatch` edge function → Expo Push Service flow (no direct APNs/FCM)
 **Plans**: 7 plans
-- [ ] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
-- [ ] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
+- [x] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
+- [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [ ] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [ ] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
@@ -124,8 +124,8 @@
   4. Final RLS audit passes: every public-schema table has policies, `storage.objects` policies for `submissions` bucket match table policies, ex-members cannot fetch media via signed URL
   5. `expo-doctor` runs green in CI; app icon, splash, and core copy are reviewed and finalized
 **Plans**: 7 plans
-- [ ] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
-- [ ] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
+- [x] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
+- [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [ ] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [ ] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
