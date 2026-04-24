@@ -21,3 +21,15 @@ Items discovered during phase 02 execution that are OUT OF SCOPE for the plan in
   - Version mismatches: `@react-native-async-storage/async-storage` (major: 2.2.0 expected / 3.0.2 found), `react-native-safe-area-context` (~5.6.2 / 5.7.0), `react-native-screens` (~4.23.0 / 4.24.0), `react-native` (0.83.6 / 0.83.1)
 - **Scope check:** All pre-existing — untouched by plan 02-01's two additions.
 - **Proposed fix (deferred):** Address in a dedicated dependency-hygiene plan or as part of phase 06 pre-rollout hardening.
+- **RESOLVED 02-07 (2026-04-24):** All 4 version mismatches and the missing `expo-constants` peer dep were fixed at phase close as a prerequisite for the automated phase gate. `npx expo install --fix` + `npx expo install expo-constants` brought everything to SDK 55 expected versions; expo-doctor now reports 18/18 checks passing. Committed in `15ae9e9 chore(02-07): align deps with SDK 55 + install expo-constants peer dep`.
+
+## 02-07 (discovered 2026-04-24)
+
+### Pre-existing Android-only prebuild warnings
+
+- **Found during:** Task 2 prep (`npx expo prebuild --clean` before iOS UAT)
+- **Warnings surfaced:**
+  - `EDGE_TO_EDGE_PLUGIN: edgeToEdgeEnabled customization is no longer available — Android 16 makes edge-to-edge mandatory. Remove the edgeToEdgeEnabled entry from your app.json/app.config.js.`
+  - `userInterfaceStyle: Install expo-system-ui in your project to enable this feature`
+- **Scope check:** Android-only. Phase 1 explicitly deferred Android UAT (no Android env set up per STATE.md), Phase 2 inherits that stance. iOS prebuild + UAT proceed unaffected.
+- **Proposed fix (deferred to Phase 6):** Remove `edgeToEdgeEnabled` from `app.json`; `npx expo install expo-system-ui`. Validate on a real Android dev build during phase 06 pre-rollout hardening when the Android env is stood up.
