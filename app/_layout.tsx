@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../src/lib/queryClient';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
 import { AuthProvider, useSession } from '../src/features/auth/AuthProvider';
+import { usePendingInviteReplay } from '../src/features/groups/usePendingInviteReplay';
 
 function useProtectedRoute() {
   const { session, loading, recoveryPending } = useSession();
@@ -40,6 +41,11 @@ function useProtectedRoute() {
 
 function RootGate() {
   useProtectedRoute();
+  // P2 auth-detour replay: after a user authenticates from a deep-link invite,
+  // this hook reads PENDING_INVITE_KEY from SecureStore and routes back to
+  // /invite/[code]. Ordered AFTER useProtectedRoute so the recovery-password
+  // gate still wins priority (its effect fires first). See 02-PATTERNS.md §699.
+  usePendingInviteReplay();
   return <Stack screenOptions={{ headerShown: false }} />;
 }
 
