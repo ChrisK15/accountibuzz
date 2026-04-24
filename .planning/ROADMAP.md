@@ -49,8 +49,8 @@
 - [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [x] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
-- [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
-- [ ] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
+- [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
+- [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
 - [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 **UI hint**: yes
 
@@ -69,8 +69,8 @@
 - [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [x] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
-- [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
-- [ ] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
+- [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
+- [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
 - [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 **UI hint**: yes
 
@@ -89,8 +89,8 @@
 - [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [x] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
-- [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
-- [ ] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
+- [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
+- [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
 - [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 **UI hint**: yes
 
@@ -109,8 +109,8 @@
 - [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [x] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
-- [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
-- [ ] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
+- [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
+- [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
 - [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 
 ### Phase 6: Pre-Rollout Hardening
@@ -128,8 +128,8 @@
 - [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
 - [x] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
-- [ ] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
-- [ ] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
+- [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
+- [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
 - [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 **UI hint**: yes
 
