@@ -7,6 +7,13 @@ describe('AvatarInitials helpers', () => {
     expect(initialsFor('Alex Rivera')).toBe('AR');
     expect(initialsFor('Mary Jane Parker')).toBe('MP');
   });
+  it('handles surrogate-pair (emoji) leading/trailing words (WR-05)', () => {
+    // Code-point-safe iteration: emoji first word → full emoji (no lone surrogate).
+    expect(initialsFor('🔥 Flame')).toBe('🔥F');
+    expect(initialsFor('Alex 🔥')).toBe('A🔥');
+    // Single-word emoji-only name → emoji glyph, not a lone surrogate.
+    expect(initialsFor('🔥')).toBe('🔥');
+  });
   it('hue is deterministic per input', () => {
     expect(hueFor('Alex')).toBe(hueFor('Alex'));
     expect(hueFor('Alex')).not.toBe(hueFor('Bailey'));

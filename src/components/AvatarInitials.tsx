@@ -12,8 +12,11 @@ function djb2(s: string): number {
 export function initialsFor(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  // WR-05: Iterate by code point (not UTF-16 code unit) so emoji-first names
+  // like '🔥 Flame' don't render as a lone high surrogate followed by 'F'.
+  const firstChar = (s: string) => Array.from(s)[0] ?? '';
+  if (parts.length === 1) return firstChar(parts[0]).toUpperCase();
+  return (firstChar(parts[0]) + firstChar(parts[parts.length - 1])).toUpperCase();
 }
 
 export function hueFor(name: string): number {
