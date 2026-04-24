@@ -2,120 +2,93 @@
 phase: 01-foundation
 fixed_at: 2026-04-22T00:00:00Z
 review_path: .planning/phases/01-foundation/01-REVIEW.md
-iteration: 1
-findings_in_scope: 10
-fixed: 10
+iteration: 2
+findings_in_scope: 5
+fixed: 5
 skipped: 0
 status: all_fixed
 ---
 
-# Phase 01: Code Review Fix Report
+# Phase 01: Code Review Fix Report (Iteration 2)
 
 **Fixed at:** 2026-04-22
-**Source review:** `.planning/phases/01-foundation/01-REVIEW.md`
-**Iteration:** 1
+**Source review:** `.planning/phases/01-foundation/01-REVIEW.md` (deep re-review, post-0002)
+**Iteration:** 2 (first iteration's report superseded; see git history for iter-1 report content)
 
 **Summary:**
-- Findings in scope: 10 (1 Critical + 9 Warning)
-- Fixed: 10
+- Findings in scope: 5 (all Warnings; 9 Info findings out of scope per `fix_scope=critical_warning`)
+- Fixed: 5
 - Skipped: 0
 
-SQL fixes live in a NEW append-only migration `supabase/migrations/0002_phase1_review_fixes.sql` per the Supabase append-only constraint. All migrations were re-applied locally via `npx supabase db reset`, all pgTAP tests pass, `tsc --noEmit` is clean, and `npx jest` reports 27/27 passing after each fix.
+All five warnings from the 2026-04-22 deep re-review were fixed. Each fix is an atomic commit. The SQL changes are in a new append-only migration (`0003_phase1_review_fixes_2.sql`) — 0001 and 0002 were NOT edited. Post-fix verification: `npx tsc --noEmit` clean, `npx jest` 31/31 passing (4 new test cases added), `supabase db reset` applies 0001+0002+0003 cleanly, `supabase test db` passes 9/9 existing pgTAP tests.
 
 ## Fixed Issues
 
-### CR-01: `submissions_update_admin_or_owner_pending` permits owner self-approval (no WITH CHECK)
+### WR-05: `initialsFor` mangles surrogate-pair names
 
-**Files modified:** `supabase/migrations/0002_phase1_review_fixes.sql`
-**Commit:** 8bbbad4
-**Applied fix:** Dropped the single monolithic UPDATE policy and replaced it with two policies with explicit `WITH CHECK`: (1) `submissions_update_owner_pending_content` — owner may only touch rows where `user_id = auth.uid() AND status = 'pending'` on both pre- and post-image; (2) `submissions_update_admin_review` — admin-only review lane keyed on `is_group_admin(group_id)`. Added a BEFORE UPDATE trigger `submissions_owner_immutable_trigger` (SECURITY DEFINER) that pins `status`, `user_id`, `group_id`, `local_date`, `reviewed_by`, `reviewed_at`, `rejection_reason` on owner edits — enforcing column-level immutability the RLS layer cannot express. **Requires human verification:** semantic change, no pgTAP coverage yet for the new policies. Suggest adding a pgTAP test in Phase 2 that impersonates an owner, attempts `update submissions set status='approved' where id = own_row` and asserts the update is rejected.
+**Files modified:** `src/components/AvatarInitials.tsx`, `tests/avatar-initials.test.ts`
+**Commit:** 52c533f
+**Applied fix:** Replaced UTF-16 code-unit indexing (`parts[0].slice(0,1)`, `parts[0][0]`) with code-point iteration via `Array.from(s)[0]`. Added three new test cases: `'🔥 Flame' → '🔥F'`, `'Alex 🔥' → 'A🔥'`, `'🔥' → '🔥'` (single-word emoji-only name). All 4 existing tests still pass.
 
-### WR-01: Recovery-session gate bypass — user could land in `/(app)/profile` without setting a new password
-
-**Files modified:** `src/features/auth/AuthProvider.tsx`, `app/_layout.tsx`
-**Commit:** 31353d6 (combined with WR-05 since both touch AuthProvider's single useEffect)
-**Applied fix:** Added `recoveryPending: boolean` to the `AuthContextValue`. The auth-state listener now flips `recoveryPending=true` on `PASSWORD_RECOVERY` and flips it back to `false` on `USER_UPDATED` / `SIGNED_OUT`. `useProtectedRoute` in `_layout.tsx` short-circuits while `recoveryPending` is true — if the user is not on `/(auth)/reset-password` it forces them back there, regardless of session presence. Closes the exploit where a user could hit the "Request a new code" link (or hardware back / iOS swipe) after `verifyOtp` succeeded and be auto-promoted into `/(app)/profile`. All existing jest tests pass (`tests/auth-schemas.test.ts`, `tests/signup.test.ts`, `tests/signout.test.ts` untouched).
-
-### WR-02: `storage.objects` RLS is not explicitly enabled by the migration
-
-**Files modified:** `supabase/migrations/0002_phase1_review_fixes.sql`, `.github/workflows/rls-check.yml`
-**Commit:** 776a9da
-**Applied fix:** `ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY` cannot be run as the migration role (`postgres`) — `storage.objects` is owned by `supabase_storage_admin`, which yields `permission denied (42501) must be owner of table objects`. Instead the migration *asserts* the invariant via a DO-block that raises an exception if `pg_tables.rowsecurity` is false on `storage.objects` — and a CI probe in `rls-check.yml` mirrors the check. If Supabase ever ships with RLS off, the migration and CI both fail loudly with actionable error messages.
-
-### WR-03: `invites_update_authenticated` allowed any logged-in user to mutate any invite row
-
-**Files modified:** `supabase/migrations/0002_phase1_review_fixes.sql`
-**Commit:** 1e3e2fb
-**Applied fix:** Dropped `invites_update_authenticated` and replaced with `invites_mark_used_as_self` — USING `used_at is null` (can only touch unused invites), WITH CHECK `used_by = auth.uid() and used_at is not null` (the caller must mark themselves, setting a timestamp). Stub-level; full redeem semantics ship in P2 via a SECURITY DEFINER RPC.
-
-### WR-04: `group_members` policies self-reference via raw subquery
-
-**Files modified:** `supabase/migrations/0002_phase1_review_fixes.sql`
-**Commit:** dccff97
-**Applied fix:** Dropped all four `group_members` policies (SELECT / INSERT / DELETE / UPDATE) and recreated them using the SECURITY DEFINER helpers `is_group_member(group_id)` and `is_group_admin(group_id)` declared in 0001. Folds in IN-04 by adding `WITH CHECK (public.is_group_admin(group_id))` to `group_members_update_admin`. **Requires human verification:** small semantic shift — the old "admin" branch matched via `group_members.role='admin'`; the new branch matches via `groups.admin_user_id = auth.uid()`. Equivalent today (group creator is the only admin) but P2's create-group RPC must keep the two in sync (see IN-01 landmine for context).
-
-### WR-05: `AuthProvider` swallows errors from `getSession()` and leaves `loading: true` forever
-
-**Files modified:** `src/features/auth/AuthProvider.tsx`
-**Commit:** 31353d6 (combined with WR-01)
-**Applied fix:** Rewrote the `useEffect` to use `.then(...).catch(...).finally(...)` so `setLoading(false)` always fires — even if the storage adapter throws (`aesjs.utils.hex.toBytes` on corrupted AsyncStorage ciphertext). Catches the rejection with a `console.warn` rather than propagating it.
-
-### WR-06: `useUpdateProfile` / `useAvatarUpload` accepted `userId: string` and silently no-op'd on empty string
-
-**Files modified:** `src/features/profile/useUpdateProfile.ts`, `src/features/profile/useAvatarUpload.ts`, `app/(app)/profile.tsx`
-**Commit:** ca67411
-**Applied fix:** Changed both hook signatures to `string | undefined`, with `if (!userId) throw new Error(...)` at the top of each mutationFn (plus a guard inside `pickAndUploadAvatar`). Profile screen updated to pass `user?.id` directly instead of coercing to `''`. All existing jest tests pass (`tests/avatar-upload.test.ts` still uses a concrete `'user-1'` id).
-
-### WR-07: `handleLogout` discarded `signOut` errors; UI got stuck if signout failed
+### WR-04: Onboarding "Skip for now" button is a literal no-op
 
 **Files modified:** `app/(app)/profile.tsx`
-**Commit:** 7d0c0e5 (combined with WR-08)
-**Applied fix:** Destructured `{ error } = await supabase.auth.signOut()` and raised a second `Alert.alert` on failure so the user sees feedback instead of silently tapping an unresponsive button.
+**Commit:** 4fcbf4f
+**Applied fix:** Removed the button entirely (option (a) from the review). P1 has no legitimate partial-onboarding state — `onboarding = display_name === ''` is the only gate, and exit requires a saved display name. Left a breadcrumb comment in place of the removed JSX so a future contributor re-adding a skip path understands the prerequisite: any "skip" flow must write a placeholder display name or redefine the `onboarding` predicate. The Continue button was already the only legitimate path out of onboarding, so there is no functional regression.
 
-### WR-08: Avatar URL cache-busting missing — `expo-image` showed stale avatar after re-upload
+### WR-01: Recovery-pending flag does not survive app kill (cold-start bypass)
 
-**Files modified:** `app/(app)/profile.tsx`
-**Commit:** 7d0c0e5 (combined with WR-07)
-**Applied fix:** `avatarUrl` now appends `?v=${encodeURIComponent(profile.updated_at)}`. Because `useUpdateProfile` and `useAvatarUpload` both bump `updated_at`, the cache-busting query string changes on every upload, defeating `expo-image`'s URL cache.
+**Files modified:** `src/features/auth/AuthProvider.tsx`, `tests/auth-recovery-cold-start.test.tsx` (new)
+**Commit:** 46262ad
+**Applied fix:** Persist `recoveryPending` to AsyncStorage under key `accountibuzz.recoveryPending` on `PASSWORD_RECOVERY`; clear it on `USER_UPDATED` | `SIGNED_OUT`. On cold start, restore the flag *alongside* `getSession()` via `Promise.all(...)` so the gate effect in `app/_layout.tsx` reads both the session and the flag on the same render — otherwise a one-frame race lets the gate redirect to `/(app)` before the flag arrives. AsyncStorage (not SecureStore) per constraint — the flag is a boolean, not a secret.
 
-### WR-09: Password reset depends on an undocumented Supabase dashboard email-template edit
+**Stale-flag guard:** only hydrate `recoveryPending=true` when the restored session is non-null. A user who cleared app data but left the flag behind won't be pinned to `/(auth)` with nothing to redirect to.
 
-**Files modified:** `README.md`
-**Commit:** 29b1315
-**Applied fix:** Expanded the Dashboard → Authentication setup step to call out the `Email Templates → Reset Password` edit (swap `{{ .ConfirmationURL }}` for `{{ .Token }}`), reference the Phase 1 summary, and explain the symptom a fresh-project user would otherwise hit (link-style email + "invalid token"). Did not attempt to pin the template in `supabase/config.toml` — maintainer confirmed OTP design is intentional and the gap is documentation only (per additional-constraints).
+Added `tests/auth-recovery-cold-start.test.tsx` (new file) with three cases:
+1. Flag + session both present → `recoveryPending=true` hydrates (the primary bypass fix).
+2. Flag present but no session → `recoveryPending=false` (stale-flag guard).
+3. No flag persisted → `recoveryPending=false` (clean slate).
 
-## Skipped Issues
+Uses `react-test-renderer` directly — `@testing-library/react-native`'s `render` had a flaky interaction with the jest-expo preset + our minimal RN mock that produced "Can't access .root on unmounted test renderer". Functionally equivalent for context-capture.
 
-None — all 10 in-scope findings were fixed.
+### WR-02 + WR-03: Admin cross-group submission moves and `reviewed_by` spoofing
+
+**Files modified:** `supabase/migrations/0003_phase1_review_fixes_2.sql` (new)
+**Commit:** 9b45500
+**Applied fix:** Single new migration (append-only; 0001 and 0002 untouched; `create or replace function` + `drop trigger if exists` idempotent against local + remote current state). Extended `submissions_owner_immutable` (from 0002) with an admin branch that:
+
+- **WR-02 fix:** pins `group_id`, `user_id`, `local_date`, `media_path`, `media_type` as immutable on admin UPDATE paths. Admin may now only mutate the reviewed allowlist: `status`, `reviewed_by`, `reviewed_at`, `rejection_reason`. Closes the "admin of two groups moves row between them" escape (pre-image/post-image evaluation split) AND the "move pending row to sidestep the `(group_id, user_id, local_date)` UNIQUE" escape.
+- **WR-03 fix:** whenever an admin transitions `status` to `'approved'` or `'rejected'`, `reviewed_by` must equal `auth.uid()`. Prevents crediting the decision to another admin's uuid — load-bearing for P4 streak/points triggers that key off `reviewed_by` for attribution.
+
+Trigger approach (vs. WITH CHECK) chosen per constraint. WITH CHECK alone cannot pin `reviewed_by = auth.uid()` against WR-03 (evaluates post-image only; doesn't coordinate with the caller identity as the trigger's `auth.uid()` call does), so a trigger fence is load-bearing for WR-03 regardless — co-locating WR-02 into the same function keeps the shape policy discoverable in one place.
+
+**Requires human verification:** the admin-branch allowlist is new behavior. No pgTAP coverage added in this pass — that's IN-07 scope (Info, out of fix_scope). Suggested follow-up: add `supabase/tests/submissions_admin_immutable.sql` that seeds two admin'd groups, impersonates the admin, attempts a cross-group move, and asserts the trigger raises; and that attempts `set status='approved', reviewed_by=<other_uuid>` and asserts raise.
 
 ---
 
 ## Verification summary
 
 After each fix:
-- **TS/TSX changes:** `npx tsc --noEmit` (clean) + `npx jest` (27/27 passing).
-- **SQL changes:** `npx supabase db reset` (applies 0001 + 0002 cleanly) + `npx supabase test db` (9/9 pgTAP tests passing).
-- **Docs-only (WR-09):** visual diff against REVIEW.md-specified content.
+- **TS/TSX changes (WR-01, WR-04, WR-05):** `npx tsc --noEmit` (clean) + `npx jest` (31/31 passing; 4 new tests added).
+- **SQL changes (WR-02 + WR-03):** `supabase db reset` applies 0001+0002+0003 cleanly; `supabase test db` passes 9/9 existing pgTAP tests.
+- **No rollbacks:** every fix applied cleanly on first attempt.
 
-No fixes were rolled back. No regressions introduced to the existing test suite.
+## Out-of-scope findings (IN-01..IN-09)
 
-## Carried-over landmines (out of scope for iteration 1)
+Not fixed — `fix_scope=critical_warning`. Quick triage:
 
-These were flagged in REVIEW.md as Info-level and are *not* fixed in this pass (fix_scope = critical_warning). Noted here so they are not lost:
-
-- **IN-01** — group creator is not auto-enrolled in `group_members`. Fix in P2 `create_group` RPC or via an AFTER INSERT trigger on `public.groups`.
-- **IN-02** — adjacent to CR-01; already partially addressed by the `submissions_owner_immutable_trigger` added in this iteration (it already pins `local_date`, `group_id`, `user_id`). No separate fix needed.
-- **IN-03** — policy-name collision between `public.submissions` and `storage.objects`. Rename in a future migration.
-- **IN-04** — folded into WR-04's rewrite (see `group_members_update_admin` now carries `WITH CHECK`).
-- **IN-05** — `seed.sql` hardcoded password. Add a WARNING header in a future docs pass.
-- **IN-06** — "Skip for now" no-op button. UX cleanup.
-- **IN-07** — `useProfile` non-null assertion. Low-priority refactor.
-- **IN-08** — `expo-file-system/legacy` TODO comment. Add when pinning SDK 56.
-- **IN-09** — no UI surface for mutation errors on profile screen. UX follow-up.
-- **IN-10** — fragile `LIKE` probe in `rls-check.yml`. Tighten probe in a future CI pass.
+- **IN-01 / IN-01b:** withdrawn in review; no action needed.
+- **IN-02:** `invites_mark_used_as_self` column-level looseness. Landing in P2 when SECURITY DEFINER redeem_invite RPC ships; policy drops at that point.
+- **IN-03:** `group_members.role` vs `groups.admin_user_id` drift. Codify in the P2 create-group plan (either drop `role` or add a mirror trigger).
+- **IN-04:** Coupling-comment between `handle_submission_approval` and `submissions_owner_immutable`. One-liner cross-reference comment; defer to next migration.
+- **IN-05:** RLS probe substring false-positive risk. Tighten in a future CI pass.
+- **IN-06:** Client-supplied `updated_at` on profile mutations. Candidate for a BEFORE UPDATE trigger in a later migration.
+- **IN-07:** pgTAP coverage gaps (owner-immutable, invites redeem-self, storage avatars path). Three new test files worth a dedicated pass.
+- **IN-08:** README Expo Go vs dev-build wording. Docs-only.
+- **IN-09:** `KeyboardAvoidingView` Android behavior. UX fix before Android UAT.
 
 ---
 
 _Fixed: 2026-04-22_
 _Fixer: Claude (gsd-code-fixer)_
-_Iteration: 1_
+_Iteration: 2_
