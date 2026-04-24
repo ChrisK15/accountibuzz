@@ -138,14 +138,10 @@ export default function Profile() {
               loading={isSubmitting}
             />
           </View>
-          <View style={{ marginTop: t.spacing.sm }}>
-            <GhostButton
-              label="Skip for now"
-              onPress={() => {
-                /* stays on profile view state; display_name remains empty so we stay in onboarding until saved */
-              }}
-            />
-          </View>
+          {/* WR-04: removed no-op "Skip for now" button. P1 onboarding has no
+              partial/skip state — `onboarding = display_name === ''` only exits
+              once a display name is saved. Adding a display name is required to
+              leave onboarding; a skip button that does nothing invites rage-taps. */}
         </ScreenContainer>
       </KeyboardAvoidingView>
     );
