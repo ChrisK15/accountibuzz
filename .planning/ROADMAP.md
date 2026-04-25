@@ -51,7 +51,7 @@
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
 - [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
-- [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
+- [x] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 **UI hint**: yes
 
 ### Phase 3: Capture & Admin Review
@@ -71,7 +71,7 @@
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
 - [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
-- [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
+- [x] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 **UI hint**: yes
 
 ### Phase 4: Social Surfaces
@@ -91,7 +91,7 @@
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
 - [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
-- [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
+- [x] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 **UI hint**: yes
 
 ### Phase 5: Push & Daily Rollover
@@ -111,7 +111,7 @@
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
 - [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
-- [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
+- [x] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 
 ### Phase 6: Pre-Rollout Hardening
 **Goal**: The app is ready for real friend-group testing — retention mechanics, admin health signals, and a final security pass are in place before anyone outside the builder touches it.
@@ -130,7 +130,7 @@
 - [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
 - [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
 - [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
-- [ ] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
+- [x] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
 **UI hint**: yes
 
 ## Progress
