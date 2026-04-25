@@ -58,11 +58,14 @@ export default function Profile() {
     resolver: zodResolver(profileUpdateSchema),
     mode: 'onBlur',
     defaultValues: { display_name: profile?.display_name ?? '' },
-    values: profile ? { display_name: profile.display_name } : undefined,
+    // WR-03: guard against a null display_name reaching RHF — the Zod schema
+    // requires string, and null would leave Save permanently disabled.
+    values: profile ? { display_name: profile.display_name ?? '' } : undefined,
   });
 
   if (!user || isPending || !profile) return null;
-  const onboarding = profile.display_name === '';
+  // WR-03: route null display_name through onboarding too (not just '' === '').
+  const onboarding = !profile.display_name;
 
   async function handleLogout() {
     Alert.alert('Log out?', "You'll need to log back in to keep posting.", [
