@@ -38,6 +38,7 @@ import { shareInvite } from '../../../../src/features/groups/shareInvite';
 import { labelFor } from '../../../../src/features/groups/timezones';
 import { useSession } from '../../../../src/features/auth/AuthProvider';
 import { useTheme } from '../../../../src/theme/useTheme';
+import { supabase } from '../../../../src/lib/supabase';
 import {
   ScreenContainer,
   Avatar,
@@ -46,6 +47,11 @@ import {
   InviteCodeChip,
   Modal,
 } from '../../../../src/components';
+
+function avatarUrlFor(path: string | null | undefined): string | null {
+  if (!path) return null;
+  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+}
 
 type ModalKind =
   | null
@@ -642,6 +648,7 @@ function MemberRowItem({
 }) {
   const t = useTheme();
   const name = member.display_name ?? 'Unnamed';
+  const imageUri = avatarUrlFor(member.avatar_path);
   return (
     <View
       style={{
@@ -651,7 +658,7 @@ function MemberRowItem({
         gap: t.spacing.md,
       }}
     >
-      <Avatar name={name} size={40} />
+      <Avatar name={name} imageUri={imageUri} size={40} />
       <View style={{ flex: 1 }}>
         <Text
           style={[t.fonts.body, { color: t.colors.textStrong }]}
@@ -728,6 +735,7 @@ function TransferPickerList({
       {members.map((m) => {
         const isSelected = selected === m.user_id;
         const name = m.display_name ?? 'Unnamed';
+        const imageUri = avatarUrlFor(m.avatar_path);
         return (
           <Pressable
             key={m.user_id}
@@ -748,7 +756,7 @@ function TransferPickerList({
               borderColor: isSelected ? t.colors.accent : t.colors.border,
             }}
           >
-            <Avatar name={name} size={32} />
+            <Avatar name={name} imageUri={imageUri} size={32} />
             <Text
               style={[t.fonts.body, { color: t.colors.textStrong, flex: 1 }]}
               numberOfLines={1}
