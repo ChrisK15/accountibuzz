@@ -48,9 +48,15 @@ import {
   Modal,
 } from '../../../../src/components';
 
-function avatarUrlFor(path: string | null | undefined): string | null {
+// WR-01: append `?v={updated_at}` so expo-image busts its URL cache after a
+// member uploads a new avatar to the stable `{userId}/avatar.jpg` path.
+function avatarUrlFor(
+  path: string | null | undefined,
+  updatedAt?: string | null,
+): string | null {
   if (!path) return null;
-  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  const base = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  return updatedAt ? `${base}?v=${encodeURIComponent(updatedAt)}` : base;
 }
 
 type ModalKind =
@@ -648,7 +654,7 @@ function MemberRowItem({
 }) {
   const t = useTheme();
   const name = member.display_name ?? 'Unnamed';
-  const imageUri = avatarUrlFor(member.avatar_path);
+  const imageUri = avatarUrlFor(member.avatar_path, member.updated_at);
   return (
     <View
       style={{
@@ -735,7 +741,7 @@ function TransferPickerList({
       {members.map((m) => {
         const isSelected = selected === m.user_id;
         const name = m.display_name ?? 'Unnamed';
-        const imageUri = avatarUrlFor(m.avatar_path);
+        const imageUri = avatarUrlFor(m.avatar_path, m.updated_at);
         return (
           <Pressable
             key={m.user_id}
