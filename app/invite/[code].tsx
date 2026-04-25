@@ -223,6 +223,10 @@ export default function InviteLandingScreen() {
             loading={redeem.isPending}
           />
         </View>
+        <GhostButton
+          label="Not now"
+          onPress={() => router.replace('/(app)/')}
+        />
         {joinError ? (
           <Text
             style={[
