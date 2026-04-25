@@ -18,6 +18,12 @@ function useProtectedRoute() {
     // exists but the user still needs to call updateUser on the reset screen.
     // Keep them on /(auth)/reset-password until they set a new password.
     const onResetPassword = inAuth && (segments as string[])[1] === 'reset-password';
+    // Invite-landing exemption: /invite/[code] lives outside both (auth) and
+    // (app) so it renders for both unauthed users (preview + 'Sign in to join')
+    // and authed users (preview + 'Join group'). Without this exemption the
+    // gate would bounce unauthed users to /(auth)/login and authed users to
+    // /(app)/, defeating the deep-link redemption flow (INV-02).
+    const onInviteLanding = segments[0] === 'invite';
 
     // WR-01: while a password-recovery session is pending (verifyOtp succeeded
     // but updateUser has not yet fired), pin the user to /(auth)/reset-password
@@ -31,9 +37,9 @@ function useProtectedRoute() {
       return;
     }
 
-    if (!session && !inAuth) {
+    if (!session && !inAuth && !onInviteLanding) {
       router.replace('/(auth)/login');
-    } else if (session && !inApp && !onResetPassword) {
+    } else if (session && !inApp && !onResetPassword && !onInviteLanding) {
       router.replace('/(app)/');
     }
   }, [session, loading, recoveryPending, segments, router]);
