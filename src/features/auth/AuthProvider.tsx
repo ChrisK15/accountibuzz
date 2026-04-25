@@ -8,6 +8,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
+import { queryClient } from '../../lib/queryClient';
 
 // WR-01 (iter 2): persist recovery intent across cold start. `PASSWORD_RECOVERY`
 // does not fire on cold start — only `INITIAL_SESSION` does — so if a user
@@ -72,6 +73,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (e === 'USER_UPDATED' || e === 'SIGNED_OUT') {
         setRecoveryPending(false);
         AsyncStorage.removeItem(RECOVERY_PENDING_KEY).catch(() => {});
+      }
+      // Clear all React Query caches on sign-out so the next signed-in user
+      // does not see stale data from the previous session. The cache key
+      // namespace is shared across users (e.g. ['groups']), so without this
+      // a sign-in immediately following a sign-out can render the previous
+      // user's empty/populated list. Caught during 02-07 manual UAT.
+      if (e === 'SIGNED_OUT') {
+        queryClient.clear();
       }
     });
     return () => {
