@@ -7,6 +7,8 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSession } from '../../src/features/auth/AuthProvider';
@@ -31,6 +33,7 @@ import {
 
 export default function Profile() {
   const t = useTheme();
+  const router = useRouter();
   const { user } = useSession();
   const { data: profile, isPending } = useProfile(user?.id);
   const [mode, setMode] = useState<'view' | 'edit'>('view');
@@ -158,9 +161,27 @@ export default function Profile() {
             alignItems: 'center',
             marginTop: t.spacing.xl,
             marginBottom: t.spacing.lg,
+            gap: t.spacing.md,
           }}
         >
-          <Text style={[t.fonts.heading2, { color: t.colors.textStrong }]}>
+          <Pressable
+            onPress={() => router.replace('/(app)/')}
+            accessibilityRole="button"
+            accessibilityLabel="Back to groups"
+            hitSlop={12}
+          >
+            <Feather
+              name="chevron-left"
+              size={28}
+              color={t.colors.textStrong}
+            />
+          </Pressable>
+          <Text
+            style={[
+              t.fonts.heading2,
+              { color: t.colors.textStrong, flex: 1 },
+            ]}
+          >
             Profile
           </Text>
           <GhostButton label="Edit" onPress={() => setMode('edit')} />
