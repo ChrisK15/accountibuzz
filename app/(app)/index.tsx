@@ -6,11 +6,13 @@
 //   • Empty: title + avatar profile shortcut, ScreenHeader + two CTAs.
 //   • Populated: title + '+' icon + kebab menu, FlatList with pull-to-refresh.
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
-  Alert,
+  ActionSheetIOS,
   FlatList,
+  Modal as RNModal,
+  Platform,
   Pressable,
   RefreshControl,
   Text,
@@ -54,18 +56,25 @@ export default function GroupsListScreen() {
     }?v=${encodeURIComponent(profile.updated_at)}`;
   }, [profile?.avatar_path, profile?.updated_at]);
 
+  // WR-05: kebab uses native ActionSheetIOS on iOS and a custom list modal
+  // on Android (RN Alert.alert is limited to 3 buttons with per-OEM quirks).
+  const [kebabOpen, setKebabOpen] = useState(false);
   const openKebab = () => {
-    Alert.alert('More', undefined, [
-      {
-        text: 'Join with a code',
-        onPress: () => router.push('/groups/join'),
-      },
-      {
-        text: 'Profile',
-        onPress: () => router.push('/profile'),
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Join with a code', 'Profile', 'Cancel'],
+          cancelButtonIndex: 2,
+          title: 'More',
+        },
+        (idx) => {
+          if (idx === 0) router.push('/groups/join');
+          else if (idx === 1) router.push('/profile');
+        },
+      );
+    } else {
+      setKebabOpen(true);
+    }
   };
 
   if (isPending) {
@@ -177,7 +186,123 @@ export default function GroupsListScreen() {
           />
         }
       />
+      {/* WR-05: Android kebab list. */}
+      <KebabSheetAndroid
+        visible={kebabOpen}
+        onDismiss={() => setKebabOpen(false)}
+        items={[
+          {
+            label: 'Join with a code',
+            onPress: () => {
+              setKebabOpen(false);
+              router.push('/groups/join');
+            },
+          },
+          {
+            label: 'Profile',
+            onPress: () => {
+              setKebabOpen(false);
+              router.push('/profile');
+            },
+          },
+        ]}
+      />
     </ScreenContainer>
+  );
+}
+
+// WR-05: Android kebab action sheet (mirrors the one in groups/[id]/index.tsx).
+function KebabSheetAndroid({
+  visible,
+  onDismiss,
+  items,
+}: {
+  visible: boolean;
+  onDismiss: () => void;
+  items: Array<{ label: string; onPress: () => void; destructive?: boolean }>;
+}) {
+  const t = useTheme();
+  const scrimBg =
+    t.name === 'dark' ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.45)';
+  return (
+    <RNModal
+      transparent
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onDismiss}
+    >
+      <Pressable
+        onPress={onDismiss}
+        style={{
+          flex: 1,
+          backgroundColor: scrimBg,
+          justifyContent: 'flex-end',
+        }}
+      >
+        <Pressable
+          onPress={() => {
+            /* swallow */
+          }}
+          style={{
+            backgroundColor: t.colors.surface,
+            borderTopLeftRadius: t.radii.lg,
+            borderTopRightRadius: t.radii.lg,
+            paddingVertical: t.spacing.md,
+          }}
+        >
+          {items.map((item, idx) => (
+            <Pressable
+              key={item.label}
+              onPress={item.onPress}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
+              style={({ pressed }) => ({
+                paddingVertical: t.spacing.lg,
+                paddingHorizontal: t.spacing.xl,
+                backgroundColor: pressed ? t.colors.surfaceMuted : 'transparent',
+                borderTopWidth: idx === 0 ? 0 : 1,
+                borderTopColor: t.colors.border,
+              })}
+            >
+              <Text
+                style={[
+                  t.fonts.body,
+                  {
+                    color: item.destructive
+                      ? t.colors.destructive
+                      : t.colors.textStrong,
+                    fontWeight: '600',
+                  },
+                ]}
+              >
+                {item.label}
+              </Text>
+            </Pressable>
+          ))}
+          <Pressable
+            onPress={onDismiss}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            style={({ pressed }) => ({
+              paddingVertical: t.spacing.lg,
+              paddingHorizontal: t.spacing.xl,
+              backgroundColor: pressed ? t.colors.surfaceMuted : 'transparent',
+              borderTopWidth: 1,
+              borderTopColor: t.colors.border,
+            })}
+          >
+            <Text
+              style={[
+                t.fonts.body,
+                { color: t.colors.textMuted, fontWeight: '500' },
+              ]}
+            >
+              Close
+            </Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </RNModal>
   );
 }
 

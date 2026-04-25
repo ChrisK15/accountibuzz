@@ -16,7 +16,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
+  ActionSheetIOS,
   Alert,
+  Modal as RNModal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -65,7 +68,12 @@ type ModalKind =
   | 'admin-leave-branch'
   | 'transfer-picker'
   | 'delete-confirm'
-  | 'regenerate-confirm';
+  | 'regenerate-confirm'
+  // WR-05: Android-only action sheet for the admin kebab. iOS uses the
+  // native ActionSheetIOS; Android RN `Alert.alert` silently drops buttons
+  // beyond the 3rd on some OEM skins, so we render a custom list sheet.
+  | 'kebab-admin-android'
+  | 'kebab-member-android';
 
 export default function GroupDetailScreen() {
   const t = useTheme();
@@ -224,32 +232,43 @@ export default function GroupDetailScreen() {
     }
   };
 
-  // Kebab items depend on role.
+  // WR-05: Kebab uses native ActionSheetIOS on iOS (HIG-compliant for >2
+  // choices with a destructive action) and a custom list modal on Android
+  // (RN `Alert.alert` only honors 3 buttons on Android, silently dropping
+  // the 4th on some OEM skins).
   const onKebabTap = () => {
-    const options: Array<{
-      text: string;
-      onPress?: () => void;
-      style?: 'destructive' | 'cancel';
-    }> = isAdmin
-      ? [
-          { text: 'Regenerate code', onPress: onRegenerateTap },
-          { text: 'Transfer admin', onPress: onTransferTap },
+    if (Platform.OS === 'ios') {
+      if (isAdmin) {
+        ActionSheetIOS.showActionSheetWithOptions(
           {
-            text: 'Delete group',
-            style: 'destructive',
-            onPress: onDeleteTap,
+            options: ['Regenerate code', 'Transfer admin', 'Delete group', 'Cancel'],
+            cancelButtonIndex: 3,
+            destructiveButtonIndex: 2,
+            title: 'More',
           },
-          { text: 'Cancel', style: 'cancel' },
-        ]
-      : [
+          (idx) => {
+            if (idx === 0) onRegenerateTap();
+            else if (idx === 1) onTransferTap();
+            else if (idx === 2) onDeleteTap();
+          },
+        );
+      } else {
+        ActionSheetIOS.showActionSheetWithOptions(
           {
-            text: 'Leave group',
-            style: 'destructive',
-            onPress: onLeaveTap,
+            options: ['Leave group', 'Cancel'],
+            cancelButtonIndex: 1,
+            destructiveButtonIndex: 0,
+            title: 'More',
           },
-          { text: 'Cancel', style: 'cancel' },
-        ];
-    Alert.alert('More', undefined, options);
+          (idx) => {
+            if (idx === 0) onLeaveTap();
+          },
+        );
+      }
+    } else {
+      // Android: show a custom list modal (see Modals section below).
+      setModal(isAdmin ? 'kebab-admin-android' : 'kebab-member-android');
+    }
   };
 
   const memberAtCap = members.length === 10;
@@ -601,7 +620,150 @@ export default function GroupDetailScreen() {
         }}
         cancelLabel="Keep current code"
       />
+
+      {/* WR-05: Android-only kebab action sheets. RN `Alert.alert` on Android
+          honors at most 3 buttons (positive/negative/neutral); the 4th is
+          silently dropped on some OEM skins. iOS uses ActionSheetIOS directly. */}
+      <KebabSheetAndroid
+        visible={modal === 'kebab-admin-android'}
+        onDismiss={() => setModal(null)}
+        items={[
+          {
+            label: 'Regenerate code',
+            onPress: () => {
+              setModal(null);
+              onRegenerateTap();
+            },
+          },
+          {
+            label: 'Transfer admin',
+            onPress: () => {
+              setModal(null);
+              onTransferTap();
+            },
+          },
+          {
+            label: 'Delete group',
+            destructive: true,
+            onPress: () => {
+              setModal(null);
+              onDeleteTap();
+            },
+          },
+        ]}
+      />
+      <KebabSheetAndroid
+        visible={modal === 'kebab-member-android'}
+        onDismiss={() => setModal(null)}
+        items={[
+          {
+            label: 'Leave group',
+            destructive: true,
+            onPress: () => {
+              setModal(null);
+              onLeaveTap();
+            },
+          },
+        ]}
+      />
     </ScreenContainer>
+  );
+}
+
+// WR-05: Android kebab action sheet. Custom list modal because the Modal
+// primitive requires a primaryAction and at most one secondary, which doesn't
+// fit a flat list of 3 choices.
+function KebabSheetAndroid({
+  visible,
+  onDismiss,
+  items,
+}: {
+  visible: boolean;
+  onDismiss: () => void;
+  items: Array<{ label: string; onPress: () => void; destructive?: boolean }>;
+}) {
+  const t = useTheme();
+  const scrimBg =
+    t.name === 'dark' ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.45)';
+  return (
+    <RNModal
+      transparent
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onDismiss}
+    >
+      <Pressable
+        onPress={onDismiss}
+        style={{
+          flex: 1,
+          backgroundColor: scrimBg,
+          justifyContent: 'flex-end',
+        }}
+      >
+        <Pressable
+          onPress={() => {
+            /* swallow */
+          }}
+          style={{
+            backgroundColor: t.colors.surface,
+            borderTopLeftRadius: t.radii.lg,
+            borderTopRightRadius: t.radii.lg,
+            paddingVertical: t.spacing.md,
+          }}
+        >
+          {items.map((item, idx) => (
+            <Pressable
+              key={item.label}
+              onPress={item.onPress}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
+              style={({ pressed }) => ({
+                paddingVertical: t.spacing.lg,
+                paddingHorizontal: t.spacing.xl,
+                backgroundColor: pressed ? t.colors.surfaceMuted : 'transparent',
+                borderTopWidth: idx === 0 ? 0 : 1,
+                borderTopColor: t.colors.border,
+              })}
+            >
+              <Text
+                style={[
+                  t.fonts.body,
+                  {
+                    color: item.destructive
+                      ? t.colors.destructive
+                      : t.colors.textStrong,
+                    fontWeight: '600',
+                  },
+                ]}
+              >
+                {item.label}
+              </Text>
+            </Pressable>
+          ))}
+          <Pressable
+            onPress={onDismiss}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            style={({ pressed }) => ({
+              paddingVertical: t.spacing.lg,
+              paddingHorizontal: t.spacing.xl,
+              backgroundColor: pressed ? t.colors.surfaceMuted : 'transparent',
+              borderTopWidth: 1,
+              borderTopColor: t.colors.border,
+            })}
+          >
+            <Text
+              style={[
+                t.fonts.body,
+                { color: t.colors.textMuted, fontWeight: '500' },
+              ]}
+            >
+              Close
+            </Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </RNModal>
   );
 }
 
