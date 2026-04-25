@@ -22,6 +22,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useInvitePreview } from '../../src/features/groups/useInvitePreview';
 import { useRedeemInvite } from '../../src/features/groups/useRedeemInvite';
 import { useSession } from '../../src/features/auth/AuthProvider';
+import { normalizeInviteCode } from '../../src/features/groups/formatInviteCode';
 import { PENDING_INVITE_KEY } from '../../src/features/groups/usePendingInviteReplay';
 import { useTheme } from '../../src/theme/useTheme';
 import type { Theme } from '../../src/theme/useTheme';
@@ -37,7 +38,10 @@ export default function InviteLandingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ code: string }>();
   const rawCode = (params.code ?? '').toString();
-  const code = rawCode.toUpperCase();
+  // WR-02: normalize so dashed forms like `ABCD-EF12` from manually-typed URLs
+  // are equivalent to the raw 8-char share-sheet form `ABCDEF12`. Also handles
+  // lowercase and incidental whitespace.
+  const code = normalizeInviteCode(rawCode);
 
   const { session, loading: sessionLoading } = useSession();
   const {
