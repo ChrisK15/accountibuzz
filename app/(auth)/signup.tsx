@@ -46,7 +46,7 @@ export default function Signup() {
           );
         }
       }
-      // On success, AuthProvider listener + root layout gate redirect to /(app)/profile.
+      // On success, AuthProvider listener + root layout gate redirect to /(app)/ (groups list).
     } catch {
       setSubmitError(
         'Something went sideways. Check your connection and try again.',

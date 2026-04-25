@@ -34,7 +34,7 @@ function useProtectedRoute() {
     if (!session && !inAuth) {
       router.replace('/(auth)/login');
     } else if (session && !inApp && !onResetPassword) {
-      router.replace('/(app)/profile');
+      router.replace('/(app)/');
     }
   }, [session, loading, recoveryPending, segments, router]);
 }

@@ -59,7 +59,7 @@ export default function ResetPassword() {
             onVerified={() => setStep('setpw')}
           />
         ) : (
-          <SetPasswordStep onDone={() => router.replace('/(app)/profile')} />
+          <SetPasswordStep onDone={() => router.replace('/(app)/')} />
         )}
       </ScreenContainer>
     </KeyboardAvoidingView>
