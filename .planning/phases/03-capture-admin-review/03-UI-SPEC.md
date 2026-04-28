@@ -89,11 +89,21 @@ No other divergences. All Lovable component compositions are tokenised against `
 | Camera shutter inner | 52pt diameter | 4pt outer ring (white) + 16pt clearance on each side; matches Lovable mock |
 | Active recording inner-square | 16pt | "Stop recording" affordance morphed from circle to square; matches Lovable mock + native iOS Camera convention |
 | Top-bar circular controls (close `×`, flip-camera) | 40pt diameter (32pt visual + 4pt scrim padding each side, 44pt hit slop applied) | Visual lightness over viewfinder while preserving HIG 44pt hit target |
-| Card-stack offsets | 6pt translateY for card 2 (97% scale), 12pt translateY for card 3 (94% scale) | Lovable-locked stack visual; not a multiple of 4 because the visual relationship is geometric (3pt steps would feel cramped, 8pt would push card 3 below the fold). Logged as a P3-specific stack-visual exception; **does not** propagate to other token usage. |
+| Card-stack offsets | 6pt translateY for card 2 (97% scale), 12pt translateY for card 3 (94% scale) | See **Locked Exceptions §1** below — formal off-grid exception, scoped + non-propagating |
 | Swipe action-button row internal gap | 12pt | `md` token; equal-weight Reject + Approve buttons sit edge-to-edge with this gap |
 | Swipe-overlay icon size | 80pt circle (42pt icon inside) | Visual swipe-feedback convention — same scale as iOS card-style stack apps; large enough to read peripherally during gesture |
 
 All other declared values remain multiples of 4. Phase 1's 12px inclusion remains the user-locked spacing exception.
+
+### Locked Exceptions (named off-grid values, documented so future checkers don't re-flag)
+
+P3 introduces **one** off-grid spacing value. It follows the same naming-and-scoping pattern Phase 2 used for the typography Locked Exceptions (5 sizes / 3 weights). All other P3 spacing values resolve to the inherited 4 / 8 / 12 / 16 / 24 / 32 token scale (where 12 is itself a P1 user-locked exception).
+
+| # | Exception | Standard rule | Actual value | Justification | Scope |
+|---|-----------|---------------|--------------|--------------|-------|
+| 1 | **SwipeCard stack offset, card 2** | Spacing values must be multiples of 4 | **6pt** translateY (paired with 97% scale) | Geometric stack visual locked to the Lovable mockup (`design_refs/design_code_for_claude/accounti-buzz-spark-main/src/mocks/screens/Review.tsx`). The card-stack proportions (97% → 94% → ...) and depth offsets are a single visual system: 4pt feels cramped against the 3% scale step; 8pt pushes card 3 below the fold on smaller devices (iPhone SE). 6pt is the visually-correct geometric pairing for the 97% scale step. | **Single-use, non-propagating.** Applies only to `SwipeCard` `translateY` for `stackPosition === 1`. Does not propagate to: any other component, any other layout direction, any padding / margin / gap value, any future card-stack pattern. Future card-stack components must either reuse `SwipeCard` directly or re-justify this exception explicitly. |
+
+**This is an explicit override of the Dimension-5 multiple-of-4 default,** analogous to how Phase 2 ratified the 5-size / 3-weight typography exceptions and Phase 1 ratified the 12px spacing exception. The card-2 6pt value is the *only* off-grid number declared in the entire P3 contract; the card-3 12pt offset coexists in the same stack visual but is on-grid (a `md` token), so it does not require an exception entry.
 
 ---
 
@@ -180,7 +190,7 @@ All other declared values remain multiples of 4. Phase 1's 12px inclusion remain
 
 `--primary` (yellow `#FFDE42`) continues as the brand-CTA filled-button color and the StatusPill-approved emphasis color. P3 additions:
 
-1. **Submit button** on Today GroupCard — PrimaryButton, full width inside card, label `Submit`
+1. **Submit button** on Today GroupCard — PrimaryButton, full width inside card, label `Submit photo` (when `submission_type = photo`) or `Submit video` (when `submission_type = video`) — verb+noun matches the capture-screen Submit for end-to-end label parity
 2. **Submit button** on Capture review screen — PrimaryButton, full-flex right side of bottom panel, label `Submit photo` or `Submit video`
 3. **Approve button** on swipe queue — PrimaryButton with leading Feather `check` icon, half-width, label `Approve`
 4. **Camera shutter inner fill** (idle, both photo and video variants) — 52pt circle in `--primary` yellow at full saturation
@@ -295,7 +305,8 @@ Voice reminder: **warm, energetic, concise — never corporate.** Use *we* / *yo
 
 | Surface | CTA | Variant |
 |---------|-----|---------|
-| Today GroupCard — `none` (not yet submitted) | `Submit` | PrimaryButton, full-width inside card |
+| Today GroupCard — `none` (not yet submitted), `submission_type = photo` | `Submit photo` | PrimaryButton, full-width inside card |
+| Today GroupCard — `none` (not yet submitted), `submission_type = video` | `Submit video` | PrimaryButton, full-width inside card |
 | Today GroupCard — `pending` or `approved` | `Submitted` | SecondaryButton, disabled appearance, no press feedback |
 | Today GroupCard — `rejected` | `Today didn't count` | GhostButton, disabled, with 4px `--destructive` left border |
 | Today empty — primary | `Create a group` | PrimaryButton, max-width 320pt |
@@ -352,8 +363,8 @@ Time format = group's local timezone, 12-hour with AM/PM (en-US default). Use `I
 | Today — zero groups | Heading: `No groups yet` · Body: `Create one with friends or join one with a code.` · Primary: `Create a group` (→ `/groups/new`) · Secondary accent link: `Join with a code` (→ `/groups/join`) |
 | Today — single group | Render exactly one GroupCard (the layout works at 1, 5, or 10 groups) |
 | Today — pulled-to-refresh, no data change | No special UI; pull-to-refresh spinner via `RefreshControl`, dismisses silently |
-| GroupCard — submission_type photo, no submission yet | TypeChip: `📷 Photo` (Feather `camera` + label); CTA: `Submit` |
-| GroupCard — submission_type video, no submission yet | TypeChip: `🎬 Video` (Feather `video` + label); CTA: `Submit` |
+| GroupCard — submission_type photo, no submission yet | TypeChip: `📷 Photo` (Feather `camera` + label); CTA: `Submit photo` |
+| GroupCard — submission_type video, no submission yet | TypeChip: `🎬 Video` (Feather `video` + label); CTA: `Submit video` |
 | Pending-review entry — count = 0 | **Hidden entirely.** The entry row only renders when `count > 0` AND user is admin |
 | Pending-review entry — count > 9 | Title: `Pending review (9+)` — never render double-digit numbers in the title |
 | Review queue — empty (admin caught up after last decision) | Heading: `All caught up` · Body: `Nothing's waiting on you.` · Success-green check badge above heading (80pt circle in `--success` with white check) · Primary: `Back to group` |
@@ -972,10 +983,10 @@ Inherited from Phase 1 + 2. P3 additions:
 
 | Server submission status | minutesLeft | queuedUploadSize | StatusPill | CTA | Cutoff hint |
 |--------------------------|-------------|------------------|------------|-----|-------------|
-| no submission yet | > 60 | undefined | `none` (em-dash) | `Submit` (primary) | `9:00 AM cutoff (4h left)` muted |
-| no submission yet | 5..60 | undefined | `none` | `Submit` | `9:00 AM cutoff (47m left)` destructive 500 |
-| no submission yet | < 5 | undefined | `none` | `Submit` | `9:00 AM cutoff (3m left)` destructive 700 |
-| no submission yet | any | non-empty (queued from previous attempt) | `none` | `Submit` (still enabled — user can retake) | (replaced by submitted-ago) |
+| no submission yet | > 60 | undefined | `none` (em-dash) | `Submit photo` / `Submit video` (primary, by `submission_type`) | `9:00 AM cutoff (4h left)` muted |
+| no submission yet | 5..60 | undefined | `none` | `Submit photo` / `Submit video` | `9:00 AM cutoff (47m left)` destructive 500 |
+| no submission yet | < 5 | undefined | `none` | `Submit photo` / `Submit video` | `9:00 AM cutoff (3m left)` destructive 700 |
+| no submission yet | any | non-empty (queued from previous attempt) | `none` | `Submit photo` / `Submit video` (still enabled — user can retake) | (replaced by submitted-ago) |
 | pending | n/a | undefined | `pending` | `Submitted` (disabled secondary) | `Submitted 2m ago` muted |
 | pending | n/a | non-empty (e.g. uploading right now) | `pending` | `Submitted` | `Submitted just now` muted; **+ QueueBadge** at bottom |
 | approved | n/a | undefined | `approved` | `Submitted` (disabled secondary) | `Submitted 1h ago` muted |
@@ -1040,7 +1051,7 @@ Inherited from Phase 1 + 2. P3 additions:
 | Requirement | Specification |
 |-------------|---------------|
 | Tab bar | `accessibilityRole="tablist"` on container; each tab cell `accessibilityRole="tab"` + `accessibilityState={{ selected }}` + explicit `accessibilityLabel`. The active 2pt yellow indicator is decorative — `accessibilityElementsHidden={true}`. |
-| GroupCard composite label | Single composed label: `"${name} group, ${kindLabel}, ${statusLabel}, ${cutoffOrAgo}"` so VoiceOver announces the whole card in one read. CTA button gets its own focus stop with the explicit `Submit` / `Submitted` / `Today didn't count` label. |
+| GroupCard composite label | Single composed label: `"${name} group, ${kindLabel}, ${statusLabel}, ${cutoffOrAgo}"` so VoiceOver announces the whole card in one read. CTA button gets its own focus stop with the explicit `Submit photo` / `Submit video` / `Submitted` / `Today didn't count` label (per `submission_type` and current state). |
 | StatusPill rejected (tappable) | `accessibilityRole="button"`, `accessibilityHint="Shows the admin's note"`. |
 | QueueBadge | Container `accessibilityLabel="Upload pending, ${size} queued"`; trailing `more-horizontal` button gets its own focus stop with `accessibilityLabel="Pending uploads menu"`. |
 | Cutoff hint urgency | Color is the visual cue, but VoiceOver reads the text — the destructive-color `47m left` text reads as "9:00 AM cutoff, 47 minutes left" with no extra semantic markup. **Color-only cue forbidden:** the destructive-weight (700) + destructive-color combination is intentional double-encoding, AND the `47m` text itself is the substance. |
@@ -1136,7 +1147,7 @@ If the executor finds a need for a token not in the P1 export, they must either:
 
 ### Dimension 1 — Copywriting
 - ✅ Voice consistent with P1/P2: warm, energetic, concise; uses *we / your group / friends*
-- ✅ Every CTA is verb + noun (`Submit`, `Approve`, `Reject`, `Submit photo`, `Submit video`, `Open Settings`, `Discard`, `Got it`, `Back to group`, `Create a group`, `Join with a code`)
+- ✅ Every CTA is verb + noun (`Submit photo`, `Submit video`, `Approve`, `Reject`, `Open Settings`, `Discard`, `Got it`, `Back to group`, `Create a group`, `Join with a code`) — Today GroupCard CTA is now per-`submission_type` (`Submit photo` / `Submit video`) for end-to-end label parity with the capture screen; no bare `Submit` anywhere in the spec
 - ✅ Every modal supplies a context-specific dismiss label, never `Cancel` (`Keep recording`, `Never mind`, `Got it` as single-exit)
 - ✅ Empty states have heading + body + next-step CTA (Today empty, Review queue empty)
 - ✅ Error states include problem + solution path (every typed-error string in the Submit flow + RPC error in admin queue)
@@ -1168,9 +1179,10 @@ If the executor finds a need for a token not in the P1 export, they must either:
 - ✅ `allowFontScaling={false}` documented for capture chrome (shutter, REC badge, timer) to prevent Dynamic-Type overflow on critical capture controls
 
 ### Dimension 5 — Spacing
-- ✅ All declared values are multiples of 4
+- ✅ All on-grid declared values are multiples of 4
 - ✅ Phase 1 user-locked 12px exception inherited
-- ✅ P3 documented exceptions: tab-bar 56pt height, shutter 72/52pt sizes, top-bar 40pt circles, card-stack offsets 6pt + 12pt (geometric stack visual, locked to Lovable mock), swipe-overlay 80pt circle. Each exception has a justification.
+- ✅ P3 on-grid documented values with justification: tab-bar 56pt height, shutter 72/52pt sizes, top-bar 40pt circles, card-stack offset for card 3 (12pt = `md` token), swipe-overlay 80pt circle, swipe action-button row gap 12pt. Each has a one-line justification in the Spacing exceptions table.
+- ✅ **One named off-grid Locked Exception** (Spacing §Locked Exceptions §1): SwipeCard card-2 stack offset = 6pt translateY. Single-use, non-propagating, scoped explicitly to `SwipeCard.translateY` for `stackPosition === 1`. Geometric pairing with the 97% scale step locked to the Lovable mock; ratified in the same precedent pattern as Phase 1's 12px and Phase 2's typography Locked Exceptions. **Future card-stack components must reuse `SwipeCard` directly or re-justify this exception.**
 
 ### Dimension 6 — Registry Safety
 - ✅ No third-party UI registries declared
