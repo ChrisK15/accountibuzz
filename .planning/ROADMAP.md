@@ -64,14 +64,15 @@
   3. Member sees their own submission status (pending / approved / rejected) and is blocked from submitting twice for the same local day
   4. Admin sees a swipe-style queue of pending submissions for groups they admin and can approve or reject (with optional reason) — RLS prevents non-admins from reviewing
   5. Rejected submitters are notified so they can resubmit before cutoff
-**Plans**: 7 plans
-- [x] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
-- [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
-- [x] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
-- [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
-- [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
-- [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
-- [x] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
+**Plans**: 8 plans
+- [ ] 03-01-PLAN.md — Wave 0 infra: install netinfo + expo-camera plugin block + jest mocks + dev client rebuild [checkpoint]
+- [ ] 03-02-PLAN.md — Migration 0006: 3 SECURITY DEFINER RPCs + 4 pgTAP files + [BLOCKING] supabase db push + types regen + tabs-migration audit test
+- [ ] 03-03-PLAN.md — Submissions data layer: schemas, time helpers, two-phase commit submitMedia pipeline, AsyncStorage upload queue manager + 3 Jest tests
+- [ ] 03-04-PLAN.md — 8 new UI primitives: DestructiveButton, StatusPill, TypeChip, GroupCard, Shutter, CaptureTopBar, ReviewPanel, SwipeCard + 3 component tests
+- [ ] 03-05-PLAN.md — 7 submissions hooks (TanStack reads + mutations + Realtime channel with useFocusEffect cleanup) + 5 Jest tests
+- [ ] 03-06-PLAN.md — App shell migration (Stack→Tabs), Today screen, group-detail PendingReviewRow, startQueueManager wiring + tabs allowlist update
+- [ ] 03-07-PLAN.md — Capture screen state machine + admin swipe-stack review queue + reject-reason panel + first-review tooltip + 2 Jest tests
+- [ ] 03-08-PLAN.md — Phase verification: full test suite + typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough + REQUIREMENTS/ROADMAP rewording for terminal-rejection per D-12
 **UI hint**: yes
 
 ### Phase 4: Social Surfaces
