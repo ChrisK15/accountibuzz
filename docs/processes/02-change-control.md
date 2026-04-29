@@ -1,6 +1,6 @@
 # 2. Change Control
 
-How a new requirement, a change to an existing requirement, or any other scope change moves from "someone had an idea" to "the change is part of the plan and reflected in code." The goal is no surprise scope.
+How a new requirement, a change to an existing requirement, or any other scope change moves from "someone had an idea" to "the change is part of the plan and reflected in code."
 
 ## Inputs to change control
 
@@ -8,14 +8,16 @@ A change can originate from any of these sources:
 
 | Source | Example |
 |---|---|
-| Customer/user feedback | Beta tester says "I want to leave a group" |
+| Customer/user feedback | Tester (us currently) says "I want to leave a group" |
 | Manual QA | Tester finds a bug in the release APK |
-| Code review | Reviewer flags a missing edge case |
+| Code review | Reviewer (Currently external AI's like Gemini or GPT) flags a missing edge case |
 | Stakeholder/instructor | Course feedback during demo |
 | Engineering | Tech-debt or architectural concern surfaces during execution |
 | Compliance / data integrity | Audit finds a silent data-corruption bug (see SCRUM-49, SCRUM-50) |
 
 ## The intake → triage → planning pipeline
+
+GSD (Get Shit Done) allows us to use the following pipeline based on how it is built.
 
 ```
 ┌──────────┐    ┌─────────┐    ┌──────────┐    ┌──────────┐    ┌────────┐
@@ -37,7 +39,7 @@ Bugs found in production or QA are filed directly as **Bug** issues in JIRA (the
 
 ### Step 2 — Triage (classify the change)
 
-Within ~48 hours the team triages each new item and decides one of:
+We triage each new item and decides one of:
 
 | Outcome | Action |
 |---|---|
@@ -55,7 +57,7 @@ Once accepted into the active milestone, the change moves through the standard G
 1. `/gsd-spec-phase` — refine *what* is being delivered, with falsifiable acceptance criteria, before any implementation decisions.
 2. `/gsd-discuss-phase` — gather context: codebase patterns, gray areas, assumptions.
 3. `/gsd-plan-phase` — produce a `PLAN.md` per work-stream, broken into atomic-commit-sized plans, with goal-backward verification.
-4. (Optional) `/gsd-review` — cross-AI peer review of the plan to catch missed concerns before any code is written.
+4. (Optional) `/gsd-review` — cross-AI peer review (with GPT and Gemini) of the plan to catch missed concerns before any code is written.
 
 The plan files live at `.planning/phases/NN-phase-name/NN-MM-PLAN.md` and are committed under `docs(NN): create phase plan` so the planning record is permanent and reviewable.
 
