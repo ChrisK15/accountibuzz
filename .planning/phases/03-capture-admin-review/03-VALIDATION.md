@@ -91,7 +91,8 @@ All test files below are NEW. The test infrastructure exists (Jest 29 + jest-exp
 ### Jest test files
 
 - [ ] `tests/submissions/submitMedia.test.ts` — covers SUB-01, SUB-02, SUB-03 happy + network-error paths
-- [ ] `tests/submissions/uploadQueueManager.test.ts` — covers SUB-03 flush triggers + SUB-05 drop-on-conflict
+- [ ] `tests/submissions/uploadQueueManager.test.ts` — covers SUB-03 flush triggers + SUB-05 drop-on-conflict + per-entry corruption isolation (REVIEWS.md C4)
+- [ ] `tests/submissions/time.test.ts` — covers DST-safe cutoff math (REVIEWS.md C2): PST→PDT spring-forward, EDT→EST fall-back, no-DST baselines (UTC, Pacific/Kiritimati), 23:59 boundary, 3 urgency thresholds
 - [ ] `tests/submissions/useTodaySubmission.test.ts` — covers SUB-04 initial fetch shape
 - [ ] `tests/submissions/useTodaySubmissionRealtime.test.ts` — covers SUB-04 + ADM-04 Realtime patch
 - [ ] `tests/submissions/useReviewQueue.test.ts` — covers ADM-01 admin queue read
@@ -110,6 +111,7 @@ All test files below are NEW. The test infrastructure exists (Jest 29 + jest-exp
 - [ ] `supabase/tests/submit_today.sql` — covers SUB-01..05 (RPC happy + 3 typed-error paths)
 - [ ] `supabase/tests/review_submission.sql` — covers ADM-02..03, PLAT-03 (admin-only + state machine + cross-group denied)
 - [ ] `supabase/tests/get_pending_review_count.sql` — covers ADM-01 (badge + 0-leak)
+- [ ] `supabase/tests/get_pending_review_queue.sql` — covers ADM-01 admin-only access (REVIEWS.md C3): admin returns rows, non-admin/stranger/anon/cross-group all raise `not_admin`
 - [ ] `supabase/tests/submissions_admin_immutable.sql` — backfills 0003 trigger coverage (01 deferred-items.md flag)
 
 ### `jest.setup.ts` mock additions
