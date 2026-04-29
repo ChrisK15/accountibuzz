@@ -9,6 +9,7 @@ How source code, documentation, and planning artifacts are versioned, reviewed, 
 - **GitHub Actions** — CI runs on every push and pull request. Two workflows live in `.github/workflows/`:
   - `ci.yml` — Node 20, `npx tsc --noEmit` (typecheck), `jest` test suite.
   - `rls-check.yml` — boots Supabase locally and asserts every public-schema table has Row-Level Security enabled.
+  - **Note: We are still working on getting this functioning, don't know if it's worth having CI since app runs on expo for development**
 - **Conventional Commits** for the commit message style (no automated tooling enforces it; the team applies it manually).
 
 ## Branching strategy
@@ -16,9 +17,9 @@ How source code, documentation, and planning artifacts are versioned, reviewed, 
 The project uses a **trunk-based** flow with a single long-lived branch:
 
 - `main` is the only persistent branch and is always shippable.
-- The team is small (1–2 developers) and the cadence is fast, so feature branches are not used during normal phase execution. Commits land directly on `main` after they pass the developer's local checks.
+- The team 2 developers and the cadence is fast, so feature branches are not used during normal phase execution. Commits land directly on `main` after they pass the developer's local checks.
 - **Worktree branches** (`worktree-agent-*`) are used as throwaway scratch areas for AI-assisted parallel work; they are merged back into `main` via fast-forward and then deleted, never pushed to GitHub.
-- For larger or riskier work (e.g., multi-day refactors, code-review-driven fixes that we want a second set of eyes on), we will open a short-lived PR branch in the form `phase/NN-short-description`, push it, and open a pull request against `main` — see "Pull request flow" below.
+- For larger or riskier work, we will open a PR branch in the form `phase/NN-short-description`, push it, and open a pull request against `main` — see "Pull request flow" below.
 
 ## Commit conventions
 
@@ -52,8 +53,7 @@ The scope tells you which phase the work belongs to; the imperative summary tell
 2. Push: `git push -u origin phase/03-capture`.
 3. Open a PR against `main` with `gh pr create`. PR title follows the same `type(scope): summary` rule.
 4. Wait for both CI workflows to pass (`ci.yml` and `rls-check.yml`).
-5. For solo work, self-review the diff before merging. For review-required work, request review or run `/ultrareview`.
-6. Squash-and-merge into `main`. Delete the branch.
+5. Squash-and-merge into `main`. Delete the branch.
 
 ## What is versioned
 
@@ -74,6 +74,5 @@ Released milestones will be tagged with `v<major>.<minor>.<patch>` once the MVP 
 
 ## Recovery and reversibility
 
-- All commits are atomic and individually revertible. The GSD workflow enforces this — every plan in `.planning/phases/NN/` becomes one commit.
-- `/gsd-undo` (Claude-Code skill) wraps `git revert` with dependency awareness for rolling back a phase or a plan without breaking subsequent work.
+- All commits are atomic and individually revertible. The GSD (Get Shit Done) workflow enforces this — every plan in `.planning/phases/NN/` becomes one commit.
 - Force-pushes to `main` are forbidden. The remote will reject them via repository settings; the team will not bypass this.
