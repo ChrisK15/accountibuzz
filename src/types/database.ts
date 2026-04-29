@@ -330,12 +330,43 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_pending_review_count: {
+        Args: { p_group_id: string }
+        Returns: number
+      }
+      get_pending_review_queue: {
+        Args: { p_group_id: string }
+        Returns: Database["public"]["CompositeTypes"]["review_queue_row"][]
+        SetofOptions: {
+          from: "*"
+          to: "review_queue_row"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       handle_daily_rollover: { Args: never; Returns: undefined }
       is_group_admin: { Args: { g: string }; Returns: boolean }
       is_group_member: { Args: { g: string }; Returns: boolean }
       leave_group: { Args: { p_group_id: string }; Returns: undefined }
       redeem_invite: { Args: { code_input: string }; Returns: string }
       regenerate_invite: { Args: { p_group_id: string }; Returns: string }
+      review_submission: {
+        Args: {
+          p_decision: string
+          p_rejection_reason: string
+          p_submission_id: string
+        }
+        Returns: undefined
+      }
+      submit_today: {
+        Args: {
+          p_caption: string
+          p_group_id: string
+          p_media_path: string
+          p_media_type: string
+        }
+        Returns: string
+      }
       transfer_admin: {
         Args: { p_group_id: string; p_new_admin_user_id: string }
         Returns: undefined
@@ -349,6 +380,17 @@ export type Database = {
         group_name: string | null
         member_count: number | null
         admin_display_name: string | null
+      }
+      review_queue_row: {
+        id: string | null
+        user_id: string | null
+        caption: string | null
+        media_path: string | null
+        media_type: string | null
+        created_at: string | null
+        display_name: string | null
+        avatar_path: string | null
+        profile_updated_at: string | null
       }
     }
   }
