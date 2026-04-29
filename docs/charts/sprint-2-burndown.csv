@@ -1,0 +1,7 @@
+timestamp_pt,points_remaining,event
+2026-04-23T23:57:00-07:00,20,Sprint start — phase context committed
+2026-04-24T13:32:00-07:00,13,Migration 0004 + 7 RPCs (closes SCRUM-17/18/19)
+2026-04-24T14:09:00-07:00,11,TanStack hooks landed (closes SCRUM-14)
+2026-04-24T14:52:00-07:00,3,Create-group screen + timezone picker (closes SCRUM-13/16)
+2026-04-24T14:54:00-07:00,0,Deep-link invite landing (closes SCRUM-15)
+2026-04-25T14:13:00-07:00,0,Sprint close — VERIFICATION.md committed
