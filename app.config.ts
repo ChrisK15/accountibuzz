@@ -29,7 +29,19 @@ const config: ExpoConfig = {
   web: {
     favicon: './assets/favicon.png',
   },
-  plugins: ['expo-router', 'expo-secure-store', 'expo-font'],
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    'expo-font',
+    [
+      'expo-camera',
+      {
+        cameraPermission: 'Accountibuzz needs camera access to capture your daily proof.',
+        microphonePermission: 'Accountibuzz needs microphone access to record audio with your video proof.',
+        recordAudioAndroid: true,
+      },
+    ],
+  ],
   // Runtime-only fields (typed loosely to satisfy strict TS while keeping SDK 55 features)
   ...({ newArchEnabled: true } as Record<string, unknown>),
 };
