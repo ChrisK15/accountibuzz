@@ -70,7 +70,7 @@ completed: 2026-04-29
 - **Duration:** ~7 min (Tasks 1-3 + verification + SUMMARY)
 - **Started:** 2026-04-29T01:54:58Z
 - **Completed (Tasks 1-3):** 2026-04-29T02:01:45Z
-- **Tasks:** 3 of 4 executed (Task 4 = blocking checkpoint:human-verify, awaiting user)
+- **Tasks:** 4 of 4 executed (Task 4 user-verified — dev client rebuilt on iOS, app launched clean)
 - **Files modified:** 4 (package.json, package-lock.json, app.config.ts, jest.setup.ts)
 - **Files created:** 2 (deferred-items.md, this SUMMARY.md)
 
@@ -88,7 +88,7 @@ Each task was committed atomically:
 1. **Task 1: Install netinfo + react-native-get-random-values** — `de5b811` (chore)
 2. **Task 2: Add expo-camera plugin block to app.config.ts** — `8349d82` (feat)
 3. **Task 3: Extend jest.setup.ts with Phase 3 mocks (+ install missing native modules)** — `5405652` (test)
-4. **Task 4: Rebuild dev client** — *NOT EXECUTED — `checkpoint:human-verify` gate; awaits user*
+4. **Task 4: Rebuild dev client** — *user-verified 2026-04-29 — `npx expo prebuild --clean && npx expo run:ios` succeeded, app launched clean on iOS device*
 
 **Plan metadata commit:** *pending — committed at end of executor run with this SUMMARY*
 
@@ -148,22 +148,11 @@ No new network endpoints, auth paths, file access, or schema changes introduced 
 
 ## User Setup Required
 
-**Pending — `checkpoint:human-verify` at Task 4.**
+**Resolved — `checkpoint:human-verify` cleared 2026-04-29.**
 
-The dev client rebuild is the gating step before Plans 03-04 / 03-07 can run capture surfaces on a physical device. Per `feedback_rn_dev_build_required.md` project memory:
+User ran `npx expo prebuild --clean && npx expo run:ios` from project root; app launched clean on iOS device. Verbatim camera/mic prompt smoke check deferred to Plan 03-07 capture flow exercise (will surface naturally at first capture).
 
-```bash
-# From the project root:
-npx expo prebuild --clean   # regenerate native projects with the new plist/manifest
-npx expo run:ios            # rebuild + reinstall the dev client
-# (Android deferred per Phase 1 + 2 precedent)
-```
-
-The currently-installed dev client lacks the new camera + microphone permissions in its Info.plist. Without a rebuild, the next capture-screen smoke test in Plan 03-07 / 03-08 UAT will silently fail or be denied without an OS prompt on first launch.
-
-After rebuild, optionally trigger `useCameraPermissions().requestPermission()` from a debug screen and confirm the OS prompt shows the verbatim string `Accountibuzz needs camera access to capture your daily proof.` (NOT a generic system fallback).
-
-**Resume signal:** "approved — dev client rebuilt with camera/mic permissions" (or describe issues).
+Dev-client binary now carries `NSCameraUsageDescription`, `NSMicrophoneUsageDescription`, Android `CAMERA`, and `RECORD_AUDIO` permissions. Plans 03-04, 03-07, and 03-08 unblocked.
 
 ## Self-Check: PASSED
 
@@ -202,4 +191,4 @@ All claimed files and commits verified present.
 ---
 *Phase: 03-capture-admin-review*
 *Plan: 03-01*
-*Last update: 2026-04-29 (Tasks 1-3 complete; Task 4 = checkpoint:human-verify, awaiting user)*
+*Last update: 2026-04-29 (all 4 tasks complete; Task 4 user-verified — dev client rebuilt with camera/mic permissions)*
