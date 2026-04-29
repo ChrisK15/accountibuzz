@@ -58,8 +58,7 @@ describe('submitTodaySchema', () => {
     expect(
       submitTodaySchema.safeParse({
         ...valid,
-        // @ts-expect-error testing invalid enum
-        mediaType: 'audio',
+        mediaType: 'audio' as 'photo' | 'video',
       }).success,
     ).toBe(false);
   });
@@ -117,8 +116,7 @@ describe('reviewSubmissionSchema', () => {
     expect(
       reviewSubmissionSchema.safeParse({
         ...valid,
-        // @ts-expect-error testing invalid enum
-        decision: 'maybe',
+        decision: 'maybe' as 'approved' | 'rejected',
       }).success,
     ).toBe(false);
   });
