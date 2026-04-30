@@ -48,7 +48,7 @@ jest.mock('../../src/features/auth/AuthProvider', () => ({
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { useGroupsList } = require('../../src/features/groups/useGroupsList');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const GroupsListScreen = require('../../app/(app)/index').default;
+const GroupsListScreen = require('../../app/(app)/groups/index').default;
 
 const theme: Theme = {
   colors: colors.light,
