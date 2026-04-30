@@ -68,7 +68,7 @@
 - [x] 03-01-PLAN.md — Wave 0 infra: install netinfo + expo-camera plugin block + jest mocks + dev client rebuild [checkpoint]
 - [x] 03-02-PLAN.md — Migration 0006: 3 SECURITY DEFINER RPCs + 4 pgTAP files + [BLOCKING] supabase db push + types regen + tabs-migration audit test
 - [ ] 03-03-PLAN.md — Submissions data layer: schemas, time helpers, two-phase commit submitMedia pipeline, AsyncStorage upload queue manager + 3 Jest tests
-- [ ] 03-04-PLAN.md — 8 new UI primitives: DestructiveButton, StatusPill, TypeChip, GroupCard, Shutter, CaptureTopBar, ReviewPanel, SwipeCard + 3 component tests
+- [x] 03-04-PLAN.md — 8 new UI primitives: DestructiveButton, StatusPill, TypeChip, GroupCard, Shutter, CaptureTopBar, ReviewPanel, SwipeCard + 3 component tests
 - [ ] 03-05-PLAN.md — 7 submissions hooks (TanStack reads + mutations + Realtime channel with useFocusEffect cleanup) + 5 Jest tests
 - [ ] 03-06-PLAN.md — App shell migration (Stack→Tabs), Today screen, group-detail PendingReviewRow, startQueueManager wiring + tabs allowlist update
 - [ ] 03-07-PLAN.md — Capture screen state machine + admin swipe-stack review queue + reject-reason panel + first-review tooltip + 2 Jest tests

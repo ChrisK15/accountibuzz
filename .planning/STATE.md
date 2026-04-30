@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-04-29T01:53:47.131Z"
+stopped_at: 03-04 complete (Phase 3 component primitives)
+last_updated: "2026-04-30T13:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 13
-  percent: 62
+  completed_plans: 17
+  percent: 81
 ---
 
 # State: Accountibuzz
@@ -30,12 +30,12 @@ progress:
 ## Current Position
 
 Phase: 03 (capture-admin-review) — EXECUTING
-Plan: 1 of 8
+Plan: 4 of 8 complete; 4 of 8 remaining (03-05, 03-06, 03-07, 03-08)
 
-- **Phase:** 2 — Groups & Invites (complete, 7/7 plans)
-- **Plan:** 02-07 — phase closure gate; UAT A–K all approved; code review fixes WR-01..WR-05 applied
+- **Phase:** 3 — Capture & Admin Review (in progress, 4/8 plans done: 03-01 infra, 03-02 migration, 03-03 data layer, 03-04 UI primitives)
+- **Plan:** 03-04 — 8 Phase-3 UI primitives + 3 component test suites; full project test suite at 201/201; SwipeCard contract test holds the REVIEWS C5 row-spread guarantee
 - **Status:** Executing Phase 03
-- **Progress:** [███▎      ] 33%
+- **Progress:** [████████  ] 81%
 
 ## Roadmap At-a-Glance
 
@@ -43,7 +43,7 @@ Plan: 1 of 8
 |-------|------|--------|
 | 1 | Foundation | Complete |
 | 2 | Groups & Invites | Complete |
-| 3 | Capture & Admin Review | Not started |
+| 3 | Capture & Admin Review | In progress (4/8 plans done) |
 | 4 | Social Surfaces | Not started |
 | 5 | Push & Daily Rollover | Not started |
 | 6 | Pre-Rollout Hardening | Not started |
@@ -51,10 +51,11 @@ Plan: 1 of 8
 ## Performance Metrics
 
 - Phases complete: 2 / 6
-- Plans complete: 13 / 13 (Phase 1: 6, Phase 2: 7)
+- Plans complete: 17 / 21 (Phase 1: 6, Phase 2: 7, Phase 3: 4 of 8)
 - Requirements shipped (validated):
   - Phase 1: 5 of 6 (AUTH-01, AUTH-02, AUTH-03 via OTP pivot, AUTH-04, PLAT-02 via CI); PLAT-01 = PARTIAL (iOS PASS, Android DEFERRED)
   - Phase 2: 8 of 8 (GRP-01, GRP-02, GRP-03, GRP-04, GRP-05, INV-01, INV-02, INV-03) — all verified via UAT + automated suite + pgTAP
+  - Phase 3 (in progress): 03-04 marks SUB-04 as primitive-shipped (StatusPill renders the per-group submission status); waiting on 03-05 hooks + 03-06 Today-screen wire to be UAT-validated
 
 ## Accumulated Context
 
@@ -91,10 +92,10 @@ Plan: 1 of 8
 
 ## Session Continuity
 
-- **Last session:** 2026-04-28T19:55:15.684Z
-- **Next session:** Run `/gsd-discuss-phase 3` (or `/gsd-plan-phase 3` to skip discuss)
-- **Resume hint:** Phase 2 closed with 7 inline fixes during UAT (auth-gate redirect target, invite-landing gate exemption, deep-link escape hatch, profiles_select_co_member RLS migration 0005, Avatar imageUri wiring, React Query cache leak across sessions, profile back button) plus 5 advisory code-review warning fixes (avatar cache-bust, deep-link normalization, RHF null-guard, member ordering, ActionSheetIOS kebab). Migrations 0004 + 0005 live on remote. Android UAT remains deferred per Phase 1 precedent. Pre-existing Android prebuild warnings (edgeToEdgeEnabled removal + expo-system-ui) logged in deferred-items.md for Phase 6 hardening.
-- **Stopped at:** Phase 3 UI-SPEC approved
+- **Last session:** 2026-04-30T13:00:00Z (Plan 03-04 complete)
+- **Next session:** Continue Phase 3 with Plan 03-05 (submissions hooks). Plans 03-04 and 03-03 are independent of each other; 03-05 depends on 03-03's data layer and consumes nothing new from this plan (it defines the canonical PendingSubmissionRow that SwipeCard's snake_case props already match).
+- **Resume hint:** Phase 3 four of eight plans complete. 03-04 shipped 8 RN component primitives (DestructiveButton, StatusPill, TypeChip, GroupCard, Shutter, CaptureTopBar, ReviewPanel, SwipeCard) tokens-only with 3 component test suites (18 cases). REVIEWS C5 contract held: SwipeCard's props match PendingSubmissionRow shape exactly (snake_case) so Plan 03-07's review screen will spread `<SwipeCard {...row} />` without a mapper; a contract test guards this. Reanimated mock fix in jest.setup.ts (hand-rolled, replaces broken upstream `/mock` re-export). Full test suite at 201/201; 1 pre-existing design_refs vitest suite still failing (Phase 6 hardening item). Phase 2 closure context preserved verbatim above.
+- **Stopped at:** 03-04 complete (Phase 3 component primitives)
 
 ---
 *State initialized: 2026-04-21*
