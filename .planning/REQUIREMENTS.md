@@ -36,17 +36,17 @@ Requirements for initial MVP release to friend groups.
 
 - [ ] **SUB-01**: Member can capture and submit a photo (if group is photo-type) before the group's local midnight cutoff
 - [ ] **SUB-02**: Member can capture and submit a short video (if group is video-type) before the group's local midnight cutoff
-- [ ] **SUB-03**: Upload is resilient to flaky networks (resumable + offline queue + retry)
-- [ ] **SUB-04**: Member can see the status of their submission (pending / approved / rejected)
+- [x] **SUB-03**: Upload is resilient to flaky networks (resumable + offline queue + retry)
+- [x] **SUB-04**: Member can see the status of their submission (pending / approved / rejected)
 - [ ] **SUB-05**: Member is blocked from submitting twice on the same local day
 - [ ] **SUB-06**: Member can optionally add a short caption to their submission
 
 ### Admin Review
 
-- [ ] **ADM-01**: Admin sees a queue of pending submissions for groups they admin
-- [ ] **ADM-02**: Admin can approve a submission
-- [ ] **ADM-03**: Admin can reject a submission with an optional short reason
-- [ ] **ADM-04**: Rejected submissions notify the submitter so they can resubmit before cutoff
+- [x] **ADM-01**: Admin sees a queue of pending submissions for groups they admin
+- [x] **ADM-02**: Admin can approve a submission
+- [x] **ADM-03**: Admin can reject a submission with an optional short reason
+- [x] **ADM-04**: Rejected submissions notify the submitter so they can resubmit before cutoff
 
 ### Points, Streaks, Leaderboard
 
@@ -141,14 +141,14 @@ Every v1 requirement maps to exactly one phase in ROADMAP.md.
 | INV-03 | Phase 2 — Groups & Invites | Pending |
 | SUB-01 | Phase 3 — Capture & Admin Review | Pending |
 | SUB-02 | Phase 3 — Capture & Admin Review | Pending |
-| SUB-03 | Phase 3 — Capture & Admin Review | Pending |
-| SUB-04 | Phase 3 — Capture & Admin Review | Pending |
+| SUB-03 | Phase 3 — Capture & Admin Review | Complete |
+| SUB-04 | Phase 3 — Capture & Admin Review | Complete |
 | SUB-05 | Phase 3 — Capture & Admin Review | Pending |
 | SUB-06 | Phase 3 — Capture & Admin Review | Pending |
-| ADM-01 | Phase 3 — Capture & Admin Review | Pending |
-| ADM-02 | Phase 3 — Capture & Admin Review | Pending |
-| ADM-03 | Phase 3 — Capture & Admin Review | Pending |
-| ADM-04 | Phase 3 — Capture & Admin Review | Pending |
+| ADM-01 | Phase 3 — Capture & Admin Review | Complete |
+| ADM-02 | Phase 3 — Capture & Admin Review | Complete |
+| ADM-03 | Phase 3 — Capture & Admin Review | Complete |
+| ADM-04 | Phase 3 — Capture & Admin Review | Complete |
 | PLAT-03 | Phase 3 — Capture & Admin Review | Pending |
 | PTS-01 | Phase 4 — Social Surfaces | Pending |
 | PTS-02 | Phase 4 — Social Surfaces | Pending |

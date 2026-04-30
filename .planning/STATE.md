@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: 03-04 complete (Phase 3 component primitives)
-last_updated: "2026-04-30T13:00:00.000Z"
+stopped_at: 03-05 complete (Phase 3 submissions hooks)
+last_updated: "2026-04-30T20:51:34.563Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 17
-  percent: 81
+  completed_plans: 18
+  percent: 86
 ---
 
 # State: Accountibuzz
@@ -30,12 +30,12 @@ progress:
 ## Current Position
 
 Phase: 03 (capture-admin-review) — EXECUTING
-Plan: 4 of 8 complete; 4 of 8 remaining (03-05, 03-06, 03-07, 03-08)
+Plan: 5 of 8 complete; 3 of 8 remaining (03-06, 03-07, 03-08)
 
-- **Phase:** 3 — Capture & Admin Review (in progress, 4/8 plans done: 03-01 infra, 03-02 migration, 03-03 data layer, 03-04 UI primitives)
-- **Plan:** 03-04 — 8 Phase-3 UI primitives + 3 component test suites; full project test suite at 201/201; SwipeCard contract test holds the REVIEWS C5 row-spread guarantee
+- **Phase:** 3 — Capture & Admin Review (in progress, 5/8 plans done: 03-01 infra, 03-02 migration, 03-03 data layer, 03-04 UI primitives, 03-05 hooks)
+- **Plan:** 03-05 — 7 submissions hooks (3 reads + 2 mutations + useUploadQueue + Realtime channel) + 5 Jest test suites (28 new cases); REVIEWS C1/C3/C4 fully closed; full project test suite at 231/231 in our codebase
 - **Status:** Executing Phase 03
-- **Progress:** [████████  ] 81%
+- **Progress:** [█████████░] 86%
 
 ## Roadmap At-a-Glance
 
@@ -43,7 +43,7 @@ Plan: 4 of 8 complete; 4 of 8 remaining (03-05, 03-06, 03-07, 03-08)
 |-------|------|--------|
 | 1 | Foundation | Complete |
 | 2 | Groups & Invites | Complete |
-| 3 | Capture & Admin Review | In progress (4/8 plans done) |
+| 3 | Capture & Admin Review | In progress (5/8 plans done) |
 | 4 | Social Surfaces | Not started |
 | 5 | Push & Daily Rollover | Not started |
 | 6 | Pre-Rollout Hardening | Not started |
@@ -51,11 +51,11 @@ Plan: 4 of 8 complete; 4 of 8 remaining (03-05, 03-06, 03-07, 03-08)
 ## Performance Metrics
 
 - Phases complete: 2 / 6
-- Plans complete: 17 / 21 (Phase 1: 6, Phase 2: 7, Phase 3: 4 of 8)
+- Plans complete: 18 / 21 (Phase 1: 6, Phase 2: 7, Phase 3: 5 of 8)
 - Requirements shipped (validated):
   - Phase 1: 5 of 6 (AUTH-01, AUTH-02, AUTH-03 via OTP pivot, AUTH-04, PLAT-02 via CI); PLAT-01 = PARTIAL (iOS PASS, Android DEFERRED)
   - Phase 2: 8 of 8 (GRP-01, GRP-02, GRP-03, GRP-04, GRP-05, INV-01, INV-02, INV-03) — all verified via UAT + automated suite + pgTAP
-  - Phase 3 (in progress): 03-04 marks SUB-04 as primitive-shipped (StatusPill renders the per-group submission status); waiting on 03-05 hooks + 03-06 Today-screen wire to be UAT-validated
+  - Phase 3 (in progress): 03-04 shipped SUB-04 primitive (StatusPill); 03-05 shipped 7 hooks claiming SUB-03 / SUB-04 / ADM-01 / ADM-02 / ADM-03 / ADM-04 (hooks-only — final UAT validation in Plan 03-08 after screens ship in 03-06/03-07)
 
 ## Accumulated Context
 
@@ -92,10 +92,10 @@ Plan: 4 of 8 complete; 4 of 8 remaining (03-05, 03-06, 03-07, 03-08)
 
 ## Session Continuity
 
-- **Last session:** 2026-04-30T13:00:00Z (Plan 03-04 complete)
-- **Next session:** Continue Phase 3 with Plan 03-05 (submissions hooks). Plans 03-04 and 03-03 are independent of each other; 03-05 depends on 03-03's data layer and consumes nothing new from this plan (it defines the canonical PendingSubmissionRow that SwipeCard's snake_case props already match).
-- **Resume hint:** Phase 3 four of eight plans complete. 03-04 shipped 8 RN component primitives (DestructiveButton, StatusPill, TypeChip, GroupCard, Shutter, CaptureTopBar, ReviewPanel, SwipeCard) tokens-only with 3 component test suites (18 cases). REVIEWS C5 contract held: SwipeCard's props match PendingSubmissionRow shape exactly (snake_case) so Plan 03-07's review screen will spread `<SwipeCard {...row} />` without a mapper; a contract test guards this. Reanimated mock fix in jest.setup.ts (hand-rolled, replaces broken upstream `/mock` re-export). Full test suite at 201/201; 1 pre-existing design_refs vitest suite still failing (Phase 6 hardening item). Phase 2 closure context preserved verbatim above.
-- **Stopped at:** 03-04 complete (Phase 3 component primitives)
+- **Last session:** 2026-04-30T20:51:34.555Z
+- **Next session:** Continue Phase 3 with Plan 03-06 (App shell migration Stack→Tabs, Today screen, group-detail PendingReviewRow, startQueueManager wiring). Plan 03-06 consumes the 7 hooks shipped in 03-05 and the 8 primitives shipped in 03-04.
+- **Resume hint:** Phase 3 five of eight plans complete. 03-05 shipped 7 submissions-domain hooks (useTodaySubmission, usePendingReviewCount, useReviewQueue, useUploadQueue, useSubmitToday, useReviewSubmission, useTodaySubmissionRealtime) + 5 Jest test suites (28 new cases). REVIEWS C1 (cross-day cache pollution) closed via date-aware query key + handler narrowing. REVIEWS C3 (admin-queue leak) closed via get_pending_review_queue SECURITY DEFINER RPC instead of direct table SELECT. REVIEWS C4 (UUID corruption cascade) closed via newClientUuid fail-hard with typed 'uuid_unavailable'. Realtime channel-mock pattern established. Plan 03-06 wiring TODO captured in 03-05 SUMMARY: invalidate ['uploadQueue'] from uploadQueueManager mutation callers (callback or EventEmitter). Full project test suite: baseline 201 → 231 passing (+30); 1 pre-existing design_refs vitest suite still failing (Phase 6 hardening item).
+- **Stopped at:** 03-05 complete (Phase 3 submissions hooks)
 
 ---
 *State initialized: 2026-04-21*
