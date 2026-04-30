@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';
+import type { Session } from '@supabase/supabase-js';
 import { queryClient } from '../src/lib/queryClient';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
 import { AuthProvider, useSession } from '../src/features/auth/AuthProvider';
 import { usePendingInviteReplay } from '../src/features/groups/usePendingInviteReplay';
+import { startQueueManager } from '../src/features/submissions/uploadQueueManager';
 
 function useProtectedRoute() {
   const { session, loading, recoveryPending } = useSession();
@@ -45,6 +47,29 @@ function useProtectedRoute() {
   }, [session, loading, recoveryPending, segments, router]);
 }
 
+function useUploadQueueManager() {
+  // P3-06: wire AppState + NetInfo flush triggers ONCE for the lifetime of the
+  // app. The queue manager's `flushQueue(session)` no-ops when session is null
+  // (signed-out) per Plan 03-03, so calling it on every transition is safe.
+  //
+  // sessionRef is synced via a separate useEffect so the getSession callback
+  // returned to startQueueManager always reads the LATEST session (not the
+  // closure-captured value at first mount). Without this, signing in after
+  // the app has been open with no session would leave startQueueManager
+  // forever calling flushQueue(null).
+  const { session } = useSession();
+  const sessionRef = useRef<Session | null>(session);
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    const unsubscribe = startQueueManager(() => sessionRef.current);
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
 function RootGate() {
   useProtectedRoute();
   // P2 auth-detour replay: after a user authenticates from a deep-link invite,
@@ -52,6 +77,8 @@ function RootGate() {
   // /invite/[code]. Ordered AFTER useProtectedRoute so the recovery-password
   // gate still wins priority (its effect fires first). See 02-PATTERNS.md §699.
   usePendingInviteReplay();
+  // P3-06: AppState + NetInfo flush triggers for the offline upload queue.
+  useUploadQueueManager();
   return <Stack screenOptions={{ headerShown: false }} />;
 }
 

@@ -22,9 +22,9 @@ const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
 
 /**
  * Allowlist of EVERY router.push / router.replace / Link href that targets
- * the root '/' OR a tab-relative path. Extracted from current codebase pre-P3-06
- * migration. Plan 03-06 will retarget some of these (e.g. post-leave-group from
- * '/' to '/groups') and update this allowlist accordingly.
+ * the root '/' OR a tab-relative path. Updated post-P3-06 — the post-leave/
+ * post-delete-group sites in app/(app)/groups/[id]/index.tsx now target
+ * '/groups' (the Groups tab) per UI-SPEC line 717.
  *
  * Entries: { pattern: regex, intent: brief-description }
  */
@@ -32,8 +32,8 @@ const EXPECTED_ROUTER_CALL_SITES = [
   // Auth-success → app shell (CORRECT post-tabs target — Today is right post-login landing per UI-SPEC line 719)
   // The codebase uses Expo Router route-group syntax `/(app)/` to land on the (app)/index route.
   { pattern: /router\.replace\(['"]\/\(app\)\/?['"]\)/, intent: 'auth-success-or-postlogin' },
-  // Bare-root variant kept as future-proofing for any sites that use just `/` post-migration
-  { pattern: /router\.replace\(['"]\/['"]\)/, intent: 'post-leave-or-delete-group' },
+  // Post-leave-group / post-delete-group (RETARGETED to '/groups' in Plan 03-06 per UI-SPEC line 717)
+  { pattern: /router\.replace\(['"]\/groups['"]\)/, intent: 'post-leave-or-delete-group' },
   // Auth flow redirects (signout, session-clear, recovery) — auth route group
   { pattern: /router\.replace\(['"]\/\(auth\)\/login['"]\)/, intent: 'auth-redirect-to-login' },
   { pattern: /router\.replace\(['"]\/\(auth\)\/signup['"]\)/, intent: 'auth-redirect-to-signup' },
@@ -42,13 +42,16 @@ const EXPECTED_ROUTER_CALL_SITES = [
   { pattern: /router\.replace\(['"]\/groups\/[^'"]+['"]\)/, intent: 'post-redeem-invite-to-detail' },
   // Post-create-group → groups/[id] (CORRECT)
   { pattern: /router\.replace\(['"]\/groups\/[^'"]+['"]\)/, intent: 'post-create-group-to-detail' },
-  // Per-group navigation (groups list → detail)
+  // Per-group navigation (groups list → detail) — also matches /groups/[id]/review (admin queue, Plan 03-06 → 03-07)
   { pattern: /router\.push\(['"]\/groups\/[^'"]+['"]\)/, intent: 'navigate-to-group-detail' },
   // Profile, new, join, invite-redeem entry points (all valid post-tabs targets)
   { pattern: /router\.push\(['"]\/profile['"]\)/, intent: 'navigate-to-profile' },
   { pattern: /router\.push\(['"]\/groups\/new['"]\)/, intent: 'navigate-to-create-group' },
   { pattern: /router\.push\(['"]\/groups\/join['"]\)/, intent: 'navigate-to-join-group' },
   { pattern: /router\.push\(['"]\/groups['"]\)/, intent: 'navigate-to-groups-tab-from-empty-state' },
+  // Bare root '/' — only via Link/replace from the invite-landing screen for the public/marketing landing
+  // (currently there's one such site in app/invite/[code].tsx for the unauthed path)
+  { pattern: /router\.replace\(['"]\/['"]\)/, intent: 'invite-landing-public-redirect' },
 ];
 
 /**
@@ -94,18 +97,17 @@ describe('Stack → Tabs migration audit (D-14)', () => {
     }
   });
 
-  it('post-leave / post-delete-group call sites currently target "/" (will be retargeted in 03-06)', () => {
-    // This is a tracking test — it should currently PASS because the call sites
-    // in app/(app)/groups/[id]/index.tsx (lines 161 + 201 per PATTERNS.md line 40)
-    // currently call router.replace('/'). When 03-06 retargets them to '/groups',
-    // this test will FAIL and the planner should update both this assertion AND
-    // the allowlist intent above.
+  it('post-leave / post-delete-group call sites have been retargeted to "/groups" (Plan 03-06)', () => {
+    // Post-P3-06: this assertion now expects 0 matches. The post-leave +
+    // post-delete RPC handlers in app/(app)/groups/[id]/index.tsx originally
+    // called router.replace('/'); Plan 03-06 retargeted both to
+    // router.replace('/groups') per UI-SPEC line 717. If a future PR
+    // re-introduces a router.replace('/') call site here, this test will
+    // fail — review whether the new site is intentional and update the
+    // allowlist + this comment, or change the call to use '/groups'.
     const cmd = `grep -n "router.replace('/')" ${PROJECT_ROOT}/app/\\(app\\)/groups/\\[id\\]/index.tsx 2>/dev/null || true`;
     const out = execSync(cmd, { encoding: 'utf-8' });
     const lines = out.split('\n').filter(Boolean);
-    // Pre-P3-06: expect at least 1 line (post-leave or post-delete still targets '/')
-    // Post-P3-06: expect 0 lines (both retargeted to '/groups')
-    // The test passes EITHER way — it's documentation, not a hard assertion.
-    expect(lines.length).toBeGreaterThanOrEqual(0);
+    expect(lines.length).toBe(0);
   });
 });
