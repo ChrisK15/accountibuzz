@@ -13,3 +13,12 @@ export * from './ScreenHeader';
 export * from './SegmentedControl';
 export * from './InviteCodeChip';
 export * from './Modal';
+// Phase 3 primitives
+export * from './CaptureTopBar';
+export * from './DestructiveButton';
+export * from './GroupCard';
+export * from './ReviewPanel';
+export * from './Shutter';
+export * from './StatusPill';
+export * from './SwipeCard';
+export * from './TypeChip';

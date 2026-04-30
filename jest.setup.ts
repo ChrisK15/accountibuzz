@@ -142,11 +142,106 @@ jest.mock('expo-linking', () => ({
   getInitialURL: jest.fn(async () => null),
 }));
 
-// react-native-reanimated — official mock unlocks worklet test pattern
-// (worklets become JS-thread-callable so SwipeCard gesture handlers can be
-// invoked directly without simulating native events). Required by the
-// SwipeCard.test.tsx and review.tsx integration tests in Plans 03-04 + 03-07.
-jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+// react-native-reanimated — hand-rolled minimal mock.
+//
+// We do NOT use the upstream `react-native-reanimated/mock` re-export because
+// (Reanimated 4.x) it transitively loads `./index` → `./initializers` →
+// `react-native-worklets` which throws "Native part of Worklets doesn't seem
+// to be initialized" inside Jest. Plan 03-01 added the upstream-mock line
+// optimistically but never exercised it; first use in Plan 03-04
+// (SwipeCard.test.tsx) surfaced the failure.
+//
+// The hand-rolled factory below covers the surface our components use:
+// - default export: { View, Text, Image } pointing at RN counterparts
+// - useSharedValue: returns a real { value } proxy
+// - useAnimatedStyle: invokes the callback once and returns its result
+// - SharedValue / Easing / interpolate stubs for accidental imports
+//
+// Add to this surface as more reanimated APIs are adopted.
+jest.mock('react-native-reanimated', () => {
+  const RN = jest.requireActual('react-native');
+  function noop() {
+    return undefined;
+  }
+  function identity(x: unknown) {
+    return x;
+  }
+  function useSharedValue(init: unknown) {
+    const box = { value: init };
+    return new Proxy(box, {
+      get(t, prop) {
+        if (prop === 'value') return t.value;
+        if (prop === 'get') return () => t.value;
+        if (prop === 'set')
+          return (next: unknown) => {
+            if (typeof next === 'function') {
+              const fn = next as Function;
+              t.value = fn(t.value);
+            } else {
+              t.value = next;
+            }
+          };
+        return undefined;
+      },
+      set(t, prop, next) {
+        if (prop === 'value') {
+          t.value = next;
+          return true;
+        }
+        return false;
+      },
+    });
+  }
+  function useAnimatedStyle(cb: () => unknown) {
+    return cb();
+  }
+  function passthrough(toValue: unknown) {
+    return toValue;
+  }
+  const Animated = {
+    View: RN.View,
+    Text: RN.Text,
+    Image: RN.Image,
+    ScrollView: RN.ScrollView,
+    FlatList: RN.FlatList,
+    createAnimatedComponent: identity,
+  };
+  return {
+    __esModule: true,
+    default: Animated,
+    useSharedValue,
+    useAnimatedStyle,
+    useDerivedValue: (cb: () => unknown) => ({ value: cb() }),
+    useAnimatedReaction: noop,
+    useAnimatedRef: () => ({ current: null }),
+    useAnimatedScrollHandler: () => noop,
+    runOnJS:
+      (fn: (...args: unknown[]) => unknown) =>
+      (...args: unknown[]) =>
+        fn(...args),
+    runOnUI:
+      (fn: (...args: unknown[]) => unknown) =>
+      (...args: unknown[]) =>
+        fn(...args),
+    withTiming: passthrough,
+    withSpring: passthrough,
+    withDecay: passthrough,
+    cancelAnimation: noop,
+    interpolate: noop,
+    interpolateColor: noop,
+    Easing: {
+      linear: noop,
+      ease: noop,
+      in: identity,
+      out: identity,
+      inOut: identity,
+      bezier: () => noop,
+    },
+    Extrapolation: { CLAMP: 'clamp', EXTEND: 'extend', IDENTITY: 'identity' },
+    Extrapolate: { CLAMP: 'clamp', EXTEND: 'extend', IDENTITY: 'identity' },
+    isSharedValue: () => false,
+  };
+});
 
 // PER REVIEWS.md C4: stub crypto.randomUUID to a deterministic sequence so
 // queue-entry tests (Plan 03-03) do not depend on Hermes entropy. The polyfill
