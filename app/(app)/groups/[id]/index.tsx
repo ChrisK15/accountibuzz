@@ -38,6 +38,7 @@ import { useTransferAdmin } from '../../../../src/features/groups/useTransferAdm
 import { useDeleteGroup } from '../../../../src/features/groups/useDeleteGroup';
 import { useRegenerateInvite } from '../../../../src/features/groups/useRegenerateInvite';
 import { shareInvite } from '../../../../src/features/groups/shareInvite';
+import { usePendingReviewCount } from '../../../../src/features/submissions/usePendingReviewCount';
 import { labelFor } from '../../../../src/features/groups/timezones';
 import { useSession } from '../../../../src/features/auth/AuthProvider';
 import { useTheme } from '../../../../src/theme/useTheme';
@@ -106,6 +107,14 @@ export default function GroupDetailScreen() {
     !!user && !!group && group.admin_user_id === user.id;
   const bannerKey = `seen_create_banner:${id ?? ''}`;
 
+  // PendingReviewRow gate (Plan 03-06) — admin-only entry above InviteCodePanel.
+  // Server-side RPC returns 0 for non-admins (D-17 0-leak invariant), so even if
+  // a non-admin somehow lands here, count === 0 hides the row. Defense in depth.
+  const { data: pendingCount } = usePendingReviewCount(id);
+  const showPendingRow = isAdmin && (pendingCount ?? 0) > 0;
+  const countLabel =
+    (pendingCount ?? 0) > 9 ? '9+' : String(pendingCount ?? 0);
+
   // Post-create banner: show once per group, 8s auto-hide.
   useEffect(() => {
     if (!isAdmin || !id) return;
@@ -158,7 +167,7 @@ export default function GroupDetailScreen() {
     try {
       await leave.mutateAsync(id);
       setModal(null);
-      router.replace('/');
+      router.replace('/groups');
     } catch (err) {
       setModal(null);
       Alert.alert(
@@ -198,7 +207,7 @@ export default function GroupDetailScreen() {
     try {
       await del.mutateAsync(id);
       setModal(null);
-      router.replace('/');
+      router.replace('/groups');
     } catch (err) {
       setModal(null);
       Alert.alert(
@@ -378,6 +387,60 @@ export default function GroupDetailScreen() {
               setShowRegenBanner(false);
             }}
           />
+        )}
+
+        {/* PendingReviewRow — admin-only entry above InviteCodePanel.
+            UI-SPEC §"Pending-review entry" (lines 838-858) + 03-PATTERNS.md
+            (lines 643-681). Hidden when count === 0 OR user is not admin.
+            ADM-01 + PLAT-03 (UI gate; RPC also returns 0 for non-admins). */}
+        {showPendingRow && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Pending review, ${countLabel} ${
+              pendingCount === 1 ? 'submission' : 'submissions'
+            }`}
+            accessibilityHint="Opens the review queue for this group"
+            onPress={() => router.push(`/groups/${id}/review`)}
+            style={({ pressed }) => ({
+              backgroundColor: pressed
+                ? t.colors.surfaceMuted
+                : t.colors.surface,
+              borderRadius: t.radii.md,
+              borderWidth: 1,
+              borderColor: t.colors.border,
+              padding: t.spacing.lg,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              // e1 elevation per UI-SPEC line 845
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 3,
+              elevation: 2,
+            })}
+          >
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[t.fonts.heading2, { color: t.colors.textStrong }]}
+              >
+                {`Pending review (${countLabel})`}
+              </Text>
+              <Text
+                style={[
+                  t.fonts.body,
+                  { color: t.colors.textMuted, marginTop: t.spacing.xs },
+                ]}
+              >
+                Tap to approve or reject submissions
+              </Text>
+            </View>
+            <Feather
+              name="chevron-right"
+              size={22}
+              color={t.colors.textMuted}
+            />
+          </Pressable>
         )}
 
         {/* Admin invite panel */}
