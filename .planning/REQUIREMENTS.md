@@ -81,7 +81,7 @@ Requirements for initial MVP release to friend groups.
 **: App runs on iOS and Android via Expo (SDK 55)
 - [x] **PLAT-02
 **: All data access is gated by Supabase Row-Level Security; a CI check fails builds if a table has RLS disabled
-- [ ] **PLAT-03**: Group admin can only approve/reject submissions for groups they admin (enforced by RLS)
+- [x] **PLAT-03**: Group admin can only approve/reject submissions for groups they admin (enforced by RLS)
 
 ## v2 Requirements
 
@@ -149,7 +149,7 @@ Every v1 requirement maps to exactly one phase in ROADMAP.md.
 | ADM-02 | Phase 3 — Capture & Admin Review | Complete |
 | ADM-03 | Phase 3 — Capture & Admin Review | Complete |
 | ADM-04 | Phase 3 — Capture & Admin Review | Complete |
-| PLAT-03 | Phase 3 — Capture & Admin Review | Pending |
+| PLAT-03 | Phase 3 — Capture & Admin Review | Complete |
 | PTS-01 | Phase 4 — Social Surfaces | Pending |
 | PTS-02 | Phase 4 — Social Surfaces | Pending |
 | PTS-03 | Phase 4 — Social Surfaces | Pending |

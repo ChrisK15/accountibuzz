@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: 03-05 complete (Phase 3 submissions hooks)
-last_updated: "2026-04-30T20:51:34.563Z"
+stopped_at: 03-06 complete (Phase 3 app-shell migration + Today screen + PendingReviewRow)
+last_updated: "2026-04-30T23:45:00Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 21
-  completed_plans: 18
-  percent: 86
+  completed_plans: 20
+  percent: 95
 ---
 
 # State: Accountibuzz
@@ -30,12 +30,12 @@ progress:
 ## Current Position
 
 Phase: 03 (capture-admin-review) — EXECUTING
-Plan: 5 of 8 complete; 3 of 8 remaining (03-06, 03-07, 03-08)
+Plan: 6 of 8 complete; 2 of 8 remaining (03-07, 03-08)
 
-- **Phase:** 3 — Capture & Admin Review (in progress, 5/8 plans done: 03-01 infra, 03-02 migration, 03-03 data layer, 03-04 UI primitives, 03-05 hooks)
-- **Plan:** 03-05 — 7 submissions hooks (3 reads + 2 mutations + useUploadQueue + Realtime channel) + 5 Jest test suites (28 new cases); REVIEWS C1/C3/C4 fully closed; full project test suite at 231/231 in our codebase
+- **Phase:** 3 — Capture & Admin Review (in progress, 6/8 plans done: 03-01 infra, 03-02 migration, 03-03 data layer, 03-04 UI primitives, 03-05 hooks, 03-06 app-shell migration + Today screen)
+- **Plan:** 03-06 — Stack→Tabs migration (D-14): three-tab app shell, Today-screen rewrite (FlatList of GroupCardRows + Realtime + queue badge + bottom-sheet), groups-list relocation, admin-only PendingReviewRow on group-detail with retargeted post-leave/post-delete redirects, startQueueManager wired once from app/_layout.tsx — full project test suite stays at 231/231
 - **Status:** Executing Phase 03
-- **Progress:** [█████████░] 86%
+- **Progress:** [█████████▌] 95%
 
 ## Roadmap At-a-Glance
 
@@ -43,7 +43,7 @@ Plan: 5 of 8 complete; 3 of 8 remaining (03-06, 03-07, 03-08)
 |-------|------|--------|
 | 1 | Foundation | Complete |
 | 2 | Groups & Invites | Complete |
-| 3 | Capture & Admin Review | In progress (5/8 plans done) |
+| 3 | Capture & Admin Review | In progress (6/8 plans done) |
 | 4 | Social Surfaces | Not started |
 | 5 | Push & Daily Rollover | Not started |
 | 6 | Pre-Rollout Hardening | Not started |
@@ -51,11 +51,11 @@ Plan: 5 of 8 complete; 3 of 8 remaining (03-06, 03-07, 03-08)
 ## Performance Metrics
 
 - Phases complete: 2 / 6
-- Plans complete: 18 / 21 (Phase 1: 6, Phase 2: 7, Phase 3: 5 of 8)
+- Plans complete: 19 / 21 (Phase 1: 6, Phase 2: 7, Phase 3: 6 of 8)
 - Requirements shipped (validated):
   - Phase 1: 5 of 6 (AUTH-01, AUTH-02, AUTH-03 via OTP pivot, AUTH-04, PLAT-02 via CI); PLAT-01 = PARTIAL (iOS PASS, Android DEFERRED)
   - Phase 2: 8 of 8 (GRP-01, GRP-02, GRP-03, GRP-04, GRP-05, INV-01, INV-02, INV-03) — all verified via UAT + automated suite + pgTAP
-  - Phase 3 (in progress): 03-04 shipped SUB-04 primitive (StatusPill); 03-05 shipped 7 hooks claiming SUB-03 / SUB-04 / ADM-01 / ADM-02 / ADM-03 / ADM-04 (hooks-only — final UAT validation in Plan 03-08 after screens ship in 03-06/03-07)
+  - Phase 3 (in progress): 03-04 shipped SUB-04 primitive (StatusPill); 03-05 shipped 7 hooks claiming SUB-03 / SUB-04 / ADM-01 / ADM-02 / ADM-03 / ADM-04; 03-06 ships SUB-04 visible surface (Today screen) + ADM-01 visible surface (PendingReviewRow) + PLAT-03 UI gate (admin-only PendingReviewRow render gate) — final UAT validation in Plan 03-08 after capture + review screens ship in 03-07
 
 ## Accumulated Context
 
@@ -92,10 +92,10 @@ Plan: 5 of 8 complete; 3 of 8 remaining (03-06, 03-07, 03-08)
 
 ## Session Continuity
 
-- **Last session:** 2026-04-30T20:51:34.555Z
-- **Next session:** Continue Phase 3 with Plan 03-06 (App shell migration Stack→Tabs, Today screen, group-detail PendingReviewRow, startQueueManager wiring). Plan 03-06 consumes the 7 hooks shipped in 03-05 and the 8 primitives shipped in 03-04.
-- **Resume hint:** Phase 3 five of eight plans complete. 03-05 shipped 7 submissions-domain hooks (useTodaySubmission, usePendingReviewCount, useReviewQueue, useUploadQueue, useSubmitToday, useReviewSubmission, useTodaySubmissionRealtime) + 5 Jest test suites (28 new cases). REVIEWS C1 (cross-day cache pollution) closed via date-aware query key + handler narrowing. REVIEWS C3 (admin-queue leak) closed via get_pending_review_queue SECURITY DEFINER RPC instead of direct table SELECT. REVIEWS C4 (UUID corruption cascade) closed via newClientUuid fail-hard with typed 'uuid_unavailable'. Realtime channel-mock pattern established. Plan 03-06 wiring TODO captured in 03-05 SUMMARY: invalidate ['uploadQueue'] from uploadQueueManager mutation callers (callback or EventEmitter). Full project test suite: baseline 201 → 231 passing (+30); 1 pre-existing design_refs vitest suite still failing (Phase 6 hardening item).
-- **Stopped at:** 03-05 complete (Phase 3 submissions hooks)
+- **Last session:** 2026-04-30T23:45:00Z
+- **Next session:** Continue Phase 3 with Plan 03-07 (Capture screen + Admin review queue). Plan 03-07 ships `app/(app)/capture/[groupId].tsx` + `app/(app)/groups/[id]/review.tsx` — both routes are already registered in the Tabs layout (hidden via href:null). Plan 03-07's capture screen file MUST wrap itself in a Stack with `presentation: 'fullScreenModal'`, `animation: 'slide_from_bottom'`, `gestureEnabled: false` per UI-SPEC line 786 + 951 (those Stack-only options are NOT carried by the Tabs.Screen options). Plan 03-07's enqueue/dequeue callers MUST `qc.invalidateQueries({ queryKey: ['uploadQueue'] })` after each mutation per the option-(b) cache-invalidation strategy chosen in 03-06.
+- **Resume hint:** Phase 3 six of eight plans complete. 03-06 delivered the Stack→Tabs migration (D-14): Today screen at `app/(app)/index.tsx` (FlatList of GroupCardRows + Realtime + queue badge + bottom-sheet), groups list relocated to `app/(app)/groups/index.tsx`, admin-only PendingReviewRow inserted on group-detail with retargeted post-leave/post-delete redirects to `/groups`, startQueueManager wired once from `app/_layout.tsx` via `useUploadQueueManager()` in RootGate. tabs-migration audit allowlist updated. Full project test suite stays at 231/231 in our codebase. Two polish items deferred to Plan 03-08: (a) 2pt yellow active-tab indicator (Expo Router's <Tabs> doesn't ship it; needs a custom tabBar component), (b) Modal `presentationStyle='pageSheet'` for the queue bottom-sheet (Modal primitive doesn't currently expose it). REQUIREMENTS advanced: SUB-04 visible surface, ADM-01 visible surface, PLAT-03 UI gate.
+- **Stopped at:** 03-06 complete (Phase 3 app-shell migration + Today screen + PendingReviewRow + startQueueManager wiring)
 
 ---
 *State initialized: 2026-04-21*

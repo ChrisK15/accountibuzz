@@ -70,7 +70,7 @@
 - [x] 03-03-PLAN.md — Submissions data layer: schemas, time helpers, two-phase commit submitMedia pipeline, AsyncStorage upload queue manager + 3 Jest tests
 - [x] 03-04-PLAN.md — 8 new UI primitives: DestructiveButton, StatusPill, TypeChip, GroupCard, Shutter, CaptureTopBar, ReviewPanel, SwipeCard + 3 component tests
 - [x] 03-05-PLAN.md — 7 submissions hooks (TanStack reads + mutations + Realtime channel with useFocusEffect cleanup) + 5 Jest tests
-- [ ] 03-06-PLAN.md — App shell migration (Stack→Tabs), Today screen, group-detail PendingReviewRow, startQueueManager wiring + tabs allowlist update
+- [x] 03-06-PLAN.md — App shell migration (Stack→Tabs), Today screen, group-detail PendingReviewRow, startQueueManager wiring + tabs allowlist update
 - [ ] 03-07-PLAN.md — Capture screen state machine + admin swipe-stack review queue + reject-reason panel + first-review tooltip + 2 Jest tests
 - [ ] 03-08-PLAN.md — Phase verification: full test suite + typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough + REQUIREMENTS/ROADMAP rewording for terminal-rejection per D-12
 **UI hint**: yes
@@ -140,7 +140,7 @@
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete (iOS UAT PASS; Android UAT deferred) | 2026-04-22 |
 | 2. Groups & Invites | 0/? | Not started | - |
-| 3. Capture & Admin Review | 5/8 | In progress | - |
+| 3. Capture & Admin Review | 6/8 | In progress | - |
 | 4. Social Surfaces | 0/? | Not started | - |
 | 5. Push & Daily Rollover | 0/? | Not started | - |
 | 6. Pre-Rollout Hardening | 0/? | Not started | - |
