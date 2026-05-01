@@ -63,7 +63,7 @@
   2. Upload survives flaky networks via resumable upload + offline queue, with explicit progress UI and no "silent success"
   3. Member sees their own submission status (pending / approved / rejected) and is blocked from submitting twice for the same local day
   4. Admin sees a swipe-style queue of pending submissions for groups they admin and can approve or reject (with optional reason) — RLS prevents non-admins from reviewing
-  5. Rejected submitters are notified so they can resubmit before cutoff
+  5. Rejected submitters are notified that today did not count (rejection is terminal — no resubmit per D-12)
 **Plans**: 8 plans
 - [x] 03-01-PLAN.md — Wave 0 infra: install netinfo + expo-camera plugin block + jest mocks + dev client rebuild [checkpoint]
 - [x] 03-02-PLAN.md — Migration 0006: 3 SECURITY DEFINER RPCs + 4 pgTAP files + [BLOCKING] supabase db push + types regen + tabs-migration audit test

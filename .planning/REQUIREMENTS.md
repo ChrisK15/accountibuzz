@@ -46,7 +46,7 @@ Requirements for initial MVP release to friend groups.
 - [x] **ADM-01**: Admin sees a queue of pending submissions for groups they admin
 - [x] **ADM-02**: Admin can approve a submission
 - [x] **ADM-03**: Admin can reject a submission with an optional short reason
-- [x] **ADM-04**: Rejected submissions notify the submitter so they can resubmit before cutoff
+- [x] **ADM-04**: Rejected submitters are notified that today did not count (rejection is terminal — no resubmit per D-12)
 
 ### Points, Streaks, Leaderboard
 
