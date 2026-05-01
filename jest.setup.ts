@@ -142,6 +142,54 @@ jest.mock('expo-linking', () => ({
   getInitialURL: jest.fn(async () => null),
 }));
 
+// react-native-gesture-handler — hand-rolled minimal mock.
+//
+// Plan 03-07 introduced `react-native-gesture-handler` (peer of expo-router,
+// installed via `npx expo install` during Plan 03-07 Task 1). The library's
+// own `react-native-gesture-handler/jestSetup` mocks the native module but
+// not the high-level `Gesture.Pan()` / `GestureDetector` API surface used by
+// the admin review screen. The hand-rolled mock below covers:
+// - `GestureDetector` — render children directly so the test tree includes them
+// - `Gesture.Pan()` — chainable builder whose methods all return `this`
+//
+// Add to this surface as future plans adopt more gesture-handler APIs.
+jest.mock('react-native-gesture-handler', () => {
+  const RN = jest.requireActual('react-native');
+  function makePan() {
+    const builder: Record<string, unknown> = {};
+    const chain = (..._args: unknown[]) => builder;
+    [
+      'activeOffsetX',
+      'activeOffsetY',
+      'failOffsetX',
+      'failOffsetY',
+      'enabled',
+      'onUpdate',
+      'onBegin',
+      'onStart',
+      'onEnd',
+      'onFinalize',
+      'minDistance',
+      'minVelocity',
+      'maxPointers',
+      'minPointers',
+      'shouldCancelWhenOutside',
+    ].forEach((m) => {
+      builder[m] = chain;
+    });
+    return builder;
+  }
+  return {
+    __esModule: true,
+    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+    Gesture: { Pan: makePan, Tap: makePan },
+    PanGestureHandler: RN.View,
+    State: {},
+    Directions: {},
+    GestureHandlerRootView: RN.View,
+  };
+});
+
 // react-native-reanimated — hand-rolled minimal mock.
 //
 // We do NOT use the upstream `react-native-reanimated/mock` re-export because
