@@ -32,7 +32,7 @@ insert into public.group_members (group_id, user_id, role) values
 -- Pending submissions: one in photo group (member-authored), one in video group
 -- (admin-authored, used for cross-group test).
 insert into public.submissions (id, group_id, user_id, local_date, status, media_path, media_type, caption) values
-  ('s0000001-0001-0001-0001-000000000001',
+  ('e0000001-0001-0001-0001-000000000001',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date,
@@ -40,7 +40,7 @@ insert into public.submissions (id, group_id, user_id, local_date, status, media
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c1.jpg',
    'photo',
    'member submission'),
-  ('s0000002-0002-0002-0002-000000000002',
+  ('e0000002-0002-0002-0002-000000000002',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '11111111-1111-1111-1111-111111111111',
    (now() AT TIME ZONE 'America/Los_Angeles')::date,
@@ -48,7 +48,7 @@ insert into public.submissions (id, group_id, user_id, local_date, status, media
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/11111111-1111-1111-1111-111111111111/c1.jpg',
    'photo',
    null),
-  ('s0000003-0003-0003-0003-000000000003',
+  ('e0000003-0003-0003-0003-000000000003',
    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
    '22222222-2222-2222-2222-222222222222',
    (now() AT TIME ZONE 'America/Los_Angeles')::date,
@@ -58,7 +58,7 @@ insert into public.submissions (id, group_id, user_id, local_date, status, media
    null),
   -- One in photo group used for the reject + race tests (separate from #1 to avoid
   -- coupling the approve+reject sub-tests).
-  ('s0000004-0004-0004-0004-000000000004',
+  ('e0000004-0004-0004-0004-000000000004',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 1,
@@ -66,7 +66,7 @@ insert into public.submissions (id, group_id, user_id, local_date, status, media
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c2.jpg',
    'photo',
    'reject candidate'),
-  ('s0000005-0005-0005-0005-000000000005',
+  ('e0000005-0005-0005-0005-000000000005',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 2,
@@ -74,7 +74,7 @@ insert into public.submissions (id, group_id, user_id, local_date, status, media
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c3.jpg',
    'photo',
    'reject-no-reason candidate'),
-  ('s0000006-0006-0006-0006-000000000006',
+  ('e0000006-0006-0006-0006-000000000006',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 3,
@@ -88,7 +88,7 @@ insert into public.submissions (id, group_id, user_id, local_date, status, media
 -- ============================================================
 select throws_ok(
   $$select public.review_submission(
-      's0000001-0001-0001-0001-000000000001'::uuid,
+      'e0000001-0001-0001-0001-000000000001'::uuid,
       'approved',
       null
     )$$,
@@ -109,7 +109,7 @@ set local role authenticated;
 
 select throws_ok(
   $$select public.review_submission(
-      's0000001-0001-0001-0001-000000000001'::uuid,
+      'e0000001-0001-0001-0001-000000000001'::uuid,
       'maybe',
       null
     )$$,
@@ -124,7 +124,7 @@ select throws_ok(
 select throws_ok(
   format(
     $$select public.review_submission(
-        's0000001-0001-0001-0001-000000000001'::uuid,
+        'e0000001-0001-0001-0001-000000000001'::uuid,
         'rejected',
         %L
       )$$,
@@ -164,7 +164,7 @@ set local role authenticated;
 
 select throws_ok(
   $$select public.review_submission(
-      's0000001-0001-0001-0001-000000000001'::uuid,
+      'e0000001-0001-0001-0001-000000000001'::uuid,
       'approved',
       null
     )$$,
@@ -189,7 +189,7 @@ set local role authenticated;
 
 select throws_ok(
   $$select public.review_submission(
-      's0000003-0003-0003-0003-000000000003'::uuid,
+      'e0000003-0003-0003-0003-000000000003'::uuid,
       'approved',
       null
     )$$,
@@ -203,7 +203,7 @@ select throws_ok(
 -- ============================================================
 select lives_ok(
   $$select public.review_submission(
-      's0000001-0001-0001-0001-000000000001'::uuid,
+      'e0000001-0001-0001-0001-000000000001'::uuid,
       'approved',
       null
     )$$,
@@ -213,7 +213,7 @@ select lives_ok(
 select ok(
   exists (
     select 1 from public.submissions
-     where id = 's0000001-0001-0001-0001-000000000001'
+     where id = 'e0000001-0001-0001-0001-000000000001'
        and status = 'approved'
        and reviewed_by = '11111111-1111-1111-1111-111111111111'
        and reviewed_at is not null
@@ -227,7 +227,7 @@ select ok(
 -- ============================================================
 select lives_ok(
   $$select public.review_submission(
-      's0000004-0004-0004-0004-000000000004'::uuid,
+      'e0000004-0004-0004-0004-000000000004'::uuid,
       'rejected',
       'photo is blurry'
     )$$,
@@ -237,7 +237,7 @@ select lives_ok(
 select ok(
   exists (
     select 1 from public.submissions
-     where id = 's0000004-0004-0004-0004-000000000004'
+     where id = 'e0000004-0004-0004-0004-000000000004'
        and status = 'rejected'
        and rejection_reason = 'photo is blurry'
        and reviewed_by = '11111111-1111-1111-1111-111111111111'
@@ -250,7 +250,7 @@ select ok(
 -- ============================================================
 select throws_ok(
   $$select public.review_submission(
-      's0000001-0001-0001-0001-000000000001'::uuid,
+      'e0000001-0001-0001-0001-000000000001'::uuid,
       'approved',
       null
     )$$,
@@ -269,7 +269,7 @@ select set_config('request.jwt.claims', NULL, true);
 -- Bypass RLS + trigger by acting as superuser to set up the race condition.
 update public.submissions
    set status = 'rejected'
- where id = 's0000006-0006-0006-0006-000000000006';
+ where id = 'e0000006-0006-0006-0006-000000000006';
 
 select set_config(
   'request.jwt.claims',
@@ -280,7 +280,7 @@ set local role authenticated;
 
 select throws_ok(
   $$select public.review_submission(
-      's0000006-0006-0006-0006-000000000006'::uuid,
+      'e0000006-0006-0006-0006-000000000006'::uuid,
       'approved',
       null
     )$$,

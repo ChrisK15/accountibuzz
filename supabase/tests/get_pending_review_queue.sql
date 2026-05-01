@@ -60,7 +60,7 @@ insert into public.group_members (group_id, user_id, role) values
 -- 2 pending in photo group with distinct created_at (test ordering).
 -- 1 pending row authored by user with empty display_name (LEFT JOIN edge).
 insert into public.submissions (id, group_id, user_id, local_date, status, media_path, media_type, caption, created_at) values
-  ('s0000001-0001-0001-0001-000000000001',
+  ('e0000001-0001-0001-0001-000000000001',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date,
@@ -69,7 +69,7 @@ insert into public.submissions (id, group_id, user_id, local_date, status, media
    'photo',
    'older one',
    now() - interval '2 hours'),
-  ('s0000002-0002-0002-0002-000000000002',
+  ('e0000002-0002-0002-0002-000000000002',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '55555555-5555-5555-5555-555555555555',
    (now() AT TIME ZONE 'America/Los_Angeles')::date,
@@ -162,7 +162,7 @@ select is(
 -- ============================================================
 select is(
   (select id from public.get_pending_review_queue('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') limit 1),
-  's0000001-0001-0001-0001-000000000001'::uuid,
+  'e0000001-0001-0001-0001-000000000001'::uuid,
   'admin queue ordered by created_at asc (oldest first)'
 );
 
@@ -173,14 +173,14 @@ select is(
 -- ============================================================
 select is(
   (select media_type from public.get_pending_review_queue('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-    where id = 's0000002-0002-0002-0002-000000000002'),
+    where id = 'e0000002-0002-0002-0002-000000000002'),
   'photo',
   'queue rows expose media_type column'
 );
 
 select is(
   (select caption from public.get_pending_review_queue('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-    where id = 's0000001-0001-0001-0001-000000000001'),
+    where id = 'e0000001-0001-0001-0001-000000000001'),
   'older one',
   'queue rows expose caption column'
 );
@@ -192,7 +192,7 @@ select is(
 -- ============================================================
 select is(
   (select display_name from public.get_pending_review_queue('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-    where id = 's0000002-0002-0002-0002-000000000002'),
+    where id = 'e0000002-0002-0002-0002-000000000002'),
   ''::text,
   'queue rows expose joined display_name (empty string when profile defaulted)'
 );

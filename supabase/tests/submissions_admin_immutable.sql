@@ -39,55 +39,55 @@ insert into public.group_members (group_id, user_id, role) values
 -- Pending submissions: one per test case (so each test gets a fresh row, no
 -- coupling). All authored by the owner (44444444) in the photo group.
 insert into public.submissions (id, group_id, user_id, local_date, status, media_path, media_type, caption) values
-  ('s0000001-0001-0001-0001-000000000001',
+  ('e0000001-0001-0001-0001-000000000001',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date,
    'pending',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c1.jpg',
    'photo', null),
-  ('s0000002-0002-0002-0002-000000000002',
+  ('e0000002-0002-0002-0002-000000000002',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 1,
    'pending',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c2.jpg',
    'photo', null),
-  ('s0000003-0003-0003-0003-000000000003',
+  ('e0000003-0003-0003-0003-000000000003',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 2,
    'pending',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c3.jpg',
    'photo', null),
-  ('s0000004-0004-0004-0004-000000000004',
+  ('e0000004-0004-0004-0004-000000000004',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 3,
    'pending',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c4.jpg',
    'photo', null),
-  ('s0000005-0005-0005-0005-000000000005',
+  ('e0000005-0005-0005-0005-000000000005',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 4,
    'pending',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c5.jpg',
    'photo', null),
-  ('s0000006-0006-0006-0006-000000000006',
+  ('e0000006-0006-0006-0006-000000000006',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 5,
    'pending',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c6.jpg',
    'photo', null),
-  ('s0000007-0007-0007-0007-000000000007',
+  ('e0000007-0007-0007-0007-000000000007',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 6,
    'pending',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c7.jpg',
    'photo', null),
-  ('s0000008-0008-0008-0008-000000000008',
+  ('e0000008-0008-0008-0008-000000000008',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 7,
    'pending',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/44444444-4444-4444-4444-444444444444/c8.jpg',
    'photo', null),
-  ('s0000009-0009-0009-0009-000000000009',
+  ('e0000009-0009-0009-0009-000000000009',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 8,
    'pending',
@@ -112,7 +112,7 @@ set local role authenticated;
 select throws_ok(
   $$update public.submissions
        set status = 'approved'
-     where id = 's0000001-0001-0001-0001-000000000001'$$,
+     where id = 'e0000001-0001-0001-0001-000000000001'$$,
   NULL,
   'owner may not modify key/status/review columns on submissions',
   'owner branch: status mutation rejected by trigger'
@@ -124,7 +124,7 @@ select throws_ok(
 select throws_ok(
   $$update public.submissions
        set user_id = '11111111-1111-1111-1111-111111111111'
-     where id = 's0000002-0002-0002-0002-000000000002'$$,
+     where id = 'e0000002-0002-0002-0002-000000000002'$$,
   NULL,
   'owner may not modify key/status/review columns on submissions',
   'owner branch: user_id mutation rejected by trigger'
@@ -136,7 +136,7 @@ select throws_ok(
 select throws_ok(
   $$update public.submissions
        set group_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
-     where id = 's0000003-0003-0003-0003-000000000003'$$,
+     where id = 'e0000003-0003-0003-0003-000000000003'$$,
   NULL,
   'owner may not modify key/status/review columns on submissions',
   'owner branch: group_id mutation rejected by trigger'
@@ -148,7 +148,7 @@ select throws_ok(
 select throws_ok(
   $$update public.submissions
        set local_date = '2020-01-01'
-     where id = 's0000004-0004-0004-0004-000000000004'$$,
+     where id = 'e0000004-0004-0004-0004-000000000004'$$,
   NULL,
   'owner may not modify key/status/review columns on submissions',
   'owner branch: local_date mutation rejected by trigger'
@@ -175,7 +175,7 @@ set local role authenticated;
 select throws_ok(
   $$update public.submissions
        set group_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
-     where id = 's0000005-0005-0005-0005-000000000005'$$,
+     where id = 'e0000005-0005-0005-0005-000000000005'$$,
   NULL,
   'admin may not modify submission identity/group/media columns',
   'admin branch: group_id mutation rejected by trigger (WR-02)'
@@ -187,7 +187,7 @@ select throws_ok(
 select throws_ok(
   $$update public.submissions
        set user_id = '11111111-1111-1111-1111-111111111111'
-     where id = 's0000006-0006-0006-0006-000000000006'$$,
+     where id = 'e0000006-0006-0006-0006-000000000006'$$,
   NULL,
   'admin may not modify submission identity/group/media columns',
   'admin branch: user_id mutation rejected by trigger'
@@ -199,7 +199,7 @@ select throws_ok(
 select throws_ok(
   $$update public.submissions
        set local_date = '2020-01-01'
-     where id = 's0000007-0007-0007-0007-000000000007'$$,
+     where id = 'e0000007-0007-0007-0007-000000000007'$$,
   NULL,
   'admin may not modify submission identity/group/media columns',
   'admin branch: local_date mutation rejected by trigger'
@@ -211,7 +211,7 @@ select throws_ok(
 select throws_ok(
   $$update public.submissions
        set media_path = 'evil-path.jpg'
-     where id = 's0000008-0008-0008-0008-000000000008'$$,
+     where id = 'e0000008-0008-0008-0008-000000000008'$$,
   NULL,
   'admin may not modify submission identity/group/media columns',
   'admin branch: media_path mutation rejected by trigger'
@@ -223,7 +223,7 @@ select throws_ok(
 select throws_ok(
   $$update public.submissions
        set media_type = 'video'
-     where id = 's0000009-0009-0009-0009-000000000009'$$,
+     where id = 'e0000009-0009-0009-0009-000000000009'$$,
   NULL,
   'admin may not modify submission identity/group/media columns',
   'admin branch: media_type mutation rejected by trigger'
@@ -237,7 +237,7 @@ select throws_ok(
        set status = 'approved',
            reviewed_by = '22222222-2222-2222-2222-222222222222',
            reviewed_at = now()
-     where id = 's0000007-0007-0007-0007-000000000007'$$,
+     where id = 'e0000007-0007-0007-0007-000000000007'$$,
   NULL,
   'admin review must set reviewed_by = auth.uid()',
   'admin branch: reviewed_by mismatch rejected by trigger (WR-03)'
@@ -253,7 +253,7 @@ reset role;
 select set_config('request.jwt.claims', NULL, true);
 
 insert into public.submissions (id, group_id, user_id, local_date, status, media_path, media_type, caption) values
-  ('s0000099-0099-0099-0099-000000000099',
+  ('e0000099-0099-0099-0099-000000000099',
    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '44444444-4444-4444-4444-444444444444',
    (now() AT TIME ZONE 'America/Los_Angeles')::date - 99,
@@ -273,7 +273,7 @@ select lives_ok(
        set status      = 'approved',
            reviewed_by = '11111111-1111-1111-1111-111111111111',
            reviewed_at = now()
-     where id = 's0000099-0099-0099-0099-000000000099'$$,
+     where id = 'e0000099-0099-0099-0099-000000000099'$$,
   'admin branch: legit review (status + reviewed_by=self + reviewed_at) accepted by trigger'
 );
 
