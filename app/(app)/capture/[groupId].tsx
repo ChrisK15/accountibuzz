@@ -31,7 +31,7 @@
 //   that applies those modal-style options.
 
 import { useEffect, useRef, useState } from 'react';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   AppState,
@@ -140,23 +140,19 @@ export default function CaptureScreen() {
     return () => sub.remove();
   }, [camPerm, micPerm, isVideoGroup, requestCamPerm, requestMicPerm]);
 
-  // ── Stack wrapper applies the modal-style options (Plan 03-06 note) ────
-  // Wrapping with <Stack.Screen> options at this layer because the parent
-  // Tabs.Screen registration in app/(app)/_layout.tsx cannot carry these.
-  // `fullScreenModal` keeps the screen mounted edge-to-edge (camera unmounts
-  // cleanly on dismiss); slide-from-bottom is the iOS modal idiom; gestures
-  // disabled so an accidental swipe doesn't lose a captured take (UI-SPEC
-  // line 951).
-  const stackScreen = (
-    <Stack.Screen
-      options={{
-        headerShown: false,
-        presentation: 'fullScreenModal',
-        animation: 'slide_from_bottom',
-        gestureEnabled: false,
-      }}
-    />
-  );
+  // ── Stack-modal options removed (Phase 3 inline UAT fix) ──────────────
+  // The capture route is registered as a Tabs.Screen (not a Stack.Screen) in
+  // app/(app)/_layout.tsx. `<Stack.Screen options={{ animation:
+  // 'slide_from_bottom', ... }}>` declared here was leaking those Stack-only
+  // options into the Tabs navigator's options bag, which crashed the bottom-
+  // tabs v7 animation registry (`sceneStyleInterpolator` undefined) on every
+  // navigation to /capture/[groupId].
+  //
+  // Restoring proper modal-style presentation (slide-from-bottom + gesture
+  // disabled) requires moving the capture route OUT of the Tabs and into the
+  // root Stack — tracked as a Phase 3.1 / 03-08 gap-closure item, not a
+  // blocking regression.
+  const stackScreen: React.ReactNode = null;
 
   // ── Loading / 404 group guard ──────────────────────────────────────────
   if (groupPending || !group) {
