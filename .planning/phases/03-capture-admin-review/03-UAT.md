@@ -244,7 +244,12 @@ Cross-fade happens automatically within ~2s on member device after admin's appro
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date) — **must be PASS**
+`PASS — CK / 2026-05-06` — **hard gate cleared**
+
+### Notes
+- INLINE FIX commit `215984b`: discovered the `supabase_realtime` publication was empty during this checkpoint. `useTodaySubmissionRealtime` channels were subscribing successfully but receiving zero events — ADM-04 + SUB-04 silently broken since 0001 foundation. Migration 0007 adds `public.submissions` to the publication. Idempotent guard so re-runs are safe.
+- INLINE FIX commit `215984b` (same): SecureStore.getItemAsync threw on the first-review tooltip key `tooltip:admin_review:<user.id>` — colons aren't allowed in SecureStore keys (alphanumeric + `.` `-` `_` only). Replaced with `tooltip.admin_review.<user.id>` at both call sites.
+- INLINE FIX commit `f0e125a`: opening the admin review screen also surfaced a separate Render Error — `GestureDetector must be used as a descendant of GestureHandlerRootView`. Plan 03-07 installed react-native-gesture-handler but never wrapped the root layout. Fixed by wrapping `RootLayout`'s provider tree in `<GestureHandlerRootView style={{ flex: 1 }}>`.
 
 ### Notes
 
