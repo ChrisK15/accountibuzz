@@ -504,7 +504,11 @@ Reject lands as terminal `Today didn't count` AND submitter cannot resubmit same
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date) — **must be PASS**
+`PASS — CK / 2026-05-06` — **hard gate cleared (final)**
+
+### Notes
+- INLINE FIX commit `d3260a8`: StatusPill's rejected state rendered as a flat red blob with invisible text/icon. Same `${destructive_hsl_token}26` alpha-concat bug as the ReviewPanel error banner from CK-1. Replaced with `hsla(4, 78%, 56%, 0.15)` literal bg; text + icon stayed destructive-HSL and are now legible.
+- D-12 terminal-rejection invariant validated: rejection cross-faded to `Today didn't count` on submitter's Today via Realtime, Submit CTA was locked, retry attempt blocked with the typed `already_submitted_today` error path.
 
 ### Notes
 
