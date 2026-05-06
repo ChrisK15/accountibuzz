@@ -38,7 +38,7 @@ Requirements for initial MVP release to friend groups.
 - [x] **SUB-02**: Member can capture and submit a short video (if group is video-type) before the group's local midnight cutoff
 - [x] **SUB-03**: Upload is resilient to flaky networks (resumable + offline queue + retry)
 - [x] **SUB-04**: Member can see the status of their submission (pending / approved / rejected)
-- [ ] **SUB-05**: Member is blocked from submitting twice on the same local day
+- [x] **SUB-05**: Member is blocked from submitting twice on the same local day
 - [x] **SUB-06**: Member can optionally add a short caption to their submission
 
 ### Admin Review
@@ -143,7 +143,7 @@ Every v1 requirement maps to exactly one phase in ROADMAP.md.
 | SUB-02 | Phase 3 — Capture & Admin Review | Complete |
 | SUB-03 | Phase 3 — Capture & Admin Review | Complete |
 | SUB-04 | Phase 3 — Capture & Admin Review | Complete |
-| SUB-05 | Phase 3 — Capture & Admin Review | Pending |
+| SUB-05 | Phase 3 — Capture & Admin Review | Complete |
 | SUB-06 | Phase 3 — Capture & Admin Review | Complete |
 | ADM-01 | Phase 3 — Capture & Admin Review | Complete |
 | ADM-02 | Phase 3 — Capture & Admin Review | Complete |
