@@ -405,7 +405,7 @@ Modal copy matches exactly AND both branches (Keep / Discard) clean up temp reso
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date)
+`PASS — CK / 2026-05-06`
 
 ### Notes
 
