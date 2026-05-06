@@ -249,6 +249,10 @@ export default function CaptureScreen() {
       dismissCapture();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
+      // UAT diagnostic: surface the raw error to Metro so we can see what's
+      // actually being thrown (storage 4xx/5xx, RLS denial, RPC code, etc.).
+      // Remove this console.error after Phase 3 closes.
+      console.error('[capture submit failed]', { msg, err });
       // 'queued' marker → network error; entry already enqueued by
       // useSubmitToday + ['uploadQueue'] cache invalidated. Dismiss to Today;
       // QueueBadge takes over (UI-SPEC line 826). NO haptic — the dismissal
@@ -279,8 +283,17 @@ export default function CaptureScreen() {
         case 'caption_too_long':
           setErrorText('Keep it short — 140 characters max.');
           break;
+        case 'not_authenticated':
+          setErrorText('Your session expired — sign back in and retry.');
+          break;
+        case 'uuid_unavailable':
+          setErrorText('Internal: UUID API missing. Reload and retry.');
+          break;
         default:
-          setErrorText("Couldn't submit. We'll keep your photo and try again.");
+          // UAT diagnostic mode: show the raw message so we can identify
+          // unmapped errors quickly. Revert to the friendly copy after we
+          // identify all the real-world error shapes.
+          setErrorText(`Submit failed: ${msg || '(no error message)'}`);
       }
     }
   };

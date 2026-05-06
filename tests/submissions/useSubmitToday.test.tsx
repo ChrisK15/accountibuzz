@@ -192,14 +192,27 @@ describe('useSubmitToday', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['uploadQueue'] });
   });
 
-  it('PER REVIEWS C4: throws uuid_unavailable when crypto.randomUUID is missing (no enqueue)', async () => {
-    // Surgically disable randomUUID for this test; restore in finally.
-    // NOTE: webcrypto's randomUUID is non-configurable in Node, so `delete` is a
-    // no-op (the value reappears from the prototype). Assign undefined instead —
-    // newClientUuid checks `if (!cryptoApi?.randomUUID)` which catches that.
-    const cryptoApi = (globalThis as unknown as { crypto: { randomUUID?: () => string } }).crypto;
-    const original = cryptoApi.randomUUID;
+  it('PER REVIEWS C4: throws uuid_unavailable when BOTH randomUUID and getRandomValues are missing (no enqueue)', async () => {
+    // newClientUuid prefers randomUUID, falls back to getRandomValues-based
+    // RFC4122 v4 construction. Both paths produce a true RFC4122 v4 uuid, so
+    // the C4 invariant ("never write a non-RFC4122 uuid") is preserved by
+    // either path. This test disables BOTH to exercise the final fail-hard
+    // branch — extremely unlikely in production (Plan 03-01's polyfill in
+    // src/lib/supabase.ts is imported before any submission code runs).
+    //
+    // NOTE: webcrypto APIs are non-configurable in Node, so `delete` is a
+    // no-op. Assign undefined — newClientUuid checks the keys via optional
+    // chaining and catches the falsy values.
+    const cryptoApi = (globalThis as unknown as {
+      crypto: {
+        randomUUID?: () => string;
+        getRandomValues?: (a: Uint8Array) => Uint8Array;
+      };
+    }).crypto;
+    const originalRandomUUID = cryptoApi.randomUUID;
+    const originalGetRandomValues = cryptoApi.getRandomValues;
     cryptoApi.randomUUID = undefined;
+    cryptoApi.getRandomValues = undefined;
 
     try {
       // submitMedia must NOT be called (we never get past newClientUuid).
@@ -229,7 +242,55 @@ describe('useSubmitToday', () => {
       const queue = await queueModule.readQueue();
       expect(queue).toHaveLength(0);
     } finally {
-      cryptoApi.randomUUID = original;
+      cryptoApi.randomUUID = originalRandomUUID;
+      cryptoApi.getRandomValues = originalGetRandomValues;
+    }
+  });
+
+  it('uses getRandomValues fallback when only randomUUID is missing (Hermes SDK 55 reality)', async () => {
+    // Disable randomUUID only — getRandomValues stays available (the polyfill
+    // path in production). newClientUuid's getRandomValues fallback should
+    // produce a valid RFC4122 v4 uuid and submitMedia should be called.
+    const cryptoApi = (globalThis as unknown as {
+      crypto: {
+        randomUUID?: () => string;
+        getRandomValues?: (a: Uint8Array) => Uint8Array;
+      };
+    }).crypto;
+    const originalRandomUUID = cryptoApi.randomUUID;
+    cryptoApi.randomUUID = undefined;
+    // Provide a deterministic getRandomValues that fills with 0xaa for assertion stability.
+    cryptoApi.getRandomValues = (arr) => {
+      for (let i = 0; i < arr.length; i++) arr[i] = 0xaa;
+      return arr;
+    };
+
+    try {
+      (submitMedia as jest.Mock).mockResolvedValue('sub-001');
+      const { wrapper } = makeWrapper();
+
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useSubmitToday } = require('../../src/features/submissions/useSubmitToday');
+      const { result } = renderHook(() => useSubmitToday(), { wrapper });
+
+      await act(async () => {
+        const submissionId = await result.current.mutateAsync({
+          groupId: validGroupId,
+          mediaLocalUri: 'file:///tmp/photo.jpg',
+          mediaType: 'photo',
+          caption: null,
+        });
+        expect(submissionId).toBe('sub-001');
+      });
+
+      expect(submitMedia).toHaveBeenCalledTimes(1);
+      // The fallback's RFC4122 v4 layout: byte 6 = (0xaa & 0x0f) | 0x40 = 0x4a;
+      // byte 8 = (0xaa & 0x3f) | 0x80 = 0xaa.
+      // Hex: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa".
+      const callArg = (submitMedia as jest.Mock).mock.calls[0][0];
+      expect(callArg.clientUuid).toBe('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa');
+    } finally {
+      cryptoApi.randomUUID = originalRandomUUID;
     }
   });
 });

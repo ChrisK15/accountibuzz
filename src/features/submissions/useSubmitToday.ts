@@ -23,24 +23,48 @@ import { enqueue, type QueueEntry } from './uploadQueueManager';
 import type { SubmitTodayInput } from './schemas';
 
 /**
- * Generate an RFC4122 v4 uuid via globalThis.crypto.randomUUID. Throws the typed
- * 'uuid_unavailable' error if the platform API is missing.
+ * Generate an RFC4122 v4 uuid. Prefers the platform `crypto.randomUUID()` (used
+ * by tests via jest.setup.ts's deterministic counter-based stub). Falls back to
+ * a `crypto.getRandomValues()`-based byte construction when randomUUID is not
+ * available on this runtime (Hermes in some SDK 55 builds exposes
+ * getRandomValues via the react-native-get-random-values polyfill but does not
+ * surface randomUUID).
  *
- * Production: react-native-get-random-values (installed in Plan 03-01) polyfills
- *   crypto.getRandomValues, which crypto.randomUUID needs under the hood. The
- *   polyfill is imported as the FIRST line of src/lib/supabase.ts, so by the
- *   time this hook is called the API is available.
- * Tests: jest.setup.ts stubs crypto.randomUUID with a counter-based RFC4122 v4
- *   generator so per-call values are RFC-valid AND predictable for assertions.
+ * Both paths produce a true RFC4122 v4 UUID (correct version byte 0x40 +
+ * variant byte 0x80) backed by cryptographic randomness — REVIEWS.md C4's
+ * "never write a non-RFC4122 uuid" invariant is preserved by both.
+ *
+ * Throws `uuid_unavailable` ONLY if BOTH platform APIs are missing — extremely
+ * unlikely given Plan 03-01's polyfill in src/lib/supabase.ts is imported
+ * before any submission code runs.
  */
 function newClientUuid(): string {
   const cryptoApi = (
-    globalThis as unknown as { crypto?: { randomUUID?: () => string } }
+    globalThis as unknown as {
+      crypto?: {
+        randomUUID?: () => string;
+        getRandomValues?: (a: Uint8Array) => Uint8Array;
+      };
+    }
   ).crypto;
-  if (!cryptoApi?.randomUUID) {
-    throw new Error('uuid_unavailable');
+
+  if (cryptoApi?.randomUUID) {
+    return cryptoApi.randomUUID();
   }
-  return cryptoApi.randomUUID();
+
+  if (cryptoApi?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    cryptoApi.getRandomValues(bytes);
+    // RFC4122 v4 layout: bits 4-7 of byte 6 = 0100, bits 6-7 of byte 8 = 10.
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+  }
+
+  throw new Error('uuid_unavailable');
 }
 
 /**
