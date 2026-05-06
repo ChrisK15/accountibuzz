@@ -415,7 +415,7 @@ Modal copy matches exactly AND both branches (Keep / Discard) clean up temp reso
 
 ---
 
-## Checkpoint 9 — Reduced Motion disables gesture animations (UI-SPEC a11y)
+## Checkpoint 9 — Reduced Motion disables gesture animations (UI-SPEC a11y) **RESCOPED**
 
 ### Pre-conditions
 
@@ -445,15 +445,27 @@ Gesture inputs work AND animations honor Reduce Motion (instant transitions inst
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date)
+`RESCOPED — CK / 2026-05-06` — moot after CK-7 swipe rescope
 
 ### Notes
 
 ```
-(record which animations were instant vs. still animated; flag if any animation ignored Reduce Motion)
+SCOPE CHANGE: This checkpoint tested the Reduce-Motion fallback for the
+swipe-stack's fly-off + cross-fade animations. CK-7 rescoped the entire
+swipe interaction out of Phase 3 (commit bae505a) — the gesture-driven
+animations are gone, so there are no animation classes left to gate on
+Reduce Motion. The Approve/Reject buttons commit instantly with no
+animation regardless of OS setting; StatusPill cross-fade on the
+member's Today screen is a different code path (handled by Realtime
+setQueryData → React's normal re-render) which already lacks an explicit
+animation timeline.
+
+If Phase 3.1 reintroduces swipe ergonomics, the Reduce-Motion check
+should reappear at that time.
 ```
 
-**Cleanup:** Disable Reduce Motion in iOS Settings after the test.
+**Cleanup:** No iOS Settings change needed — Reduce Motion was not
+toggled.
 
 ---
 
