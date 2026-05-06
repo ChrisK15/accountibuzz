@@ -119,7 +119,7 @@ Queue auto-flushes within 5 seconds of network reconnect AND status updates to `
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date) — **must be PASS**
+`PASS — CK / 2026-05-05` — **hard gate cleared**
 
 ### Notes
 
