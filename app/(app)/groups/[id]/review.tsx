@@ -27,29 +27,17 @@
 // card identity changes (prevents worklet stale-closure binding to stale
 // runOnJS callbacks during rapid swipes).
 
+import { useState, useEffect, useCallback } from 'react';
 import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from 'react';
-import {
-  AccessibilityInfo,
-  Dimensions,
   Pressable,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import {
-  useSharedValue,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from 'react-native-reanimated';
+// Swipe-stack gestures (Gesture.Pan + Reanimated SharedValues) were rescoped
+// out during Phase 3 UAT — Approve/Reject buttons are now the only commit
+// path. Phase 3.1 may revisit if real-world admins request swipe ergonomics.
 import { Feather } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
@@ -67,10 +55,6 @@ import {
   ScreenContainer,
 } from '../../../../src/components';
 import { useTheme } from '../../../../src/theme/useTheme';
-
-const { width: SCREEN_W } = Dimensions.get('window');
-const SWIPE_THRESHOLD = SCREEN_W * 0.35;
-const VELOCITY_THRESHOLD = 800;
 
 export default function ReviewQueueScreen() {
   const t = useTheme();
@@ -99,22 +83,9 @@ export default function ReviewQueueScreen() {
   );
   const reviewMutation = useReviewSubmission(groupId);
 
-  // ── Reanimated SharedValues for top-card gesture ───────────────────────
-  // CRITICAL: hooks BEFORE any early return per Rules of Hooks.
-  const translateX = useSharedValue(0);
-  const rotate = useSharedValue(0);
-  const opacity = useSharedValue(1);
-
-  // Reduced-motion check (UI-SPEC line 926).
-  const [reduceMotion, setReduceMotion] = useState(false);
-  useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
-    const sub = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
-      setReduceMotion,
-    );
-    return () => sub.remove();
-  }, []);
+  // Swipe gestures + reduced-motion handling were removed when the
+  // gesture-stack was rescoped (see header comment). Buttons are the
+  // only commit path — no animation-induced motion to gate.
 
   // ── First-review tooltip (UI-SPEC line 900) — 1-time per admin/device ──
   const [showTooltip, setShowTooltip] = useState(false);
@@ -144,16 +115,9 @@ export default function ReviewQueueScreen() {
     return () => clearTimeout(i);
   }, [errorToast]);
 
-  // ── Top-3 visible cards (UI-SPEC line 596 — cards 4+ not rendered) ─────
-  // In reduced-motion mode, render only the top card (UI-SPEC line 1027).
-  const visibleCards = (pending ?? []).slice(0, reduceMotion ? 1 : 3);
+  // ── Top-3 visible cards (visual stack only, no gestures) ───────────────
+  const visibleCards = (pending ?? []).slice(0, 3);
   const top = visibleCards[0];
-
-  // PER PITFALL 6 — worklet stale closure: keep topRef synced.
-  const topRef = useRef(top);
-  useEffect(() => {
-    topRef.current = top;
-  }, [top]);
 
   // ── Approve / reject commit handlers ───────────────────────────────────
   const onApprove = useCallback(
@@ -167,20 +131,13 @@ export default function ReviewQueueScreen() {
           decision: 'approved',
           rejectionReason: null,
         });
-        // Mutation invalidates ['reviewQueue', groupId] → next card slides in
-        // via re-render. Reset SharedValues for the new top card.
-        translateX.value = 0;
-        rotate.value = 0;
-        opacity.value = 1;
+        // Mutation invalidates ['reviewQueue', groupId] → next card renders
+        // via the data-driven re-render.
       } catch {
-        // RPC failed → snap card back into stack + show inline error toast.
-        translateX.value = withSpring(0, { damping: 14, stiffness: 120 });
-        rotate.value = withSpring(0, { damping: 14, stiffness: 120 });
-        opacity.value = withTiming(1, { duration: 200 });
         setErrorToast("Couldn't save that decision. Try again.");
       }
     },
-    [reviewMutation, translateX, rotate, opacity],
+    [reviewMutation],
   );
 
   const onRejectIntent = useCallback((submissionId: string) => {
@@ -201,71 +158,15 @@ export default function ReviewQueueScreen() {
       });
       setRejectingId(null);
       setRejectReason('');
-      translateX.value = 0;
-      rotate.value = 0;
-      opacity.value = 1;
     } catch {
       setErrorToast("Couldn't save that decision. Try again.");
     }
-  }, [rejectingId, rejectReason, reviewMutation, translateX, rotate, opacity]);
+  }, [rejectingId, rejectReason, reviewMutation]);
 
   const onRejectCancel = useCallback(() => {
     setRejectingId(null);
     setRejectReason('');
-    translateX.value = withSpring(0, { damping: 14, stiffness: 120 });
-    rotate.value = withSpring(0, { damping: 14, stiffness: 120 });
-    opacity.value = withTiming(1, { duration: 200 });
-  }, [translateX, rotate, opacity]);
-
-  // ── Gesture (PER REVIEWS.md C10 — useMemo on top?.id + callbacks) ──────
-  // Single-line useMemo wrap form is required for the plan's verification
-  // grep (acceptance criterion C10). Reformatting could break that contract.
-  const pan = useMemo(() => Gesture.Pan()
-        .activeOffsetX([-20, 20])
-        .failOffsetY([-20, 20])
-        .enabled(!reduceMotion && !rejectingId && !!top)
-        .onUpdate((e) => {
-          'worklet';
-          translateX.value = e.translationX;
-          rotate.value = Math.max(-15, Math.min(15, e.translationX / 30));
-          opacity.value = Math.min(
-            1,
-            (Math.abs(e.translationX) / SWIPE_THRESHOLD) * 2,
-          );
-        })
-        .onEnd((e) => {
-          'worklet';
-          const passed =
-            Math.abs(e.translationX) > SWIPE_THRESHOLD ||
-            Math.abs(e.velocityX) > VELOCITY_THRESHOLD;
-          if (!passed) {
-            translateX.value = withSpring(0, { damping: 14, stiffness: 120 });
-            rotate.value = withSpring(0, { damping: 14, stiffness: 120 });
-            opacity.value = withTiming(0, { duration: 200 });
-            return;
-          }
-          const submissionId = topRef.current?.id;
-          if (!submissionId) return;
-          if (e.translationX > 0) {
-            translateX.value = withTiming(SCREEN_W, { duration: 250 }, () => {
-              runOnJS(onApprove)(submissionId);
-            });
-          } else {
-            translateX.value = withTiming(-SCREEN_W * 0.3, { duration: 300 });
-            runOnJS(onRejectIntent)(submissionId);
-          }
-        }),
-    [
-      top?.id,
-      onApprove,
-      onRejectIntent,
-      reduceMotion,
-      rejectingId,
-      translateX,
-      rotate,
-      opacity,
-    ],
-  );
+  }, []);
 
   // ── Loading shell while group loads OR while non-admin redirect is in flight
   if (groupLoading || !group || !isAdmin) {
@@ -394,19 +295,14 @@ export default function ReviewQueueScreen() {
               zIndex={4}
             />
           ) : null}
-          {/* Card 1 (TOP — gesture-driven, full size) */}
+          {/* Card 1 (TOP — full size, static; commit via Approve/Reject buttons below) */}
           {top ? (
-            <GestureDetector gesture={pan}>
-              <SwipeCard
-                {...top}
-                scale={1}
-                translateY={0}
-                zIndex={5}
-                translateX={translateX}
-                rotate={rotate}
-                opacity={opacity}
-              />
-            </GestureDetector>
+            <SwipeCard
+              {...top}
+              scale={1}
+              translateY={0}
+              zIndex={5}
+            />
           ) : null}
         </View>
 

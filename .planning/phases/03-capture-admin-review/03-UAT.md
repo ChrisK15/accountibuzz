@@ -301,7 +301,7 @@ Full deny → grant → re-poll → viewfinder cycle works end-to-end with the v
 
 ---
 
-## Checkpoint 7 — Tinder-stack swipe gestures (ADM-02 / ADM-03)
+## Checkpoint 7 — Tinder-stack swipe gestures (ADM-02 / ADM-03) **RESCOPED**
 
 ### Pre-conditions
 
@@ -338,12 +338,34 @@ All 4 interactions (rubber-band / fly-off-right / fly-off-left + reject panel / 
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date)
+`RESCOPED — CK / 2026-05-06` — swipe gestures removed from scope; buttons-only commit path
 
 ### Notes
 
 ```
-(record any animation jank, timing drift, or stuck states; note FPS if observable via Xcode)
+SCOPE CHANGE during UAT: Swipe gestures did not work reliably on the
+physical device during this checkpoint. Rather than spend further cycles
+debugging a Tinder-stack pattern that the canonical mobile UX doesn't
+require, swipe was removed from Phase 3 scope. The Approve/Reject buttons
+that were always rendered as the fallback are now the ONLY commit path.
+
+Code change: app/(app)/groups/[id]/review.tsx ripped out
+GestureDetector, Gesture.Pan(), Reanimated SharedValues + animation
+calls, the topRef worklet-stale-closure mitigation, and the
+SCREEN_W/SWIPE_THRESHOLD/VELOCITY_THRESHOLD constants. SwipeCard component
+itself is preserved (still rendered as the visual stack of up to 3 cards)
+with no gesture wrapper. 240/240 tests still pass; typecheck clean.
+
+ADM-02 + ADM-03 still satisfied: the Approve button calls
+review_submission(decision=approved) and the Reject button opens the
+reject-reason panel which calls review_submission(decision=rejected,
+rejection_reason=...). Both RPC paths exercised in CK-5 already (admin
+approve cross-faded the submitter's GroupCard).
+
+Phase 3.1 may revisit if real-world admin feedback specifically requests
+swipe ergonomics. UI-SPEC §5 SwipeCard / §Interaction Contracts and
+PLAN 03-07 swipe sections remain in the planning history but are
+explicitly superseded by this rescope.
 ```
 
 ---
