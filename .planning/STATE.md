@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 3 complete (8/8 plans; 4/4 UAT hard gates cleared 2026-05-06); awaiting /gsd-discuss-phase 4
-last_updated: "2026-05-06T17:40:05.963Z"
+stopped_at: Phase 4 context gathered
+last_updated: "2026-05-06T19:46:11.420Z"
 progress:
   total_phases: 6
   completed_phases: 3
@@ -92,10 +92,10 @@ Plan: not started
 
 ## Session Continuity
 
-- **Last session:** 2026-05-06T17:40:05Z
+- **Last session:** 2026-05-06T19:46:11.409Z
 - **Next session:** Begin Phase 4 (Social Surfaces) — points / streaks / leaderboard / group feed. Phase 4 owns 8 v1 requirements (PTS-01..03, LB-01..02, FEED-01..03). Submissions table is populated with realistic test data from CK-11 (multiple approved + rejected rows across 2 test users) so Phase 4 leaderboard + feed have content to render against. The cross-device Realtime path validated in CK-5 + CK-10 is reusable for LB-02 (leaderboard updates in near real time). Run `/gsd-discuss-phase 4` to start the planning conversation.
 - **Resume hint:** Phase 3 closed. All 8/8 plans complete; 11/11 P3 requirements validated (SUB-01..06, ADM-01..04, PLAT-03). UAT walkthrough on iOS physical device cleared 4/4 hard gates (CK-2 airplane-mode SUB-03, CK-5 cross-device Realtime SUB-04/ADM-04, CK-6 camera permission SUB-01/02, CK-10 D-12 terminal-rejection ADM-04). 2 soft deferrals (CK-3 Slow-3G + CK-4 JWT mid-upload — tooling-dependent, low product priority) + 2 rescopes (CK-7 admin swipe gestures removed; CK-9 reduce-motion auto-moot) logged for Phase 3.1. Nine inline-fix commits applied during walkthrough — none changed the requirements contract; full audit trail in `.planning/phases/03-capture-admin-review/03-VERIFICATION.md`. Live remote schema includes the new `<latest>_phase3_realtime_publication` migration that surfaced an empty supabase_realtime publication blocking ADM-04 / SUB-04 cross-device flows since 0001 — applied via Supabase MCP during CK-5. Automated suite locked: Jest 240/240, pgTAP 107/107 (17/17 files), TypeScript 0-error in project source, expo-doctor 17/18 (pre-existing patch-level mismatch tracked in 01-foundation/deferred-items.md).
-- **Stopped at:** Phase 3 complete (8/8 plans; 4/4 UAT hard gates cleared 2026-05-06); awaiting /gsd-discuss-phase 4
+- **Stopped at:** Phase 4 context gathered
 
 ---
 *State initialized: 2026-04-21*
