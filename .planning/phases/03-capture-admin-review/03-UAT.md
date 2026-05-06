@@ -200,12 +200,17 @@ Upload survives JWT expiry mid-flight without user-visible failure.
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date)
+`DEFERRED — CK / 2026-05-05` — soft gate, dependent on CK-3 setup
 
 ### Notes
 
 ```
-(record any retry-blip behavior; OK to defer if device clock cannot be set forward — note "DEFERRED — clock-set restricted")
+DEFERRED reason: Compounds on CK-3's Network Link Conditioner (also
+deferred) and adds device-clock manipulation. supabase-js auto-refresh
+is the canonical path and has been validated by upstream extensively;
+this checkpoint is the belt-and-suspenders safety net rather than a new
+coverage area. Roll into Phase 3.1 only if a real-world session-expiry
+bug surfaces in production.
 ```
 
 **Cleanup:** Re-enable "Set Automatically" on Date & Time after the test.
