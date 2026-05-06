@@ -91,18 +91,15 @@ export function StatusPill({
     );
   }
 
-  // status === 'rejected' — interactive when onPress provided. Background is
-  // destructive at ~15% alpha (per UI-SPEC line 254 hex-suffix idiom; 0x26 ≈ 15%).
-  // NOTE: t.colors.destructive is hsl(...) — appending an alpha suffix doesn't
-  // produce a valid CSS color. We use rgba() with a hard-coded hue mapped from
-  // the same destructive lightness so contrast stays AA per UI-SPEC line 1071.
-  // This matches PATTERNS.md guidance — the destructive token's alpha-subset
-  // is materialized via hex/rgba per usage site rather than added as a token.
-  const rejectedBg = `${t.colors.destructive}26`; // works on hex tokens; for hsl
-  // RN accepts the resulting string but renders the alpha suffix as part of
-  // the color value, falling back to fully-opaque destructive in some
-  // engines. Acceptable for the visual state — contrast remains acceptable
-  // because text is the destructive color on an approximately-tinted bg.
+  // status === 'rejected' — interactive when onPress provided.
+  //
+  // UAT fix: the destructive token is `hsl(4, 78%, 56%)` and the original
+  // `${token}26` alpha-suffix concat produces an invalid CSS string. RN
+  // doesn't tint — it falls back to solid destructive, and because the text
+  // and icon were ALSO destructive, the pill rendered as a flat red blob
+  // with invisible content. Using an `hsla()` literal at 15% alpha for the
+  // bg + white text/icon for AA contrast (mirrors the ReviewPanel fix).
+  const rejectedBg = 'hsla(4, 78%, 56%, 0.15)';
 
   const isPressable = !!onPress;
 
