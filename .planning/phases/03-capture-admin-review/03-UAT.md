@@ -556,15 +556,12 @@ Reject lands as terminal `Today didn't count` AND submitter cannot resubmit same
 Full sign-up → join → submit → review → approval cycle works end-to-end on both devices.
 
 ### Receipt
-INLINE FIX bundle (commits ad544ed, 3dab443, bc86ff2): ReviewPanel HSL alpha bug, Shutter geometry, video preview play(), X-button POP, uuid fallback for Hermes, invalidation key mismatch.
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date)
+`PASS — CK / 2026-05-06`
 
 ### Notes
-
-```
-(record any step-level FAILs separately; this checkpoint implicitly validates SUB-01, SUB-04, SUB-05, ADM-01, ADM-02, ADM-04, PLAT-03 + INV-01/INV-02 reuse + GRP-01/02 reuse)
-```
+- Step 10 + 14 use Approve button (not swipe — per CK-7 rescope, swipe gestures removed; `bae505a`).
+- All 16 steps completed end-to-end. Realtime cross-fade fired within ~2s on both approve actions. PendingReviewRow visibility gate honored on member device. Implicit validation: SUB-01, SUB-04, SUB-05, ADM-01, ADM-02, ADM-04, PLAT-03, plus reuse of INV-01/INV-02 + GRP-01/02 from Phase 2.
 
 ---
 
