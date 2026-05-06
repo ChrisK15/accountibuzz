@@ -92,11 +92,24 @@ export default function CaptureScreen() {
   // component, alongside other hooks. Empty/null source → idle player; the
   // conditional render of <VideoView> in the review state branch does NOT
   // change the hook call site.
+  //
+  // The setup callback only runs ONCE with the initial source (empty string).
+  // When mediaUri later transitions to a real video URI, expo-video updates
+  // the player's source but does NOT replay the setup callback. The effect
+  // below re-asserts loop/muted and calls play() so the preview actually
+  // loops instead of frozen on first frame.
   const videoPlayer = useVideoPlayer(mediaUri ?? '', (p) => {
     p.muted = true;
     p.loop = true;
     p.play();
   });
+
+  useEffect(() => {
+    if (!mediaUri) return;
+    videoPlayer.muted = muted;
+    videoPlayer.loop = true;
+    videoPlayer.play();
+  }, [mediaUri, videoPlayer, muted]);
 
   const isVideoGroup = group?.submission_type === 'video';
 
@@ -154,6 +167,18 @@ export default function CaptureScreen() {
   // blocking regression.
   const stackScreen: React.ReactNode = null;
 
+  // Safe-back: capture/[groupId] is a Tabs.Screen with no Stack history above
+  // it (modal-presentation deferred to Phase 3.1). dismissCapture() fires a POP
+  // action that React Navigation can't resolve, surfacing a dev warning toast.
+  // Fall back to an explicit replace to Today when there's no history to pop.
+  const dismissCapture = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(app)/');
+    }
+  };
+
   // ── Loading / 404 group guard ──────────────────────────────────────────
   if (groupPending || !group) {
     return (
@@ -183,7 +208,7 @@ export default function CaptureScreen() {
           icon="camera"
           title="We need camera access"
           body="Tap below to grant access in Settings, then come back."
-          onClose={() => router.dismiss()}
+          onClose={() => dismissCapture()}
         />
       </>
     );
@@ -198,7 +223,7 @@ export default function CaptureScreen() {
           icon="mic"
           title="We need mic access too"
           body="Videos record audio — flip on mic access in Settings to keep going."
-          onClose={() => router.dismiss()}
+          onClose={() => dismissCapture()}
         />
       </>
     );
@@ -221,7 +246,7 @@ export default function CaptureScreen() {
       await Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success,
       ).catch(() => {});
-      router.dismiss();
+      dismissCapture();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
       // 'queued' marker → network error; entry already enqueued by
@@ -229,7 +254,7 @@ export default function CaptureScreen() {
       // QueueBadge takes over (UI-SPEC line 826). NO haptic — the dismissal
       // is the feedback.
       if (msg === 'queued') {
-        router.dismiss();
+        dismissCapture();
         return;
       }
       // Map typed errors to UI-SPEC §Submit flow error copy (lines 388-397).
@@ -264,7 +289,7 @@ export default function CaptureScreen() {
     if (mediaUri) {
       setShowDiscard(true);
     } else {
-      router.dismiss();
+      dismissCapture();
     }
   };
 
@@ -415,7 +440,7 @@ export default function CaptureScreen() {
               onPress: () => {
                 setShowDiscard(false);
                 setMediaUri(null);
-                router.dismiss();
+                dismissCapture();
               },
             }}
             // PER UI-SPEC §Discard-take + Modal dev-warning: must NOT be 'Cancel'.

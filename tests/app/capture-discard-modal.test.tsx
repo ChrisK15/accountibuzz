@@ -86,12 +86,14 @@ const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
 const mockDismiss = jest.fn();
+const mockCanGoBack = jest.fn(() => false);
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     push: mockPush,
     replace: mockReplace,
     back: mockBack,
     dismiss: mockDismiss,
+    canGoBack: mockCanGoBack,
   }),
   useLocalSearchParams: () => ({ groupId: 'g-1' }),
   Stack: { Screen: () => null },
@@ -151,8 +153,10 @@ describe('Capture discard-take modal', () => {
       withProviders(<CaptureScreen />),
     );
     // CaptureTopBar's close button has accessibilityLabel="Close".
+    mockCanGoBack.mockReturnValue(false);
     fireEvent.press(getByLabelText('Close'));
-    expect(mockDismiss).toHaveBeenCalled();
+    // Without media, dismissCapture() routes to /(app)/ when no nav history.
+    expect(mockReplace).toHaveBeenCalledWith('/(app)/');
     // Modal must NOT render in the no-take path.
     expect(queryByText('Discard this take?')).toBeNull();
     expect(queryByText('Keep recording')).toBeNull();

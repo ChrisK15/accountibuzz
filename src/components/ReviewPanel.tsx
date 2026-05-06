@@ -107,21 +107,22 @@ export function ReviewPanel({
         </Text>
       </View>
 
-      {/* Inline error toast */}
+      {/* Inline error toast — destructive token is HSL, so `${token}26` alpha
+          concat is invalid. Use hsla() literal that mirrors the token's hue. */}
       {errorText ? (
         <View
           style={{
             marginTop: t.spacing.md,
             paddingVertical: t.spacing.sm,
             paddingHorizontal: t.spacing.md,
-            backgroundColor: `${t.colors.destructive}26`,
+            backgroundColor: 'hsla(4, 78%, 56%, 0.15)',
             borderRadius: t.radii.sm,
           }}
         >
           <Text
             style={[
               t.fonts.caption,
-              { color: t.colors.destructive, fontWeight: '700' },
+              { color: '#FFFFFF', fontWeight: '700' },
             ]}
           >
             {errorText}

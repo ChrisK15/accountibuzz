@@ -104,12 +104,14 @@ const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
 const mockDismiss = jest.fn();
+const mockCanGoBack = jest.fn(() => false);
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     push: mockPush,
     replace: mockReplace,
     back: mockBack,
     dismiss: mockDismiss,
+    canGoBack: mockCanGoBack,
   }),
   useLocalSearchParams: () => ({ groupId: 'g-1' }),
   Stack: { Screen: () => null },
@@ -191,15 +193,16 @@ describe('Capture screen permission gates', () => {
     expect(mockOpenSettings).toHaveBeenCalled();
   });
 
-  it('Not now button calls router.dismiss()', () => {
+  it('Not now button dismisses (router.replace to Today when no history)', () => {
     (useGroup as jest.Mock).mockReturnValue({
       data: photoGroup,
       isPending: false,
     });
     mockCamPermState = mockCamPerm; // denied
+    mockCanGoBack.mockReturnValue(false);
     const { getByText } = render(withProviders(<CaptureScreen />));
     fireEvent.press(getByText('Not now'));
-    expect(mockDismiss).toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith('/(app)/');
   });
 
   it('renders mic-denied screen when video group + mic permission denied (camera granted)', () => {

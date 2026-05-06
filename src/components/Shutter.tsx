@@ -73,12 +73,15 @@ export function Shutter({ variant, onPress }: ShutterProps) {
           opacity: pulseOpacity,
         }}
       />
-      {/* Inner 52pt fill — primary yellow OR destructive red. Becomes a square
-          (borderRadius 0) while recording per UI-SPEC §6b. */}
+      {/* Inner fill — primary yellow OR destructive red. Becomes a square
+          (borderRadius 0) while recording per UI-SPEC §6b.
+          Recording variant: 44pt so the square's diagonal (62.2pt) stays
+          inside the outer ring's inner diameter (64pt). 52pt would clip the
+          ring at the corners (52*sqrt(2) = 73.5pt > 64pt). */}
       <View
         style={{
-          width: 52,
-          height: 52,
+          width: isRecording ? 44 : 52,
+          height: isRecording ? 44 : 52,
           borderRadius: isRecording ? 0 : 26,
           backgroundColor: innerColor,
           alignItems: 'center',
