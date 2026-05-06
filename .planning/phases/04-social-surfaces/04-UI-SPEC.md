@@ -1,10 +1,11 @@
 ---
 phase: 4
 slug: social-surfaces
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-06
+reviewed_at: 2026-05-06
 ---
 
 # Phase 4 — UI Design Contract
@@ -993,14 +994,14 @@ If the executor finds a need for a token not in the P1 export (e.g. a 28pt avata
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS (5 sizes / 3 weights inherited from P1/P2/P3 user-locked exceptions; one new P4 Locked Exception for 800-weight on Heading-2 size — leaderboard points number only, scoped + non-propagating)
-- [ ] Dimension 5 Spacing: PASS (P4 documented exceptions justified individually — §1 tombstone 28pt avatar, §2 section `mt-7` 28pt; both single-use, non-propagating)
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS (5 sizes / 3 weights inherited from P1/P2/P3 user-locked exceptions; one new P4 Locked Exception for 800-weight on Heading-2 size — leaderboard points number only, scoped + non-propagating)
+- [x] Dimension 5 Spacing: PASS (P4 documented exceptions justified individually — §1 tombstone 28pt avatar, §2 section `mt-7` 28pt; both single-use, non-propagating)
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-05-06
 
 ---
 
