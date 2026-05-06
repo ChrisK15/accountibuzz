@@ -157,12 +157,18 @@ Upload completes within 60s on Slow-3G AND progress UI is visible throughout.
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date)
+`DEFERRED — CK / 2026-05-05` — soft gate, low product priority
 
 ### Notes
 
 ```
-(record total upload time + observed progress %s if the bar paused or stuttered)
+DEFERRED reason: User judgment — Slow-3G simulation requires Network Link
+Conditioner setup and the failure mode it guards against (silent-success
+upload UX) is already well-covered by CK-2's airplane-mode + queue flow.
+The progress bar's *visibility* during upload is observable any time a
+multi-MB photo is submitted in normal use; an explicit Slow-3G run does
+not add coverage proportional to the setup cost. Roll into Phase 3.1 only
+if a real-world bug report surfaces silent-progress on flaky cellular.
 ```
 
 ---
