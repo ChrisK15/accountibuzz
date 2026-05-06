@@ -66,12 +66,22 @@
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date)
+`PASS — CK / 2026-05-05`
 
 ### Notes
+- During video recording, the red square with white square inside it was not inside the recording circle, it was over it. Screenshot in error_screenshots/red-square-not-inside-white-circle.png. **INLINE FIX** in commit `ad544ed`: shrunk recording-state inner square from 52pt to 44pt so the diagonal (62.2pt) stays inside the outer ring's inner diameter (64pt).
+- Holding recording video does nothing — has to tap shutter to start, tap again to stop. Accepted by user as desired UX (tap-to-toggle is consistent with iOS Camera app).
+- Video preview did not loop on the review screen — showed only the first frame as a still image. **INLINE FIX** in commit `ad544ed`: added `useEffect` that re-asserts `videoPlayer.loop = true` and calls `videoPlayer.play()` whenever `mediaUri` changes. The original `useVideoPlayer` setup callback only ran once with the empty initial source; expo-video doesn't replay it when the source updates.
+- Pressing the X at the top left of the preview screen surfaced a React Navigation `POP` warning toast (`The action 'POP' with payload {"count":1} was not handled by any navigator`). Screenshot in error_screenshots/x-button-toast-error.png. **INLINE FIX** in commit `ad544ed`: replaced all 6 `router.dismiss()` call sites with a `dismissCapture()` helper that uses `router.canGoBack() ? router.back() : router.replace('/(app)/')`. Capture is a Tabs.Screen with no Stack history above it (modal-presentation deferred to Phase 3.1), so dismiss had no stack to pop.
+- Tapping Submit Video showed a solid red box with no visible text, then nothing happened. Screenshot in error_screenshots/after-pressing-submit-video.png. Two compounding bugs:
+  1. **INLINE FIX** in commit `ad544ed`: ReviewPanel error banner used `${t.colors.destructive}26` to derive a translucent background, but the destructive token is `hsl(4, 78%, 56%)` — the `26` alpha-suffix concat is invalid CSS for HSL. RN fell back to solid red, and because the text color was *also* `t.colors.destructive` (valid HSL), bold red text rendered on solid red bg → invisible. Fixed by switching to `hsla(4, 78%, 56%, 0.15)` literal bg + white text. This unmasked the actual error message.
+  2. **INLINE FIX** in commit `3dab443`: real error was `uuid_unavailable`. `crypto.randomUUID` is not exposed on Hermes in this SDK 55 build even though `crypto.getRandomValues` is (`react-native-get-random-values` polyfills only the latter). Updated `newClientUuid` in `useSubmitToday.ts` to fall back to a `getRandomValues`-based RFC4122 v4 byte construction; both paths produce a true RFC4122 v4 UUID, REVIEWS.md C4 invariant preserved.
+- After Submit Video succeeded, the GroupCard on Today did not auto-update — still showed "Submit video" CTA until app was reloaded via Metro `r`. **INLINE FIX** in commit `bc86ff2`: `useSubmitToday`'s `onSuccess` invalidated `['submission', groupId, 'today']` but the actual query key is `['submission', groupId, <isoDate>]` — the literal `'today'` string never matched a real key. Realtime subscription should have updated the cache via `setQueryData`, but it doesn't fire when the subscription unmounts during navigation to /capture/[groupId] and remounts after dismiss (events between unmount and remount are lost). Fixed by invalidating the 2-element prefix `['submission', groupId]` so prefix matching hits every date under the groupId.
 
 ```
-(record any anomalies here — file size if observable, UI hitches, error toasts, etc.)
+File size: not observed in upload UI; check Supabase Storage dashboard for confirmation.
+Total INLINE FIX commits: ad544ed (5 fixes bundled), 3dab443 (uuid fallback), bc86ff2 (invalidation key).
+Phase 3.1 follow-ups identified: (1) restore modal-presentation for capture screen by moving it out of Tabs into root Stack; (2) Realtime subscription life-cycle hardening so events aren't lost between Today→Capture→Today navigation.
 ```
 
 ---
@@ -492,6 +502,7 @@ Reject lands as terminal `Today didn't count` AND submitter cannot resubmit same
 Full sign-up → join → submit → review → approval cycle works end-to-end on both devices.
 
 ### Receipt
+INLINE FIX bundle (commits ad544ed, 3dab443, bc86ff2): ReviewPanel HSL alpha bug, Shutter geometry, video preview play(), X-button POP, uuid fallback for Hermes, invalidation key mismatch.
 
 `_______________` (PASS / FAIL / DEFERRED — initials + date)
 
