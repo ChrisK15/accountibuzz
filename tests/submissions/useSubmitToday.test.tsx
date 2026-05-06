@@ -85,9 +85,11 @@ describe('useSubmitToday', () => {
     const callArgs = (submitMedia as jest.Mock).mock.calls[0][0];
     expect(callArgs.clientUuid).toMatch(/^00000000-0000-4000-8000-[0-9a-f]{12}$/);
 
-    // Invalidated the today cache.
+    // Invalidated the submission cache (2-element prefix matches every date
+    // under the groupId — useTodaySubmission keys by ['submission', groupId,
+    // <isoDate>], so a 3-element 'today' literal would miss the real key).
     expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ['submission', validGroupId, 'today'],
+      queryKey: ['submission', validGroupId],
     });
   });
 

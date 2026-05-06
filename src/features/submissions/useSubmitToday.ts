@@ -1,7 +1,7 @@
 // Mutation that orchestrates the two-phase commit + offline queue fallback.
 //
 // Behavior:
-//   - On SUCCESS: returns submission_id; invalidates ['submission', groupId, 'today']
+//   - On SUCCESS: returns submission_id; invalidates ['submission', groupId] prefix
 //   - On TYPED error (already_submitted_today / not_member / wrong_media_type / caption_too_long):
 //       re-throws Error.message unchanged so the screen branches per UI-SPEC §Error state copy
 //   - On NETWORK error: enqueues to AsyncStorage queue + throws Error('queued') so the screen
@@ -131,10 +131,18 @@ export function useSubmitToday() {
     onSuccess: (_submissionId, input) => {
       // Realtime is the source of truth post-mount, but invalidate immediately
       // for the optimistic case (e.g. user dismissed capture before Realtime
-      // event arrives). The query key matches useTodaySubmission's key shape,
-      // but onSuccess does not know today's local-date string — invalidate the
-      // groupId-prefix so any date-aware key under it refetches.
-      qc.invalidateQueries({ queryKey: ['submission', input.groupId, 'today'] });
+      // event arrives — common when the capture screen unmounts the Today
+      // subscription mid-flight).
+      //
+      // useTodaySubmission's queryKey is ['submission', groupId, <isoDate>]
+      // and Realtime's setQueryData uses the same shape. We don't know today's
+      // local-date string here without re-importing the time helper, so use
+      // the 2-element prefix ['submission', groupId] — TanStack Query matches
+      // by prefix, so this invalidates every date under this groupId.
+      // The earlier 3-element ['submission', groupId, 'today'] matched no
+      // queries (literal 'today' vs. real date strings), so the Today screen
+      // never refetched and the user had to reload (#UAT-CK-1).
+      qc.invalidateQueries({ queryKey: ['submission', input.groupId] });
     },
   });
 }
