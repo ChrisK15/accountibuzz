@@ -291,7 +291,7 @@ Full deny → grant → re-poll → viewfinder cycle works end-to-end with the v
 
 ### Receipt
 
-`_______________` (PASS / FAIL / DEFERRED — initials + date) — **must be PASS**
+`PASS — CK / 2026-05-06` — **hard gate cleared**
 
 ### Notes
 
