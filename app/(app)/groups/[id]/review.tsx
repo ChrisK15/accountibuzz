@@ -120,14 +120,14 @@ export default function ReviewQueueScreen() {
   const [showTooltip, setShowTooltip] = useState(false);
   useEffect(() => {
     if (!user?.id || !isAdmin) return;
-    SecureStore.getItemAsync(`tooltip:admin_review:${user.id}`).then((v) => {
+    SecureStore.getItemAsync(`tooltip.admin_review.${user.id}`).then((v) => {
       if (!v) setShowTooltip(true);
     });
   }, [user?.id, isAdmin]);
   const dismissTooltip = useCallback(async () => {
     if (user?.id) {
       await SecureStore.setItemAsync(
-        `tooltip:admin_review:${user.id}`,
+        `tooltip.admin_review.${user.id}`,
         '1',
       );
     }
