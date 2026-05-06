@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import type { Session } from '@supabase/supabase-js';
 import { queryClient } from '../src/lib/queryClient';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
@@ -83,13 +84,19 @@ function RootGate() {
 }
 
 export default function RootLayout() {
+  // GestureHandlerRootView MUST wrap the whole tree per react-native-gesture-
+  // handler docs (added when Plan 03-07 installed RNGH for the admin review
+  // swipe-stack). Without this, GestureDetector throws a Render Error when
+  // the user opens /groups/[id]/review.
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RootGate />
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <RootGate />
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
