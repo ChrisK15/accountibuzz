@@ -1183,11 +1183,11 @@ function GroupCardRow({ group, onSubmitPress, onRejectedPillPress, onQueueBadgeM
 | Pitfalls | HIGH | CGF-1 + Pitfall P4-B (concurrency) are both grounded in observable schema state |
 | UI integration | HIGH | Existing GroupCardRow + group-detail ScrollView accommodate D-09/D-13 cleanly |
 
-### Open Questions
+### Open Questions (RESOLVED)
 
-1. **Backfill for existing approved P3 UAT submissions?** Currently `group_members.points = 0` on every row even though P3 UAT generated 7+ approved submissions. Recommendation: **accept status quo** (P3 UAT was test data; production starts at 0). Document in 0008 migration comment + STATE.md. Risk: zero — no production users exist.
-2. **`longest_streak` on the leaderboard row in P4 vs P6?** UI-SPEC §"Leaderboard row copy" doesn't render it. Research recommends defer (cheap to add later; nothing to test). CONTEXT marks as Claude's Discretion.
-3. **Skeleton state for the new sections during initial load?** Existing `<GroupDetailSkeleton />` covers the screen wholesale. Recommendation: extend skeleton with 4 muted placeholder blocks, but acceptable to defer to UI-spec polish.
+1. **RESOLVED:** **Backfill for existing approved P3 UAT submissions?** Currently `group_members.points = 0` on every row even though P3 UAT generated 7+ approved submissions. Recommendation: **accept status quo** (P3 UAT was test data; production starts at 0). Document in 0008 migration comment + STATE.md. Risk: zero — no production users exist.
+2. **RESOLVED:** **`longest_streak` on the leaderboard row in P4 vs P6?** UI-SPEC §"Leaderboard row copy" doesn't render it. Research recommends defer (cheap to add later; nothing to test). CONTEXT marks as Claude's Discretion.
+3. **RESOLVED:** **Skeleton state for the new sections during initial load?** Existing `<GroupDetailSkeleton />` covers the screen wholesale. Recommendation: extend skeleton with 4 muted placeholder blocks, but acceptable to defer to UI-spec polish.
 
 ### Ready for Planning
 
