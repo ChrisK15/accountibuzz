@@ -320,6 +320,20 @@ export type Database = {
       }
       delete_group: { Args: { p_group_id: string }; Returns: undefined }
       generate_invite_code: { Args: never; Returns: string }
+      get_group_leaderboard: {
+        Args: { p_group_id: string }
+        Returns: {
+          avatar_path: string
+          current_streak: number
+          display_name: string
+          joined_at: string
+          last_rolled_date: string
+          longest_streak: number
+          points: number
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_invite_preview: {
         Args: { code_input: string }
         Returns: Database["public"]["CompositeTypes"]["invite_preview"]
@@ -329,6 +343,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      get_missed_yesterday: {
+        Args: { p_group_id: string }
+        Returns: {
+          avatar_path: string
+          display_name: string
+          updated_at: string
+          user_id: string
+        }[]
       }
       get_pending_review_count: {
         Args: { p_group_id: string }
@@ -344,6 +367,16 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_pending_today: {
+        Args: { p_group_id: string }
+        Returns: {
+          avatar_path: string
+          display_name: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      get_today_posted_count: { Args: { p_group_id: string }; Returns: number }
       handle_daily_rollover: { Args: never; Returns: undefined }
       is_group_admin: { Args: { g: string }; Returns: boolean }
       is_group_member: { Args: { g: string }; Returns: boolean }
