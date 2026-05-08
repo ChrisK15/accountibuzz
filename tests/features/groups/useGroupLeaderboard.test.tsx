@@ -19,19 +19,11 @@
 process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
 process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
 
-// HIGH #7 (REVIEWS replan 2026-05-08): tsconfig.json includes tests/, so RED
-// imports of nonexistent production modules WILL break `pnpm typecheck`.
-// Virtual-mock the not-yet-existing module so TS resolves the symbol against
-// the factory's exports. 04-03 will create the real module; the virtual mock
-// then becomes a no-op (jest.mock continues to work whether the file exists
-// or not).
-jest.mock(
-  '../../../src/features/groups/useGroupLeaderboard',
-  () => ({
-    useGroupLeaderboard: jest.fn(),
-  }),
-  { virtual: true },
-);
+// HIGH #7 (REVIEWS replan 2026-05-08): the virtual jest.mock that 04-01
+// scaffolded for typecheck-during-RED is removed in 04-03 once the real
+// production module lands — it shadowed the real export and prevented the
+// hook from running. This file now imports the real hook lazily via
+// require() so each test can wire its own supabase.rpc spy.
 
 jest.mock('react-native', () => ({
   AppState: { addEventListener: jest.fn() },
