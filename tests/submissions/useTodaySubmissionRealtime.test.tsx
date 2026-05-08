@@ -41,54 +41,8 @@ jest.mock('expo-router', () => {
   };
 });
 
-import type { ComponentType, ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-type RealtimePayload = { new?: unknown; old?: unknown };
-type Handler = (payload: RealtimePayload) => void;
-
-interface RealtimeFixture {
-  qc: QueryClient;
-  wrapper: ComponentType<{ children: ReactNode }>;
-  channel: jest.Mock;
-  on: jest.Mock;
-  subscribe: jest.Mock;
-  removeChannel: jest.Mock;
-  getHandler: () => Handler | null;
-}
-
-function setup(): RealtimeFixture {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { supabase } = require('../../src/lib/supabase');
-
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const removeChannel = jest.fn();
-  const subscribe = jest.fn(() => ({ unsubscribe: jest.fn() }));
-  let capturedHandler: Handler | null = null;
-
-  const on = jest.fn().mockImplementation((_event: string, _config: unknown, handler: Handler) => {
-    capturedHandler = handler;
-    return { subscribe };
-  });
-  const channel = jest.fn().mockReturnValue({ on });
-  jest.spyOn(supabase, 'channel').mockImplementation(channel as never);
-  jest.spyOn(supabase, 'removeChannel').mockImplementation(removeChannel as never);
-
-  const wrapper = function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
-  };
-
-  return {
-    qc,
-    wrapper,
-    channel,
-    on,
-    subscribe,
-    removeChannel,
-    getHandler: () => capturedHandler,
-  };
-}
+import { setupChannelMock } from '../_helpers/mockSupabaseChannel';
 
 function makeTzGetter(groupId: string, tz: string): () => Map<string, string> {
   return () => new Map([[groupId, tz]]);
@@ -117,7 +71,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('subscribes with user_id filter on focus', () => {
-    const { wrapper, channel, on } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { wrapper, channel, on } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 
@@ -137,7 +93,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('does NOT subscribe when userId is undefined', () => {
-    const { wrapper, channel } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { wrapper, channel } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 
@@ -149,7 +107,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('patches cache via setQueryData on INSERT event for TODAY', () => {
-    const { qc, wrapper, getHandler } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { qc, wrapper, getHandler } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 
@@ -165,7 +125,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('patches cache on UPDATE event for TODAY (rescoped ADM-04 — review notification)', () => {
-    const { qc, wrapper, getHandler } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { qc, wrapper, getHandler } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 
@@ -186,7 +148,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('PER REVIEWS C1: IGNORES events whose local_date is yesterday', () => {
-    const { qc, wrapper, getHandler } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { qc, wrapper, getHandler } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 
@@ -204,7 +168,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('PER REVIEWS C1: IGNORES events whose local_date is tomorrow', () => {
-    const { qc, wrapper, getHandler } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { qc, wrapper, getHandler } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 
@@ -220,7 +186,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('PER REVIEWS C1: IGNORES events for groups not in the active tz map', () => {
-    const { qc, wrapper, getHandler } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { qc, wrapper, getHandler } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 
@@ -236,7 +204,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('cleans up channel on unmount via removeChannel', () => {
-    const { wrapper, removeChannel } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { wrapper, removeChannel } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 
@@ -249,7 +219,9 @@ describe('useTodaySubmissionRealtime', () => {
   });
 
   it('falls back to payload.old when payload.new is missing (DELETE shape)', () => {
-    const { qc, wrapper, getHandler } = setup();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../src/lib/supabase');
+    const { qc, wrapper, getHandler } = setupChannelMock(supabase);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useTodaySubmissionRealtime } = require('../../src/features/submissions/useTodaySubmissionRealtime');
 

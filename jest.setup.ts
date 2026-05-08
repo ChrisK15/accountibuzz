@@ -291,6 +291,72 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 
+// react-native LayoutAnimation — Phase 4 hooks call configureNext() to animate
+// leaderboard row reorders and feed prepends. The native bridge is unavailable
+// in jest, so stub the API.
+// MEDIUM #4 (REVIEWS replan 2026-05-08): Presets.easeInEaseOut MUST be present
+// because 04-05 calls LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut).
+//
+// Implementation note: jest.mock('react-native', () => ({ ...jest.requireActual('react-native'), LayoutAnimation: ... }))
+// would TRIPLE-init react-native and trip TurboModuleRegistry on DevMenu before
+// jest-expo's NativeModule mocks apply. Instead, we patch LayoutAnimation on the
+// already-loaded react-native module object — Node module cache means every
+// later `require('react-native')` sees the patched LayoutAnimation, including
+// 04-05's `import { LayoutAnimation } from 'react-native'`.
+//
+// Per-test files that fully replace `react-native` via
+// `jest.mock('react-native', () => ({ AppState: ... }))` are unaffected because
+// their mock REPLACES our patched module; they never see this LayoutAnimation
+// surface anyway (their tests don't exercise it).
+{
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const RN = require('react-native');
+  const layoutAnimationMock = {
+    configureNext: jest.fn(),
+    create: jest.fn((duration: number, type: string, prop: string) => ({
+      duration,
+      update: { type, property: prop },
+      create: { type, property: prop },
+      delete: { type, property: prop },
+    })),
+    Types: { easeInEaseOut: 'easeInEaseOut', linear: 'linear', spring: 'spring' },
+    Properties: { opacity: 'opacity', scaleXY: 'scaleXY' },
+    easeInEaseOut: 'easeInEaseOut',
+    Presets: {
+      easeInEaseOut: {
+        duration: 250,
+        update: { type: 'easeInEaseOut' },
+        create: { type: 'easeInEaseOut', property: 'opacity' },
+        delete: { type: 'easeInEaseOut', property: 'opacity' },
+      },
+      linear: {
+        duration: 500,
+        update: { type: 'linear' },
+        create: { type: 'linear', property: 'opacity' },
+        delete: { type: 'linear', property: 'opacity' },
+      },
+      spring: {
+        duration: 700,
+        update: { type: 'spring', springDamping: 0.4 },
+        create: { type: 'linear', property: 'opacity' },
+        delete: { type: 'linear', property: 'opacity' },
+      },
+    },
+  };
+  try {
+    Object.defineProperty(RN, 'LayoutAnimation', {
+      configurable: true,
+      writable: true,
+      enumerable: true,
+      value: layoutAnimationMock,
+    });
+  } catch {
+    // RN's LayoutAnimation export uses an ES-module getter that may not be
+    // writable — fall back to direct assignment on the cached module exports.
+    (RN as { LayoutAnimation: typeof layoutAnimationMock }).LayoutAnimation = layoutAnimationMock;
+  }
+}
+
 // PER REVIEWS.md C4: stub crypto.randomUUID to a deterministic sequence so
 // queue-entry tests (Plan 03-03) do not depend on Hermes entropy. The polyfill
 // `react-native-get-random-values` is not loaded in Jest (no native bridge);
