@@ -86,13 +86,13 @@
   4. Feed surfaces which members have not submitted yet today, and shows missed-day tombstones for yesterday's misses
   5. Streak logic is consistent with the group's IANA timezone (server `local_date`, unique `(group_id, user_id, local_date)` constraint)
 **Plans**: 7 plans
-- [x] 02-01-PLAN.md — Wave 0: install expo-clipboard + expo-haptics, Jest mocks, Intl.supportedValuesOf probe
-- [x] 02-02-PLAN.md — Migration 0004: 7 RPCs + helper + invite_preview type + policy drops + 8 pgTAP files + [BLOCKING] supabase db push + pnpm types:gen
-- [x] 02-03-PLAN.md — Shared primitives: Zod schemas, formatInviteCode/timezones/shareInvite utils, 3 new RN components (SegmentedControl / InviteCodeChip / Modal), 5 read hooks + 6 RPC mutation hooks + usePendingInviteReplay
-- [x] 02-04-PLAN.md — Groups-list signed-in home + group-detail screen (invite panel + members + admin destructive zone + all 5 Modals)
-- [x] 02-05-PLAN.md — Create-group form + IanaTimezonePicker modal (Hermes iOS static fallback defense)
-- [x] 02-06-PLAN.md — Join-with-code screen + deep-link landing (/invite/[code].tsx) + root-layout usePendingInviteReplay wiring
-- [x] 02-07-PLAN.md — Phase verification: pnpm test:all + pnpm typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough
+- [ ] 04-01-PLAN.md — Wave 0: channel-chain Jest mock helper + LayoutAnimation mock + 4 RED pgTAP scaffolds + 5 RED Jest hook scaffolds (Nyquist RED state)
+- [ ] 04-02-PLAN.md — Migration 0008: alter publication group_members (CGF-1) + handle_submission_approval body + group_members_counter_immutable trigger + 4 SECURITY DEFINER RPCs + [BLOCKING] supabase db push + pnpm types:gen
+- [ ] 04-03-PLAN.md — Data layer: 7 hooks (useGroupLeaderboard, useGroupLeaderboardRealtime, useGroupFeed, useGroupFeedRealtime, useGroupTombstones, useGroupSocialCounts, useGroupTodayCardRealtime) + 2 new Jest tests
+- [ ] 04-04-PLAN.md — UI primitives: LeaderboardRow, FeedItem, StillToPostAvatarRow, MissedYesterdayRow + GroupCard.social prop + 5 component tests
+- [ ] 04-05-PLAN.md — Group-detail screen: 4 new sections (Leaderboard / Today's posts / Still to post / Missed yesterday) in stack order + 2 Realtime channels (D-09)
+- [ ] 04-06-PLAN.md — Today screen: per-card social-signal line + per-card Realtime channel via useGroupTodayCardRealtime (D-13/D-15)
+- [ ] 04-07-PLAN.md — Phase verification: full pnpm test:all + supabase test db + pnpm typecheck + expo-doctor + 12-checkpoint 2-device iOS UAT (LB-02 cross-device hard gate mirror of P3 CK-5)
 **UI hint**: yes
 
 ### Phase 5: Push & Daily Rollover
