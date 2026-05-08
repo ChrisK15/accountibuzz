@@ -19,15 +19,9 @@
 process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
 process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
 
-// HIGH #7 (REVIEWS replan 2026-05-08): virtual-mock the not-yet-existing module
-// so `pnpm typecheck` stays green. 04-03 will create the real module.
-jest.mock(
-  '../../../src/features/groups/useGroupLeaderboardRealtime',
-  () => ({
-    useGroupLeaderboardRealtime: jest.fn(),
-  }),
-  { virtual: true },
-);
+// HIGH #7 (REVIEWS replan 2026-05-08): the virtual jest.mock that 04-01
+// scaffolded for typecheck-during-RED is removed in 04-03 once the real
+// production module lands.
 
 jest.mock('react-native', () => ({
   AppState: { addEventListener: jest.fn() },
@@ -133,7 +127,7 @@ describe('useGroupLeaderboardRealtime', () => {
         joined_at: '2026-01-15T00:00:00Z',
       },
     ];
-    qc.setQueryData(['leaderboard', validGroupId], initialRows);
+    qc.setQueryData(['groupLeaderboard', validGroupId], initialRows);
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useGroupLeaderboardRealtime } = require('../../../src/features/groups/useGroupLeaderboardRealtime');
@@ -153,7 +147,7 @@ describe('useGroupLeaderboardRealtime', () => {
       }),
     );
 
-    const patched = qc.getQueryData<typeof initialRows>(['leaderboard', validGroupId]);
+    const patched = qc.getQueryData<typeof initialRows>(['groupLeaderboard', validGroupId]);
     expect(patched?.find((r) => r.user_id === 'u-alice')?.points).toBe(6);
     expect(patched?.find((r) => r.user_id === 'u-alice')?.current_streak).toBe(3);
     // Bob unchanged.
