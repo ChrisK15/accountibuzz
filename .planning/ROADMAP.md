@@ -92,7 +92,7 @@
 - [x] 04-04-PLAN.md — UI primitives + infrastructure: src/theme/applyAlpha.ts (HIGH #5 HSL-alpha helper) + src/hooks/useSignedMediaUrl.ts (HIGH #11 shared spyable hook) + LeaderboardRow + FeedItem (consumes shared useSignedMediaUrl, accessibilityRole=text, conditional FeedVideoThumb child) + StillToPostAvatarRow + MissedYesterdayRow (uses applyAlpha) + GroupCard.social prop + 7 tests
 - [x] 04-05-PLAN.md — Group-detail screen: 4 new sections in CORRECT D-09 order (HIGH #4 — PendingReviewRow + InvitePanel MOVED below Members) + 2 Realtime channels + MediaViewer Modal + tz-correct cutoffLabelFor (HIGH #9) + reduceMotion declared TDZ-safe before consuming hooks (HIGH #3) + applyAlpha on empty-leaderboard callout (HIGH #5 cascade)
 - [x] 04-06-PLAN.md — Today screen: per-card social-signal line with STRICT social-prop derivation (HIGH #10 — undefined when ANY source loading) + per-card Realtime channel + userId lifted to parent (MEDIUM) + GroupsListRow.member_count optimization (MEDIUM)
-- [ ] 04-07-PLAN.md — Phase verification: full pnpm test --ci + supabase test db + pnpm typecheck + expo-doctor + CK-00 REMOTE-publication prereq check (HIGH #13) + 14-checkpoint 2-device iOS UAT (6 hard gates + 1 prereq)
+- [x] 04-07-PLAN.md — Phase verification: full pnpm test --ci + supabase test db + pnpm typecheck + expo-doctor + CK-00 REMOTE-publication prereq check (HIGH #13) + 14-checkpoint 2-device iOS UAT (6 hard gates + 1 prereq)
 **UI hint**: yes
 
 ### Phase 5: Push & Daily Rollover
