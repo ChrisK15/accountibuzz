@@ -56,7 +56,7 @@ insert into public.submissions (id, group_id, user_id, local_date, status, media
 -- 1. ANON × get_pending_today → typed-error not_authenticated
 -- ============================================================
 select throws_ok(
-  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'P0001',
   'not_authenticated',
   'anon × get_pending_today raises not_authenticated'
@@ -66,7 +66,7 @@ select throws_ok(
 -- 2. ANON × get_missed_yesterday → typed-error not_authenticated
 -- ============================================================
 select throws_ok(
-  $$select * from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'P0001',
   'not_authenticated',
   'anon × get_missed_yesterday raises not_authenticated'
@@ -76,7 +76,7 @@ select throws_ok(
 -- 3. ANON × get_group_leaderboard → typed-error not_authenticated
 -- ============================================================
 select throws_ok(
-  $$select * from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'P0001',
   'not_authenticated',
   'anon × get_group_leaderboard raises not_authenticated'
@@ -106,7 +106,7 @@ set local role authenticated;
 
 -- 5. stranger × get_pending_today → typed-error not_member
 select throws_ok(
-  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'P0001',
   'not_member',
   'stranger × get_pending_today raises not_member'
@@ -114,7 +114,7 @@ select throws_ok(
 
 -- 6. stranger × get_missed_yesterday → typed-error not_member
 select throws_ok(
-  $$select * from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'P0001',
   'not_member',
   'stranger × get_missed_yesterday raises not_member'
@@ -122,7 +122,7 @@ select throws_ok(
 
 -- 7. stranger × get_group_leaderboard → typed-error not_member
 select throws_ok(
-  $$select * from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'P0001',
   'not_member',
   'stranger × get_group_leaderboard raises not_member'
@@ -151,7 +151,7 @@ set local role authenticated;
 
 -- 9. ex-member × get_pending_today → typed-error not_member
 select throws_ok(
-  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'P0001',
   'not_member',
   'ex-member × get_pending_today raises not_member (membership re-checked at call time)'
@@ -172,19 +172,19 @@ set local role authenticated;
 
 -- 10. member × get_pending_today succeeds (lives_ok proves no exception)
 select lives_ok(
-  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'member × get_pending_today succeeds'
 );
 
 -- 11. member × get_missed_yesterday succeeds
 select lives_ok(
-  $$select * from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'member × get_missed_yesterday succeeds'
 );
 
 -- 12. member × get_group_leaderboard succeeds
 select lives_ok(
-  $$select * from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'member × get_group_leaderboard succeeds'
 );
 
@@ -210,13 +210,13 @@ set local role authenticated;
 
 -- 14. admin × get_pending_today succeeds
 select lives_ok(
-  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'admin × get_pending_today succeeds'
 );
 
 -- 15. admin × get_group_leaderboard succeeds
 select lives_ok(
-  $$select * from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select * from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   'admin × get_group_leaderboard succeeds'
 );
 
@@ -251,7 +251,7 @@ select set_config(
 set local role authenticated;
 
 select throws_ok(
-  $$select * from public.get_pending_today('cccccccc-cccc-cccc-cccc-cccccccccccc')$$,
+  $$select * from public.get_pending_today('cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid)$$,
   'P0001',
   'not_member',
   'admin querying group they are NOT a member of raises not_member (membership re-check, not admin-gating)'

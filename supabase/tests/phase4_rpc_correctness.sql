@@ -126,7 +126,7 @@ set local role authenticated;
 --    We assert the single returned user_id is Derek.
 -- ============================================================
 select is(
-  (select count(*)::int from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')),
+  (select count(*)::int from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)),
   1,
   'get_pending_today returns 1 member (Derek — the only one without a submission row today)'
 );
@@ -136,7 +136,7 @@ select is(
 --    today" means the LEFT-JOIN-IS-NULL case. Re-assert by user_id.
 -- ============================================================
 select is(
-  (select user_id from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') limit 1),
+  (select user_id from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid) limit 1),
   '77777777-7777-7777-7777-777777777777'::uuid,
   'get_pending_today returns Derek by user_id (excludes Alice/Bob/Carol who all have today rows)'
 );
@@ -151,7 +151,7 @@ select is(
 --    Expected count = 2.
 -- ============================================================
 select is(
-  (select count(*)::int from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')),
+  (select count(*)::int from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)),
   2,
   'get_missed_yesterday returns 2 members (Bob + Derek — no approved row for yesterday)'
 );
@@ -164,7 +164,7 @@ select is(
 --    counts.) For RED-state purposes, just assert Bob is in the result set.
 -- ============================================================
 select bag_eq(
-  $$select user_id from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  $$select user_id from public.get_missed_yesterday('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)$$,
   $$values
       ('55555555-5555-5555-5555-555555555555'::uuid),
       ('77777777-7777-7777-7777-777777777777'::uuid)
@@ -193,7 +193,7 @@ select is(
 --    via the same tiebreaker.
 -- ============================================================
 select results_eq(
-  $$select user_id from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+  $$select user_id from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)
        limit 3$$,
   $$values
       ('44444444-4444-4444-4444-444444444444'::uuid),  -- Alice (10 pts)
@@ -210,7 +210,7 @@ select results_eq(
 --    Assert by selecting `points` from a known row (Alice).
 -- ============================================================
 select is(
-  (select points from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+  (select points from public.get_group_leaderboard('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid)
     where user_id = '44444444-4444-4444-4444-444444444444'),
   10,
   'get_group_leaderboard exposes points column (Alice = 10)'
@@ -242,7 +242,7 @@ select set_config(
 set local role authenticated;
 
 select is(
-  (select count(*)::int from public.get_group_leaderboard('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')),
+  (select count(*)::int from public.get_group_leaderboard('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid)),
   1,
   'get_group_leaderboard for Group B returns 1 row (admin only) — Group A members not leaked'
 );
@@ -264,7 +264,7 @@ select set_config(
 set local role authenticated;
 
 select is(
-  (select display_name from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') limit 1),
+  (select display_name from public.get_pending_today('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid) limit 1),
   'Derek',
   'get_pending_today order: alphabetical by display_name (Derek is the only result here)'
 );
