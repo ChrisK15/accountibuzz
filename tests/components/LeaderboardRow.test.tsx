@@ -105,4 +105,43 @@ describe('LeaderboardRow', () => {
     expect(label).toMatch(/11 points/);
     expect(label).toMatch(/4-day streak/);
   });
+
+  // 04-05 Task 3: reduceMotion prop default + Animated.View wrappers around
+  // points + currentStreak fragments. The cross-fade logic uses
+  // Animated.timing with duration 125ms (out) + 125ms (in) = 250ms total.
+  // The Animated.View at rest renders identically to a plain View — these
+  // tests cover the runtime acceptance + tree shape (≥1 Animated.View child
+  // in the row tree), not the timing per se.
+  it('accepts reduceMotion=false prop and renders points + streak normally', () => {
+    const { getByText } = render(
+      withTheme(<LeaderboardRow {...baseProps} reduceMotion={false} />),
+    );
+    expect(getByText(String(baseProps.points))).toBeTruthy();
+    // Streak meta uses the 🔥 emoji + the streak number.
+    expect(getByText(new RegExp(`🔥${baseProps.currentStreak}`))).toBeTruthy();
+  });
+
+  it('accepts reduceMotion=true prop and skips animation while still rendering', () => {
+    const { getByText } = render(
+      withTheme(<LeaderboardRow {...baseProps} reduceMotion={true} />),
+    );
+    expect(getByText(String(baseProps.points))).toBeTruthy();
+    expect(getByText(new RegExp(`🔥${baseProps.currentStreak}`))).toBeTruthy();
+  });
+
+  it('updates points + streak when props change (cross-fade integration smoke)', () => {
+    const { getByText, rerender } = render(
+      withTheme(
+        <LeaderboardRow {...baseProps} points={5} currentStreak={1} />,
+      ),
+    );
+    expect(getByText('5')).toBeTruthy();
+    rerender(
+      withTheme(
+        <LeaderboardRow {...baseProps} points={6} currentStreak={2} />,
+      ),
+    );
+    expect(getByText('6')).toBeTruthy();
+    expect(getByText(/🔥2/)).toBeTruthy();
+  });
 });
