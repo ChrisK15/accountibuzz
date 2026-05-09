@@ -9,7 +9,7 @@
 - [x] **Phase 1: Foundation** — Expo + Supabase scaffold, auth, profiles, schema, RLS, server-side timezone derivation
 - [x] **Phase 2: Groups & Invites** — Create groups, deep-link invite flow, membership
 - [x] **Phase 3: Capture & Admin Review** — Daily photo/video submissions with resilient upload + admin approval queue
-- [ ] **Phase 4: Social Surfaces** — Live leaderboard, points/streaks, group feed with tombstones
+- [x] **Phase 4: Social Surfaces** — Live leaderboard, points/streaks, group feed with tombstones
 - [ ] **Phase 5: Push & Daily Rollover** — EAS dev build, push notifications, pg_cron timezone-aware streak reset
 - [ ] **Phase 6: Pre-Rollout Hardening** — Re-engagement flow, group-health view, onboarding polish, final RLS audit
 
@@ -141,7 +141,7 @@
 | 1. Foundation | 6/6 | Complete (iOS UAT PASS; Android UAT deferred) | 2026-04-22 |
 | 2. Groups & Invites | 7/7 | Complete (iOS UAT PASS; Android UAT deferred) | 2026-04-25 |
 | 3. Capture & Admin Review | 8/8 | Complete (iOS UAT PASS — 4/4 hard gates; 2 soft deferrals + 2 rescopes for P3.1) | 2026-05-06 |
-| 4. Social Surfaces | 0/? | Not started | - |
+| 4. Social Surfaces | 7/7 | Complete (iOS UAT PASS — 6/6 in-UAT hard gates + CK-00 prereq; 2 inline fixes during UAT; CK-14 LayoutAnimation polish → P5; 7 pgTAP test-semantics issues → P4.1) | 2026-05-09 |
 | 5. Push & Daily Rollover | 0/? | Not started | - |
 | 6. Pre-Rollout Hardening | 0/? | Not started | - |
 

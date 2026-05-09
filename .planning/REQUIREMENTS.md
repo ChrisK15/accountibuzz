@@ -50,17 +50,17 @@ Requirements for initial MVP release to friend groups.
 
 ### Points, Streaks, Leaderboard
 
-- [ ] **PTS-01**: Each verified submission awards 1 point and increments the member's streak in that group
-- [ ] **PTS-02**: A day without a verified submission resets that member's streak to zero
-- [ ] **PTS-03**: Streaks and points are derived server-side and consistent with the group timezone
-- [ ] **LB-01**: Group has a leaderboard ranked by total points, showing each member's current streak
-- [ ] **LB-02**: Leaderboard updates in near real time as submissions are approved
+- [x] **PTS-01**: Each verified submission awards 1 point and increments the member's streak in that group
+- [x] **PTS-02**: A day without a verified submission resets that member's streak to zero
+- [x] **PTS-03**: Streaks and points are derived server-side and consistent with the group timezone
+- [x] **LB-01**: Group has a leaderboard ranked by total points, showing each member's current streak
+- [x] **LB-02**: Leaderboard updates in near real time as submissions are approved
 
 ### Group Feed
 
-- [ ] **FEED-01**: Group members can see today's submissions (approved items) for their group
-- [ ] **FEED-02**: Feed shows which members have not submitted yet today
-- [ ] **FEED-03**: Feed shows missed-day tombstones for yesterday's misses
+- [x] **FEED-01**: Group members can see today's submissions (approved items) for their group
+- [x] **FEED-02**: Feed shows which members have not submitted yet today
+- [x] **FEED-03**: Feed shows missed-day tombstones for yesterday's misses
 
 ### Notifications
 
@@ -150,14 +150,14 @@ Every v1 requirement maps to exactly one phase in ROADMAP.md.
 | ADM-03 | Phase 3 — Capture & Admin Review | Complete |
 | ADM-04 | Phase 3 — Capture & Admin Review | Complete |
 | PLAT-03 | Phase 3 — Capture & Admin Review | Complete |
-| PTS-01 | Phase 4 — Social Surfaces | Pending |
-| PTS-02 | Phase 4 — Social Surfaces | Pending |
-| PTS-03 | Phase 4 — Social Surfaces | Pending |
-| LB-01 | Phase 4 — Social Surfaces | Pending |
-| LB-02 | Phase 4 — Social Surfaces | Pending |
-| FEED-01 | Phase 4 — Social Surfaces | Pending |
-| FEED-02 | Phase 4 — Social Surfaces | Pending |
-| FEED-03 | Phase 4 — Social Surfaces | Pending |
+| PTS-01 | Phase 4 — Social Surfaces | Complete |
+| PTS-02 | Phase 4 — Social Surfaces | Complete |
+| PTS-03 | Phase 4 — Social Surfaces | Complete |
+| LB-01 | Phase 4 — Social Surfaces | Complete |
+| LB-02 | Phase 4 — Social Surfaces | Complete |
+| FEED-01 | Phase 4 — Social Surfaces | Complete |
+| FEED-02 | Phase 4 — Social Surfaces | Complete |
+| FEED-03 | Phase 4 — Social Surfaces | Complete |
 | NOTIF-01 | Phase 5 — Push & Daily Rollover | Pending |
 | NOTIF-02 | Phase 5 — Push & Daily Rollover | Pending |
 | NOTIF-03 | Phase 5 — Push & Daily Rollover | Pending |
