@@ -109,6 +109,30 @@ function withProviders(node: ReactElement) {
   );
 }
 
+// Tree-walk helper — InlineSocialSignal uses accessibilityElementsHidden +
+// importantForAccessibility="no-hide-descendants" so the parent GroupCard
+// composite a11y label can carry the social fragment without VoiceOver
+// double-reading. testing-library's getByText / queryByText filter such
+// subtrees out by default, so we walk the rendered JSON tree directly to
+// find substrings. Same pattern used by tests/components/GroupCard.test.tsx
+// (Plan 04-04).
+function collectAllText(root: unknown): string[] {
+  const out: string[] = [];
+  function walk(node: unknown): void {
+    if (!node) return;
+    if (typeof node === 'string') {
+      out.push(node);
+      return;
+    }
+    const obj = node as { children?: unknown };
+    if (Array.isArray(obj.children)) {
+      for (const c of obj.children) walk(c);
+    }
+  }
+  walk(root);
+  return out;
+}
+
 const sixMemberGroup = {
   id: 'g1',
   name: 'Morning runners',
@@ -152,10 +176,11 @@ describe('Today screen — social-signal line (Plan 04-06)', () => {
       ],
     });
 
-    const { getByText } = render(withProviders(<TodayScreen />));
-    expect(getByText(/4\/6 posted/)).toBeTruthy();
-    expect(getByText(/11 pts/)).toBeTruthy();
-    expect(getByText(/🔥3/)).toBeTruthy();
+    const { toJSON } = render(withProviders(<TodayScreen />));
+    const all = collectAllText(toJSON());
+    expect(all.some((s) => s.includes('4/6 posted'))).toBe(true);
+    expect(all.some((s) => s.includes('11 pts'))).toBe(true);
+    expect(all.some((s) => s.includes('🔥3'))).toBe(true);
   });
 
   it('renders be-the-first variant when posted === 0', () => {
@@ -182,9 +207,10 @@ describe('Today screen — social-signal line (Plan 04-06)', () => {
       ],
     });
 
-    const { getByText } = render(withProviders(<TodayScreen />));
-    expect(getByText(/0\/6 posted/)).toBeTruthy();
-    expect(getByText(/be the first/)).toBeTruthy();
+    const { toJSON } = render(withProviders(<TodayScreen />));
+    const all = collectAllText(toJSON());
+    expect(all.some((s) => s.includes('0/6 posted'))).toBe(true);
+    expect(all.some((s) => s.includes('be the first'))).toBe(true);
   });
 
   it('HIGH #10 GATE: hides social line when leaderboard is loading (data undefined)', () => {
@@ -201,8 +227,11 @@ describe('Today screen — social-signal line (Plan 04-06)', () => {
       isPending: true,
     });
 
-    const { queryByText } = render(withProviders(<TodayScreen />));
-    expect(queryByText(/posted/)).toBeNull();
+    const { toJSON } = render(withProviders(<TodayScreen />));
+    const all = collectAllText(toJSON());
+    // Strict-gate: NO "posted" fragment anywhere in the rendered tree.
+    expect(all.some((s) => /posted/.test(s))).toBe(false);
+    expect(all.some((s) => /be the first/.test(s))).toBe(false);
   });
 
   it('HIGH #10 GATE: hides social line when postedCount is null', () => {
@@ -230,8 +259,11 @@ describe('Today screen — social-signal line (Plan 04-06)', () => {
       ],
     });
 
-    const { queryByText } = render(withProviders(<TodayScreen />));
-    expect(queryByText(/posted/)).toBeNull();
+    const { toJSON } = render(withProviders(<TodayScreen />));
+    const all = collectAllText(toJSON());
+    // Strict-gate: postedCount === null means social is undefined → no line.
+    expect(all.some((s) => /posted/.test(s))).toBe(false);
+    expect(all.some((s) => /be the first/.test(s))).toBe(false);
   });
 
   it('MEDIUM gate: useGroupTodayCardRealtime is called per row with userId lifted from parent', () => {
