@@ -25,6 +25,25 @@ import { GhostButton } from './GhostButton';
 import { StatusPill } from './StatusPill';
 import { TypeChip } from './TypeChip';
 
+/**
+ * Phase 4 D-13 social-signal payload.
+ *
+ * `posted` — approved-today count from get_today_posted_count RPC
+ * `total`  — group_members count
+ * `points` — caller's own points in this group
+ * `streak` — caller's own current_streak in this group
+ *
+ * When provided AND `total > 0`, GroupCard renders a divider + social-signal
+ * line below ROW 4. When `social` is undefined OR `total === 0`, the card
+ * renders byte-identical to its P3 shape (no divider, no line).
+ */
+export interface GroupCardSocialProp {
+  posted: number;
+  total: number;
+  points: number;
+  streak: number;
+}
+
 export interface GroupCardProps {
   groupId: string;
   name: string;
@@ -37,6 +56,8 @@ export interface GroupCardProps {
   rejectionReason?: string | null;
   /** e.g. "2.4 MB" — undefined when no queued upload. */
   queuedUploadSize?: string;
+  /** Phase 4 D-13: optional social-signal data; renders a new line below CTA when provided. */
+  social?: GroupCardSocialProp;
   onSubmitPress: () => void;
   onRejectedPillPress?: () => void;
   onQueueBadgeMorePress?: () => void;
@@ -49,6 +70,7 @@ function compositeA11yLabel(args: {
   cutoffTime?: string;
   minutesLeft?: number;
   submittedAgo?: string;
+  social?: GroupCardSocialProp;
 }): string {
   const kindLabel = args.kind === 'photo' ? 'photo group' : 'video group';
   const statusLabel =
@@ -65,7 +87,17 @@ function compositeA11yLabel(args: {
   } else if (args.submittedAgo && args.status !== 'rejected') {
     trailing = `, submitted ${args.submittedAgo}`;
   }
-  return `${args.name} group, ${kindLabel}, ${statusLabel}${trailing}`;
+  // Phase 4 D-13: append social fragment when provided AND total > 0.
+  // UI-SPEC line 454: be-the-first variant expands to "be the first to log proof".
+  let socialFragment = '';
+  if (args.social && args.social.total > 0) {
+    if (args.social.posted === 0) {
+      socialFragment = `, 0 of ${args.social.total} posted today, be the first to log proof`;
+    } else {
+      socialFragment = `, ${args.social.posted} of ${args.social.total} posted today, ${args.social.points} points, ${args.social.streak}-day streak`;
+    }
+  }
+  return `${args.name} group, ${kindLabel}, ${statusLabel}${trailing}${socialFragment}`;
 }
 
 function formatTimeLeft(minutes: number): string {
@@ -82,6 +114,118 @@ function urgencyTextStyle(
   if (minutesLeft < 5) return { color: destructive, weight: '700' };
   if (minutesLeft < 60) return { color: destructive, weight: '500' };
   return { color: muted, weight: '500' };
+}
+
+// Phase 4 D-13/D-14 (UI-SPEC §0 + §"Today GroupCard social-signal line"):
+// renders below ROW 4 with a 1px top divider + 12pt vertical breathing room.
+// Render rule: only when `social.total > 0`. The "be-the-first" variant
+// (posted === 0) drops the points + streak fragments and emphasises the prompt.
+//
+// No animation on Realtime updates — UI-SPEC line 752: instant text swap to
+// keep the Today rhythm calm. The existing 125ms cross-fade on status change
+// (Animated.sequence below) MUST NOT wrap this row.
+interface InlineSocialSignalProps {
+  social: GroupCardSocialProp;
+}
+
+function InlineSocialSignal({ social }: InlineSocialSignalProps) {
+  const t = useTheme();
+  const isBeTheFirst = social.posted === 0;
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{
+        marginTop: t.spacing.md,
+        paddingTop: t.spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: t.colors.border,
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+      }}
+    >
+      {isBeTheFirst ? (
+        <>
+          <Text
+            style={[
+              t.fonts.caption,
+              {
+                color: t.colors.textMuted,
+                fontWeight: '500',
+                fontVariant: ['tabular-nums'],
+              },
+            ]}
+          >
+            {`0/${social.total} posted · `}
+          </Text>
+          <Text
+            style={[
+              t.fonts.caption,
+              { color: t.colors.text, fontWeight: '700' },
+            ]}
+          >
+            be the first
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text
+            style={[
+              t.fonts.caption,
+              {
+                color: t.colors.textMuted,
+                fontWeight: '500',
+                fontVariant: ['tabular-nums'],
+              },
+            ]}
+          >
+            {`${social.posted}/${social.total} posted`}
+          </Text>
+          <Text
+            style={[
+              t.fonts.caption,
+              { color: t.colors.textMuted, fontWeight: '500' },
+            ]}
+          >
+            {' · '}
+          </Text>
+          <Text
+            style={[
+              t.fonts.caption,
+              {
+                color: t.colors.text,
+                fontWeight: '700',
+                fontVariant: ['tabular-nums'],
+              },
+            ]}
+          >
+            {`${social.points} pts`}
+          </Text>
+          <Text
+            style={[
+              t.fonts.caption,
+              { color: t.colors.textMuted, fontWeight: '500' },
+            ]}
+          >
+            {' · '}
+          </Text>
+          <Text
+            style={[
+              t.fonts.caption,
+              {
+                color: t.colors.textMuted,
+                fontWeight: '500',
+                fontVariant: ['tabular-nums'],
+              },
+            ]}
+          >
+            {`🔥${social.streak}`}
+          </Text>
+        </>
+      )}
+    </View>
+  );
 }
 
 interface InlineQueueBadgeProps {
@@ -153,6 +297,7 @@ export function GroupCard({
   submittedAgo,
   rejectionReason: _rejectionReason,
   queuedUploadSize,
+  social,
   onSubmitPress,
   onRejectedPillPress,
   onQueueBadgeMorePress,
@@ -262,7 +407,16 @@ export function GroupCard({
     cutoffTime,
     minutesLeft,
     submittedAgo,
+    social,
   });
+
+  // Phase 4 D-13: render InlineSocialSignal only when `social.total > 0`.
+  // Iteration 1 plan-checker fix (WARNING-2 from 04-06 cascade): the cluster
+  // is wrapped in a `minHeight: 20` container that is rendered UNCONDITIONALLY
+  // (i.e., even when `social === undefined`) so the card height does not "pop"
+  // by ~20pt when leaderboard data lands a few frames after the rest of the
+  // card paints. The divider + InlineSocialSignal inside it remain conditional.
+  const showSocial = !!social && social.total > 0;
 
   return (
     <View
@@ -332,7 +486,14 @@ export function GroupCard({
         {cta}
       </Animated.View>
 
-      {/* ROW 5: inline QueueBadge — only when queuedUploadSize truthy */}
+      {/* ROW 5: NEW — InlineSocialSignal cluster (P4 D-13) wrapped in a
+          minHeight container (WARNING-2 fix). The container reserves vertical
+          space at first paint so cards don't "pop" when social data arrives. */}
+      <View style={{ minHeight: 20 }}>
+        {showSocial && social ? <InlineSocialSignal social={social} /> : null}
+      </View>
+
+      {/* ROW 6: inline QueueBadge — only when queuedUploadSize truthy */}
       {queuedUploadSize ? (
         <InlineQueueBadge
           queuedUploadSize={queuedUploadSize}
