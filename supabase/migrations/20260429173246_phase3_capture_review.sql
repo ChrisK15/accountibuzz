@@ -1,5 +1,5 @@
 -- =============================================================================
--- 0006_phase3_capture_review.sql — Phase 3 Capture & Admin Review (server contract)
+-- 20260429173246_phase3_capture_review.sql — Phase 3 Capture & Admin Review (server contract)
 -- =============================================================================
 -- Append-only follow-up to 0001/0002/0003/0004/0005. Ships the entire Phase 3
 -- write-path AND admin-only read-path: 4 SECURITY DEFINER RPCs + 1 row type.
@@ -72,7 +72,7 @@
 --
 -- Source: .planning/phases/03-capture-admin-review/03-RESEARCH.md §Code
 --         Examples §5–§7; .planning/phases/03-capture-admin-review/03-PATTERNS.md
---         §`supabase/migrations/0006_phase3_capture_review.sql`.
+--         §`supabase/migrations/20260429173246_phase3_capture_review.sql`.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------

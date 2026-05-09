@@ -10,7 +10,7 @@
 
 | New / Modified File | Role | Data Flow | Closest Analog | Match Quality |
 |---------------------|------|-----------|----------------|---------------|
-| `supabase/migrations/0008_phase4_points_streaks_feed.sql` | DB migration | DDL + trigger body + RPC + publication-add | `supabase/migrations/0007_phase3_realtime_publication.sql` (idempotent publication-add) + `supabase/migrations/0006_phase3_capture_review.sql` (RPC pattern) + `supabase/migrations/0001_foundation.sql` lines 365-384 (the stub being replaced) + `0003_phase1_review_fixes_2.sql` (BEFORE UPDATE column-allowlist) | exact, multi-source |
+| `supabase/migrations/20260508233129_phase4_points_streaks_feed.sql` | DB migration | DDL + trigger body + RPC + publication-add | `supabase/migrations/20260506165538_phase3_realtime_publication.sql` (idempotent publication-add) + `supabase/migrations/20260429173246_phase3_capture_review.sql` (RPC pattern) + `supabase/migrations/0001_foundation.sql` lines 365-384 (the stub being replaced) + `0003_phase1_review_fixes_2.sql` (BEFORE UPDATE column-allowlist) | exact, multi-source |
 | `supabase/tests/handle_submission_approval_streak.sql` | DB test | pgTAP raw-UPDATE + JWT claims | `supabase/tests/submissions_admin_immutable.sql` (raw-UPDATE trigger coverage) + `supabase/tests/get_pending_review_count.sql` (JWT claims) | exact |
 | `supabase/tests/handle_submission_approval_idempotency.sql` | DB test | pgTAP raw-UPDATE | `supabase/tests/submissions_admin_immutable.sql` | exact |
 | `supabase/tests/phase4_rpc_permissions.sql` | DB test | pgTAP RPC calls per persona | `supabase/tests/get_pending_review_count.sql` | exact |
@@ -34,13 +34,13 @@
 
 ## Pattern Assignments — DB Layer
 
-### `supabase/migrations/0008_phase4_points_streaks_feed.sql` (DB migration)
+### `supabase/migrations/20260508233129_phase4_points_streaks_feed.sql` (DB migration)
 
 **Analogs:** four sources. The migration is multi-section.
 
 #### (a) Realtime publication-add (idempotent) — verbatim from `0007`
 
-**Source:** `supabase/migrations/0007_phase3_realtime_publication.sql` lines 14-24
+**Source:** `supabase/migrations/20260506165538_phase3_realtime_publication.sql` lines 14-24
 
 ```sql
 do $$
@@ -129,7 +129,7 @@ create trigger submissions_owner_immutable_trigger
 
 #### (d) Three (or four) SECURITY DEFINER RPCs — verbatim shape from `0006`
 
-**Source:** `supabase/migrations/0006_phase3_capture_review.sql` lines 220-245 (`get_pending_review_count` — the lenient non-leak pattern) and lines 289-327 (`get_pending_review_queue` — the typed-error pattern with composite return)
+**Source:** `supabase/migrations/20260429173246_phase3_capture_review.sql` lines 220-245 (`get_pending_review_count` — the lenient non-leak pattern) and lines 289-327 (`get_pending_review_queue` — the typed-error pattern with composite return)
 
 Lenient (returns 0 on non-member) — mirrors `get_today_posted_count`:
 ```sql
@@ -830,7 +830,7 @@ All four P4 RPCs gate on `is_group_member(p_group_id)` (NOT `is_group_admin` —
 
 ### RPC Permission Boilerplate
 
-**Source:** every RPC in `supabase/migrations/0006_phase3_capture_review.sql` (lines 148-149, 216-217, 244-245, 326-327)
+**Source:** every RPC in `supabase/migrations/20260429173246_phase3_capture_review.sql` (lines 148-149, 216-217, 244-245, 326-327)
 **Apply to:** every new RPC in 0008
 
 ```sql

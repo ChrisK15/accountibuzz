@@ -59,7 +59,7 @@ Out of scope for Phase 4 (other phases own these):
 - **D-16: GroupCard tap continues to route to group-detail** (same as P3). No new gestures, no extra "View leaderboard" chip on the card. Drill-through is implicit; group-detail is the destination for all social context.
 
 ### RPCs (D-17..D-19)
-- **D-17: New SECURITY DEFINER RPCs (Phase 4 migration `0008_phase4_points_streaks_feed.sql`):**
+- **D-17: New SECURITY DEFINER RPCs (Phase 4 migration `20260508233129_phase4_points_streaks_feed.sql`):**
   - `get_pending_today(group_id uuid) returns table(user_id uuid, display_name text, avatar_url text)` — members with no submission for today's local_date. Membership-gated (caller must be in group).
   - `get_missed_yesterday(group_id uuid) returns table(user_id uuid, display_name text, avatar_url text)` — members with no approved submission for yesterday's local_date. Membership-gated.
   - `get_today_posted_count(group_id uuid) returns int` — approved count for today's local_date (powers the Today GroupCard social-signal line). Membership-gated.
@@ -115,9 +115,9 @@ Out of scope for Phase 4 (other phases own these):
 - `supabase/migrations/0001_foundation.sql` §`handle_submission_approval` STUB (lines 365–384) — **THIS PHASE replaces the stub body.** Trigger wiring is already in place; only the body changes.
 - `supabase/migrations/0001_foundation.sql` §`group_members_update_admin` policy (lines 168–178) — write path RLS for counter columns; D-19 references this
 - `supabase/migrations/0003_phase1_review_fixes_2.sql` — admin-immutable column allowlist on `submissions` (the WHEN clause + this trigger together provide D-03's idempotency)
-- `supabase/migrations/0006_phase3_capture_review.sql` — `submit_today`, `review_submission`, `get_pending_review_count` RPCs; the `review_submission` RPC's `status='approved'` UPDATE is what fires the P4 trigger
-- `supabase/migrations/0007_phase3_realtime_publication.sql` — adds tables to `supabase_realtime` publication; verify `group_members` and `submissions` are in the publication (they should be, but check during research)
-- `supabase/migrations/0008_phase4_points_streaks_feed.sql` (new, this phase) — `handle_submission_approval` body, optional column-allowlist trigger on `group_members` (D-19), three new SECURITY DEFINER RPCs (D-17), pgTAP coverage for trigger branches + RPCs
+- `supabase/migrations/20260429173246_phase3_capture_review.sql` — `submit_today`, `review_submission`, `get_pending_review_count` RPCs; the `review_submission` RPC's `status='approved'` UPDATE is what fires the P4 trigger
+- `supabase/migrations/20260506165538_phase3_realtime_publication.sql` — adds tables to `supabase_realtime` publication; verify `group_members` and `submissions` are in the publication (they should be, but check during research)
+- `supabase/migrations/20260508233129_phase4_points_streaks_feed.sql` (new, this phase) — `handle_submission_approval` body, optional column-allowlist trigger on `group_members` (D-19), three new SECURITY DEFINER RPCs (D-17), pgTAP coverage for trigger branches + RPCs
 
 ### External Docs
 - Supabase Realtime `postgres_changes` — single-column filter constraint already documented in P3 D-13; same constraint applies to D-15, D-20, D-21
@@ -142,7 +142,7 @@ Out of scope for Phase 4 (other phases own these):
 
 ### Established Patterns
 - **All write paths via SECURITY DEFINER RPCs** (P2 D-11, P3 D-18). P4 adds three read-side RPCs (D-17). The trigger body (D-18) is the only "write path" introduced — it runs server-side via the existing AFTER UPDATE wiring; no new client write surface.
-- **Migrations are SQL files in `supabase/migrations/`,** numbered sequentially; P4 adds `0008_phase4_points_streaks_feed.sql`. Never edit prior migrations.
+- **Migrations are SQL files in `supabase/migrations/`,** numbered sequentially; P4 adds `20260508233129_phase4_points_streaks_feed.sql`. Never edit prior migrations.
 - **RLS is the authorization layer**; CI fails the build on any public-schema table without RLS. No new tables in P4 (all RPCs read existing tables) — keep CI green incidentally.
 - **Forms / mutations use TanStack Query**; Realtime handlers patch the cache via `setQueryData`, never via a parallel state layer (Anti-Pattern #2).
 - **Theme tokens** in `src/theme/` — never hardcode colors / spacing.
@@ -153,7 +153,7 @@ Out of scope for Phase 4 (other phases own these):
 ### Integration Points
 - `app/(app)/index.tsx` (Today screen) — D-13/D-14/D-15 add a social-signal line per GroupCard. The existing FlatList of `GroupCardRow` instances stays; each row gains one Realtime subscription + one extra hook call (leaderboard read for the user's own row + posted-today count). **Hook order constraints from P3 still apply** (one row component per FlatList item).
 - `app/(app)/groups/[id]/index.tsx` (group-detail) — gets four new sections in stack order (Leaderboard, Today's posts, Still to post, Missed yesterday). The existing Members + admin-only Pending review + destructive zone stay below.
-- `supabase/migrations/0008_phase4_points_streaks_feed.sql` (new) — body for `handle_submission_approval`; three SECURITY DEFINER RPCs (`get_pending_today`, `get_missed_yesterday`, `get_today_posted_count`); optional column-allowlist trigger on `group_members` (D-19); pgTAP coverage. **Apply via `supabase db push` blocking checkpoint, parallel to P2/P3 migration plan structure.**
+- `supabase/migrations/20260508233129_phase4_points_streaks_feed.sql` (new) — body for `handle_submission_approval`; three SECURITY DEFINER RPCs (`get_pending_today`, `get_missed_yesterday`, `get_today_posted_count`); optional column-allowlist trigger on `group_members` (D-19); pgTAP coverage. **Apply via `supabase db push` blocking checkpoint, parallel to P2/P3 migration plan structure.**
 - `src/types/database.ts` — regenerate via `pnpm types:gen` after the migration lands.
 - `src/features/submissions/useTodaySubmissionRealtime.ts` — extend or pair with new hooks: `useGroupLeaderboard`, `useGroupFeed`, `useGroupTombstones`, `useGroupSocialCounts` (Today card). Same `useFocusEffect` cleanup discipline.
 

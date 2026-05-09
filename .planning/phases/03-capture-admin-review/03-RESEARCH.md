@@ -52,7 +52,7 @@ Phase 3 is the highest-stakes phase in the project so far: it ships the **core a
 - **D-16: Admin review queue is per-group, inside group-detail.** Not a tab. From `app/(app)/groups/[id]/index.tsx`, an admin-only entry "Pending review (N)" routes to `app/(app)/groups/[id]/review.tsx` (the swipe queue).
 
 **RPCs (D-17..D-19)**
-- **D-17: New SECURITY DEFINER RPCs (Phase 3 migration `0006_phase3_capture_review.sql`):**
+- **D-17: New SECURITY DEFINER RPCs (Phase 3 migration `20260429173246_phase3_capture_review.sql`):**
   - `submit_today(group_id uuid, media_path text, media_type text, caption text) returns uuid` — typed errors: `not_member`, `wrong_media_type`, `already_submitted_today`.
   - `review_submission(submission_id uuid, decision text, rejection_reason text) returns void` — validates admin of submission's group, validates current status = `pending`. The 0003 admin-immutable trigger continues to enforce `reviewed_by = auth.uid()` defensively.
   - `get_pending_review_count(group_id uuid) returns int` — admin-only count for the "Pending review (N)" badge on group-detail.
@@ -110,7 +110,7 @@ Phase 3 is the highest-stakes phase in the project so far: it ships the **core a
 | Directive | Source | Enforcement Hook |
 |-----------|--------|-----------------|
 | All write paths via SECURITY DEFINER RPCs | P2 D-11, reaffirmed in P3 D-18 | Code review + plan-checker; no `supabase.from('submissions').insert()` calls in client code |
-| Migrations are append-only SQL files in `supabase/migrations/`; never edit prior migrations | CLAUDE.md / phase pattern | Migration file `0006_phase3_capture_review.sql` is new-only; uses `create or replace function` for idempotency |
+| Migrations are append-only SQL files in `supabase/migrations/`; never edit prior migrations | CLAUDE.md / phase pattern | Migration file `20260429173246_phase3_capture_review.sql` is new-only; uses `create or replace function` for idempotency |
 | RLS gated by CI (build fails on any public table without RLS) | PLAT-02, P1 D-CI | No new public tables in P3 — CI continues to pass |
 | Forms use React Hook Form + Zod | P1 stack | Capture caption + reject-reason inputs use RHF Controller pattern |
 | TanStack Query for server state; mutations invalidate by groupId / userId | P2 PATTERNS Shared Pattern 4 | New hooks follow exact P2 invalidation matrix |
@@ -301,7 +301,7 @@ The `expo-camera` config plugin auto-generates:
 │         require reviewed_by = auth.uid() on approve/reject               │
 │     - on_submission_approved → handle_submission_approval (STUB in P3)   │
 │                                                                          │
-│  RPCs (NEW in 0006_phase3_capture_review.sql)                            │
+│  RPCs (NEW in 20260429173246_phase3_capture_review.sql)                            │
 │   • submit_today(group_id, media_path, media_type, caption)              │
 │       returns uuid (submission_id)                                       │
 │       SECURITY DEFINER, set search_path = public                         │
@@ -374,7 +374,7 @@ src/features/realtime/            # NEW (or co-locate in submissions/)
 └── useTodaySubmissionRealtime.ts # Subscribe + setQueryData; useFocusEffect cleanup
 
 supabase/migrations/
-└── 0006_phase3_capture_review.sql  # NEW — 3 RPCs + grants
+└── 20260429173246_phase3_capture_review.sql  # NEW — 3 RPCs + grants
 
 supabase/tests/
 ├── submit_today.sql              # NEW pgTAP — happy + 3 typed-error paths
@@ -1056,7 +1056,7 @@ export function startQueueManager(getSession: () => Session | null) {
 ### §5. submit_today RPC body (Postgres)
 
 ```sql
--- supabase/migrations/0006_phase3_capture_review.sql (excerpt)
+-- supabase/migrations/20260429173246_phase3_capture_review.sql (excerpt)
 
 create or replace function public.submit_today(
   p_group_id   uuid,
@@ -1740,7 +1740,7 @@ Threat 7: Cross-group review (admin of A reviews submission of B).
 
 4. **Hand-roll the swipe stack with `react-native-gesture-handler` v2.31 + `react-native-reanimated` v4.3.** All third-party card-stack libraries are unmaintained; the canonical Reanimated pattern is ~80 LOC and runs on the native UI thread (60–120 FPS).
 
-5. **Three SECURITY DEFINER RPCs in migration `0006_phase3_capture_review.sql`:** `submit_today`, `review_submission`, `get_pending_review_count`. Each follows the P2 pattern (typed errors via `raise exception 'X' using errcode = 'P0001'`). The `review_submission` RPC's UPDATE is conditional on `status = 'pending'` (Pitfall 9 — concurrent-approve race guard).
+5. **Three SECURITY DEFINER RPCs in migration `20260429173246_phase3_capture_review.sql`:** `submit_today`, `review_submission`, `get_pending_review_count`. Each follows the P2 pattern (typed errors via `raise exception 'X' using errcode = 'P0001'`). The `review_submission` RPC's UPDATE is conditional on `status = 'pending'` (Pitfall 9 — concurrent-approve race guard).
 
 6. **Wave 0 must include:** install `@react-native-community/netinfo`; rebuild dev client after `app.config.ts` adds `expo-camera` plugin; create 18 new test files (4 pgTAP + 14 Jest); audit all `router.push('/')` call sites for the Stack→Tabs migration.
 
@@ -1774,7 +1774,7 @@ Threat 7: Cross-group review (admin of A reviews submission of B).
 
 Research complete. Planner can now create PLAN.md files. Recommended wave structure (per granularity=standard):
 
-- **Wave 0 (foundation):** install netinfo + rebuild dev client + create test infra (jest mocks for camera/video/netinfo) + write `0006_phase3_capture_review.sql` migration + regenerate types + Stack→Tabs migration audit
+- **Wave 0 (foundation):** install netinfo + rebuild dev client + create test infra (jest mocks for camera/video/netinfo) + write `20260429173246_phase3_capture_review.sql` migration + regenerate types + Stack→Tabs migration audit
 - **Wave 1 (parallel):** RPCs + pgTAP coverage; capture screen + components; submitMedia pipeline + queue manager
 - **Wave 2 (parallel):** Today screen + Realtime hook; admin queue + swipe-stack
 - **Wave 3 (sequential):** integration smoke + UAT walkthrough

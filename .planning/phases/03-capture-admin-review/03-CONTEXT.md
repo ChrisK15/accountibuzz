@@ -49,7 +49,7 @@ Out of scope for Phase 3 (other phases own these): points/streak counter trigger
 - **D-16: Admin review queue is per-group, inside group-detail.** Not a tab. From `app/(app)/groups/[id]/index.tsx`, an admin-only entry "Pending review (N)" routes to `app/(app)/groups/[id]/review.tsx` (the swipe queue). Keeps admin function adjacent to the group it concerns; no cross-group review surface needed at MVP.
 
 ### RPCs (D-17..D-19)
-- **D-17: New SECURITY DEFINER RPCs (Phase 3 migration `0006_phase3_capture_review.sql`):**
+- **D-17: New SECURITY DEFINER RPCs (Phase 3 migration `20260429173246_phase3_capture_review.sql`):**
   - `submit_today(group_id uuid, media_path text, media_type text, caption text) returns uuid` — derives `local_date`, validates `media_type = group.submission_type`, validates membership, inserts `submissions` row. Returns the new submission id. Typed errors: `not_member`, `wrong_media_type`, `already_submitted_today`.
   - `review_submission(submission_id uuid, decision text /* approved|rejected */, rejection_reason text) returns void` — validates admin of submission's group, validates current status = `pending`, applies status + `reviewed_by = auth.uid()` + `reviewed_at = now()`. The 0003 admin-immutable trigger continues to enforce `reviewed_by = auth.uid()` defensively.
   - `get_pending_review_count(group_id uuid) returns int` — admin-only count for the "Pending review (N)" badge on group-detail.
@@ -107,7 +107,7 @@ Out of scope for Phase 3 (other phases own these): points/streak counter trigger
 - `supabase/migrations/0001_foundation.sql` §`handle_submission_approval` trigger STUB (lines 367–384) — body lands in P4, but the trigger fires on `status → approved` already
 - `supabase/migrations/0002_phase1_review_fixes.sql` — owner-immutable trigger
 - `supabase/migrations/0003_phase1_review_fixes_2.sql` — admin-review immutable column allowlist; `reviewed_by = auth.uid()` enforcement (lines 23–94). **D-17's `review_submission` RPC must produce UPDATEs that satisfy this trigger.**
-- `supabase/migrations/0006_phase3_capture_review.sql` (new, this phase) — `submit_today`, `review_submission`, `get_pending_review_count` RPCs; any allowlist tweaks to the owner-immutable trigger needed for the rejected→terminal semantics (D-12 means owner branch can stay locked — no resubmit transition needed)
+- `supabase/migrations/20260429173246_phase3_capture_review.sql` (new, this phase) — `submit_today`, `review_submission`, `get_pending_review_count` RPCs; any allowlist tweaks to the owner-immutable trigger needed for the rejected→terminal semantics (D-12 means owner branch can stay locked — no resubmit transition needed)
 
 ### External Docs
 - Supabase Storage TUS / resumable uploads — official docs + `react-native-resumable-upload-supabase` reference (MUST be re-validated against supabase-js 2.58 in research)
@@ -137,7 +137,7 @@ Out of scope for Phase 3 (other phases own these): points/streak counter trigger
 
 ### Established Patterns
 - **All write paths go through SECURITY DEFINER RPCs** (P2 D-11). P3 adds `submit_today` + `review_submission` + `get_pending_review_count`.
-- **Migrations are SQL files in `supabase/migrations/`,** numbered (`0001_`..`0005_`); P3 adds `0006_phase3_capture_review.sql`. Never edit prior migrations.
+- **Migrations are SQL files in `supabase/migrations/`,** numbered (`0001_`..`0005_`); P3 adds `20260429173246_phase3_capture_review.sql`. Never edit prior migrations.
 - **RLS is the authorization layer**; CI fails the build on any public-schema table without RLS — keep this green for any new helper tables (none expected in P3).
 - **Forms use React Hook Form + Zod** (P1 stack research); validation messages surface via `FormError`.
 - **TanStack Query for server state**; mutations invalidate keyed by `groupId` / `userId`. Realtime subscriptions patch the cache via `queryClient.setQueryData` (Pitfall #2 — no polling).
@@ -150,7 +150,7 @@ Out of scope for Phase 3 (other phases own these): points/streak counter trigger
 - `app/(app)/index.tsx` — currently the groups list (per P2 D-12). P3 moves the groups-list logic into `app/(app)/groups/index.tsx` and `index.tsx` becomes the new Today screen. **All deep links and `router.push('/')` calls in the codebase need an audit during planning.**
 - `app/(app)/groups/[id]/index.tsx` — P3 adds an admin-only "Pending review (N)" entry that routes to a new `app/(app)/groups/[id]/review.tsx`.
 - `app/(app)/profile.tsx` — unchanged structurally; just becomes a tab destination.
-- `supabase/migrations/0006_phase3_capture_review.sql` (new) — adds the three RPCs + any pgTAP coverage for them; also write the missing pgTAP for the 0003 admin-immutable trigger flagged in `01-foundation/deferred-items.md`.
+- `supabase/migrations/20260429173246_phase3_capture_review.sql` (new) — adds the three RPCs + any pgTAP coverage for them; also write the missing pgTAP for the 0003 admin-immutable trigger flagged in `01-foundation/deferred-items.md`.
 - `src/types/database.ts` — regenerate via `pnpm types:gen` after the new migration.
 - `app.config.ts` — add `expo-camera` plugin block (`NSCameraUsageDescription`, `NSMicrophoneUsageDescription` for video, Android `RECORD_AUDIO` + `CAMERA` permissions). Verify `infoPlist` and `android.permissions` accordingly.
 

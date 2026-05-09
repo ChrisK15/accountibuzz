@@ -1,5 +1,5 @@
 -- =============================================================================
--- 0008_phase4_points_streaks_feed.sql — Phase 4 Social Surfaces (server contract)
+-- 20260508233129_phase4_points_streaks_feed.sql — Phase 4 Social Surfaces (server contract)
 -- =============================================================================
 -- Append-only follow-up to 0001..0007. Replaces the handle_submission_approval
 -- STUB shipped in 0001 §10 (lines 365-384) with the real body. Adds 4
