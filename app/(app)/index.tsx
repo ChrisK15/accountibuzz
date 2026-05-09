@@ -366,31 +366,45 @@ function GroupCardRow({
     ? (submittedAgoLabel(submission.created_at) ?? undefined)
     : undefined;
 
+  // CK-10 inline fix 2026-05-09: wrap GroupCard in a Pressable so tapping the
+  // card body routes to group-detail. D-16 spec says this should match P3
+  // behavior, but the wiring was missing — confirmed latent in P3 (no
+  // onCardPress prop has ever existed on GroupCard, no Pressable wrapper in
+  // the FlatList renderItem). The card's internal Pressables (Submit button,
+  // StatusPill, QueueBadge More) stop propagation so they continue to work
+  // independently.
+  const cardRouter = useRouter();
   return (
-    <GroupCard
-      groupId={group.id}
-      name={group.name}
-      goal={group.goal}
-      kind={group.submission_type}
-      status={status}
-      cutoffTime={status === 'none' ? cutoff.cutoffTime : undefined}
-      minutesLeft={status === 'none' ? cutoff.minutesLeft : undefined}
-      submittedAgo={
-        status === 'pending' || status === 'approved'
-          ? submittedAgo
-          : undefined
-      }
-      rejectionReason={submission?.rejection_reason ?? null}
-      queuedUploadSize={queueSummary?.sizeLabel}
-      social={social}
-      onSubmitPress={onSubmitPress}
-      onRejectedPillPress={
-        submission?.rejection_reason || status === 'rejected'
-          ? () => onRejectedPillPress(submission?.rejection_reason ?? null)
-          : undefined
-      }
-      onQueueBadgeMorePress={onQueueBadgeMorePress}
-    />
+    <Pressable
+      onPress={() => cardRouter.push(`/groups/${group.id}`)}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${group.name} group`}
+    >
+      <GroupCard
+        groupId={group.id}
+        name={group.name}
+        goal={group.goal}
+        kind={group.submission_type}
+        status={status}
+        cutoffTime={status === 'none' ? cutoff.cutoffTime : undefined}
+        minutesLeft={status === 'none' ? cutoff.minutesLeft : undefined}
+        submittedAgo={
+          status === 'pending' || status === 'approved'
+            ? submittedAgo
+            : undefined
+        }
+        rejectionReason={submission?.rejection_reason ?? null}
+        queuedUploadSize={queueSummary?.sizeLabel}
+        social={social}
+        onSubmitPress={onSubmitPress}
+        onRejectedPillPress={
+          submission?.rejection_reason || status === 'rejected'
+            ? () => onRejectedPillPress(submission?.rejection_reason ?? null)
+            : undefined
+        }
+        onQueueBadgeMorePress={onQueueBadgeMorePress}
+      />
+    </Pressable>
   );
 }
 

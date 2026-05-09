@@ -136,8 +136,10 @@ describe('useGroupFeed', () => {
 
     expect(fromSpy).toHaveBeenCalledWith('submissions');
     // Select must include profile embed for flat-shape mapping.
+    // CK-04 inline fix 2026-05-09: explicit FK hint required because
+    // submissions has two FKs to profiles (user_id + reviewed_by).
     expect(selectSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/profiles\(display_name, ?avatar_path, ?updated_at\)/),
+      expect.stringMatching(/profiles!submissions_user_id_fkey\(display_name, ?avatar_path, ?updated_at\)/),
     );
     // Final step must be created_at descending.
     expect(order).toHaveBeenCalledWith('created_at', { ascending: false });
