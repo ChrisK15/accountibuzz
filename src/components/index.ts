@@ -38,3 +38,4 @@ export {
   type MissedYesterdayRowProps,
   type MissedMember,
 } from './feed/MissedYesterdayRow';
+export { MediaViewer, type MediaViewerProps } from './MediaViewer';
