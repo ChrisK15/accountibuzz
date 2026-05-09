@@ -13,9 +13,10 @@
 //   • Post-create banner: SecureStore key `seen_create_banner:{group_id}`,
 //     8s auto-hide, never shown again for the same group.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
+  AccessibilityInfo,
   ActionSheetIOS,
   Alert,
   Modal as RNModal,
@@ -50,7 +51,23 @@ import {
   DestructiveTextButton,
   InviteCodeChip,
   Modal,
+  LeaderboardRow,
+  FeedItem,
+  StillToPostAvatarRow,
+  MissedYesterdayRow,
+  MediaViewer,
 } from '../../../../src/components';
+// Note: MediaViewer barrel-export lands in 04-05 Task 2; the screen renders
+// it conditionally via {viewerState.open && ...} below the ScrollView.
+// Phase 4 (04-05) — wires Leaderboard / Today's posts / Still to post /
+// Missed yesterday into the group-detail screen + MediaViewer modal.
+import { useGroupLeaderboard } from '../../../../src/features/groups/useGroupLeaderboard';
+import { useGroupLeaderboardRealtime } from '../../../../src/features/groups/useGroupLeaderboardRealtime';
+import { useGroupFeed } from '../../../../src/features/submissions/useGroupFeed';
+import { useGroupFeedRealtime } from '../../../../src/features/submissions/useGroupFeedRealtime';
+import { useGroupTombstones } from '../../../../src/features/groups/useGroupTombstones';
+import { todayLocalDate } from '../../../../src/features/submissions/time';
+import { applyAlpha } from '../../../../src/theme/applyAlpha';
 
 // WR-01: append `?v={updated_at}` so expo-image busts its URL cache after a
 // member uploads a new avatar to the stable `{userId}/avatar.jpg` path.
@@ -61,6 +78,38 @@ function avatarUrlFor(
   if (!path) return null;
   const base = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
   return updatedAt ? `${base}?v=${encodeURIComponent(updatedAt)}` : base;
+}
+
+// HIGH #9 (Iteration 1 plan-checker fix 2026-05-08): For MVP, the cutoff is
+// structurally always "12:00 AM" — group-tz midnight by construction. There
+// is no per-group cutoff time configuration in MVP, so computing the label
+// dynamically is unnecessary and was the source of two regressions:
+//   1. Original: device-local Date arithmetic + format-in-group-tz — wrong
+//      when device tz differs from group tz.
+//   2. First revision: constructing a UTC-midnight instant and then
+//      formatting it in group tz, which yields the group's wall-clock
+//      equivalent of UTC midnight (e.g., "5:00 PM" for America/Los_Angeles),
+//      NOT group-tz midnight.
+//
+// The static-string return is correct by construction. If product later
+// needs a per-group cutoff (e.g., "9:00 PM cutoff"), promote
+// `cutoff_local_time` to a `groups` column and read it through the RPC; the
+// helper would then accept a `cutoffHourInGroupTz: number` parameter.
+//
+// Exported for the HIGH #9 unit gate in tests/groups/groupDetailScreen.test.tsx.
+export function cutoffLabelFor(_groupTimezone: string): string {
+  return '12:00 AM';
+}
+
+// Short tz label like "PT" / "ET" / "JST" — pre-formatted by the parent for
+// the MissedYesterdayRow trailing copy ("Streaks reset at 12:00 AM PT.").
+export function tzShortLabelFor(timezone: string): string {
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone: timezone,
+    timeZoneName: 'short',
+  }).formatToParts(new Date());
+  const tzPart = parts.find((p) => p.type === 'timeZoneName');
+  return tzPart?.value ?? timezone;
 }
 
 type ModalKind =
@@ -89,6 +138,48 @@ export default function GroupDetailScreen() {
   const transfer = useTransferAdmin();
   const del = useDeleteGroup();
   const regen = useRegenerateInvite();
+
+  // HIGH #3 (REVIEWS replan 2026-05-08): reduceMotion MUST be declared BEFORE
+  // useGroupLeaderboardRealtime(id, { reduceMotion }) is called below.
+  // Otherwise the {reduceMotion} options object captures an identifier in the
+  // temporal dead zone, throwing a runtime ReferenceError on first render.
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((v) => {
+      if (mounted) setReduceMotion(v);
+    });
+    const sub = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      setReduceMotion,
+    );
+    return () => {
+      mounted = false;
+      sub.remove();
+    };
+  }, []);
+
+  // Phase 4 (04-05) — 6 new hooks. ALL are declared at the top of the
+  // component, BEFORE any conditional early return (Rules of Hooks).
+  const today = useMemo(
+    () => (group?.timezone ? todayLocalDate(group.timezone, new Date()) : undefined),
+    [group?.timezone],
+  );
+  const { data: leaderboard, isPending: leaderboardPending } =
+    useGroupLeaderboard(id);
+  const { data: feed, isPending: _feedPending } = useGroupFeed(id, today);
+  const { pendingToday, missedYesterday } = useGroupTombstones(id);
+  // safe — reduceMotion is declared above (HIGH #3 TDZ-safe ordering)
+  useGroupLeaderboardRealtime(id);
+  useGroupFeedRealtime(id, group?.timezone);
+
+  const [leaderboardExpanded, setLeaderboardExpanded] = useState(false);
+  // D-11 + UI-SPEC line 546 — fullscreen viewer state.
+  const [viewerState, setViewerState] = useState<{
+    open: boolean;
+    mediaPath: string | null;
+    mediaType: 'photo' | 'video' | null;
+  }>({ open: false, mediaPath: null, mediaType: null });
 
   const [modal, setModal] = useState<ModalKind>(null);
   const [selectedTransferTarget, setSelectedTransferTarget] = useState<
@@ -389,7 +480,358 @@ export default function GroupDetailScreen() {
           />
         )}
 
-        {/* PendingReviewRow — admin-only entry above InviteCodePanel.
+        {/* === Phase 4 (D-09 #4) Leaderboard section (LB-01) === */}
+        <View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: t.spacing.sm,
+              paddingHorizontal: t.spacing.sm,
+            }}
+          >
+            <Text
+              style={[
+                t.fonts.heading2,
+                { color: t.colors.text, fontWeight: '700' },
+              ]}
+            >
+              Leaderboard
+            </Text>
+            {leaderboard && leaderboard.length > 5 && leaderboardExpanded ? (
+              <Pressable
+                onPress={() => setLeaderboardExpanded(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Show top 5"
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Text
+                  style={[
+                    t.fonts.body,
+                    { color: t.colors.accent, fontWeight: '700' },
+                  ]}
+                >
+                  Show top 5
+                </Text>
+              </Pressable>
+            ) : leaderboard && leaderboard.length > 5 ? (
+              <Pressable
+                onPress={() => setLeaderboardExpanded(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Show all ${leaderboard.length} members`}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Text
+                  style={[
+                    t.fonts.body,
+                    { color: t.colors.accent, fontWeight: '700' },
+                  ]}
+                >
+                  See all
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+
+          {/* Empty-state callout — HIGH #5 (REVIEWS replan 2026-05-08):
+              applyAlpha(t.colors.surfaceMuted, 0.4), NOT the broken
+              hex-suffix concat that yielded invalid CSS like
+              "hsl(220, 14%, 92%)" + the alpha hex byte. */}
+          {leaderboard &&
+            leaderboard.length > 0 &&
+            leaderboard.every(
+              (r) => r.points === 0 && r.current_streak === 0,
+            ) && (
+              <View
+                style={{
+                  backgroundColor: applyAlpha(t.colors.surfaceMuted, 0.4),
+                  padding: t.spacing.md,
+                  borderRadius: t.radii.md,
+                  marginBottom: t.spacing.sm,
+                }}
+              >
+                <Text
+                  style={[
+                    t.fonts.body,
+                    {
+                      color: t.colors.textMuted,
+                      textAlign: 'center',
+                      fontWeight: '500',
+                    },
+                  ]}
+                >
+                  Nobody&apos;s on the board yet — submit today to start the streak.
+                </Text>
+              </View>
+            )}
+
+          {/* Card with rows */}
+          <View
+            style={{
+              backgroundColor: t.colors.surface,
+              borderWidth: 1,
+              borderColor: t.colors.border,
+              borderRadius: t.radii.md,
+            }}
+          >
+            {leaderboardPending
+              ? [0, 1, 2, 3, 4].map((i) => (
+                  <View
+                    key={`sk-${i}`}
+                    style={{
+                      height: 56,
+                      borderBottomWidth: i < 4 ? 1 : 0,
+                      borderBottomColor: t.colors.border,
+                      padding: t.spacing.lg,
+                      backgroundColor: t.colors.surfaceMuted,
+                      opacity: 0.5,
+                    }}
+                  />
+                ))
+              : (leaderboardExpanded
+                  ? leaderboard
+                  : leaderboard?.slice(0, 5)
+                )?.map((row, idx, arr) => {
+                  const isEmpty = leaderboard?.every(
+                    (r) => r.points === 0 && r.current_streak === 0,
+                  );
+                  return (
+                    <View
+                      key={row.user_id}
+                      style={{
+                        borderBottomWidth: idx < arr.length - 1 ? 1 : 0,
+                        borderBottomColor: t.colors.border,
+                      }}
+                    >
+                      <LeaderboardRow
+                        rank={isEmpty ? 0 : idx + 1}
+                        userId={row.user_id}
+                        isYou={row.user_id === user?.id}
+                        displayName={row.display_name ?? '?'}
+                        avatarUrl={avatarUrlFor(
+                          row.avatar_path,
+                          row.updated_at,
+                        )}
+                        points={row.points}
+                        currentStreak={row.current_streak}
+                        joinedLabel={
+                          row.joined_at
+                            ? new Intl.DateTimeFormat('en', {
+                                month: 'short',
+                                day: 'numeric',
+                                timeZone: group.timezone,
+                              }).format(new Date(row.joined_at))
+                            : undefined
+                        }
+                      />
+                    </View>
+                  );
+                })}
+            {/* Expand-from-bottom button when collapsed */}
+            {leaderboard && leaderboard.length > 5 && !leaderboardExpanded && (
+              <Pressable
+                onPress={() => setLeaderboardExpanded(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Show all ${leaderboard.length} members`}
+                style={({ pressed }) => ({
+                  height: 48,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: t.spacing.xs,
+                  opacity: pressed ? 0.7 : 1,
+                  borderTopWidth: 1,
+                  borderTopColor: t.colors.border,
+                })}
+              >
+                <Text
+                  style={[
+                    t.fonts.body,
+                    { color: t.colors.accent, fontWeight: '700' },
+                  ]}
+                >
+                  Show all {leaderboard.length} members
+                </Text>
+                <Feather
+                  name="chevron-down"
+                  size={18}
+                  color={t.colors.accent}
+                />
+              </Pressable>
+            )}
+          </View>
+        </View>
+
+        {/* === Phase 4 (D-09 #5) Today's posts section (FEED-01) === */}
+        <View>
+          <Text
+            style={[
+              t.fonts.heading2,
+              {
+                color: t.colors.text,
+                fontWeight: '700',
+                marginBottom: t.spacing.sm,
+                paddingHorizontal: t.spacing.sm,
+              },
+            ]}
+          >
+            {`Today's posts${feed && feed.length > 0 ? ` (${feed.length})` : ''}`}
+          </Text>
+          {feed && feed.length > 0 ? (
+            <View style={{ gap: t.spacing.sm }}>
+              {feed.map((entry) => (
+                <FeedItem
+                  key={entry.id}
+                  submissionId={entry.id}
+                  submitterUserId={entry.user_id}
+                  isYou={entry.user_id === user?.id}
+                  displayName={entry.display_name ?? '?'}
+                  avatarUrl={avatarUrlFor(
+                    entry.avatar_path,
+                    entry.updated_at,
+                  )}
+                  mediaPath={entry.media_path}
+                  mediaType={entry.media_type}
+                  caption={entry.caption}
+                  submittedAt={entry.created_at}
+                  onMediaPress={() =>
+                    setViewerState({
+                      open: true,
+                      mediaPath: entry.media_path,
+                      mediaType: entry.media_type,
+                    })
+                  }
+                />
+              ))}
+            </View>
+          ) : (
+            // Dashed-border empty card when N=0 (UI-SPEC §Today's posts).
+            <View
+              style={{
+                borderWidth: 1,
+                borderStyle: 'dashed',
+                borderColor: t.colors.border,
+                borderRadius: t.radii.md,
+                padding: t.spacing.lg,
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={[
+                  t.fonts.body,
+                  {
+                    color: t.colors.textMuted,
+                    textAlign: 'center',
+                    fontWeight: '500',
+                  },
+                ]}
+              >
+                No posts yet — be the first today.
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* === Phase 4 (D-09 #6) Still to post section (FEED-02) === */}
+        {pendingToday.length > 0 && (
+          <View>
+            <Text
+              style={[
+                t.fonts.caption,
+                {
+                  color: t.colors.textMuted,
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.65,
+                  marginBottom: t.spacing.md,
+                  paddingHorizontal: t.spacing.sm,
+                },
+              ]}
+            >
+              Still to post
+            </Text>
+            <StillToPostAvatarRow
+              members={pendingToday.map((p) => ({
+                userId: p.user_id,
+                displayName: p.display_name ?? '?',
+                avatarUrl: avatarUrlFor(p.avatar_path, p.updated_at),
+              }))}
+              cutoffLabel={cutoffLabelFor(group.timezone)}
+            />
+          </View>
+        )}
+
+        {/* === Phase 4 (D-09 #7) Missed yesterday section (FEED-03) === */}
+        {missedYesterday.length > 0 && (
+          <View>
+            <Text
+              style={[
+                t.fonts.caption,
+                {
+                  color: t.colors.textMuted,
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.65,
+                  marginBottom: t.spacing.md,
+                  paddingHorizontal: t.spacing.sm,
+                },
+              ]}
+            >
+              Missed yesterday
+            </Text>
+            <MissedYesterdayRow
+              members={missedYesterday.map((m) => ({
+                userId: m.user_id,
+                displayName: m.display_name ?? '?',
+                avatarUrl: avatarUrlFor(m.avatar_path, m.updated_at),
+              }))}
+              tzShortLabel={tzShortLabelFor(group.timezone)}
+            />
+          </View>
+        )}
+
+        {/* Members section */}
+        <View>
+          <Text
+            style={[
+              t.fonts.caption,
+              { color: t.colors.textMuted, marginBottom: t.spacing.md },
+            ]}
+          >
+            {`Members (${members.length})`}
+          </Text>
+          {members.map((m) => (
+            <MemberRowItem
+              key={m.user_id}
+              member={m}
+              isSelf={m.user_id === user?.id}
+            />
+          ))}
+          {soloAdmin && (
+            <Text
+              style={[
+                t.fonts.caption,
+                { color: t.colors.textMuted, marginTop: t.spacing.md },
+              ]}
+            >
+              Just you so far — share your code to bring friends in.
+            </Text>
+          )}
+          {memberAtCap && (
+            <Text
+              style={[
+                t.fonts.body,
+                { color: t.colors.textMuted, marginTop: t.spacing.md },
+              ]}
+            >
+              Your group&apos;s full — 10 is the cap for now.
+            </Text>
+          )}
+        </View>
+
+        {/* PendingReviewRow — admin-only entry MOVED below Members per D-09
+            (HIGH #4 — RESOLVED via REVIEWS replan 2026-05-08).
             UI-SPEC §"Pending-review entry" (lines 838-858) + 03-PATTERNS.md
             (lines 643-681). Hidden when count === 0 OR user is not admin.
             ADM-01 + PLAT-03 (UI gate; RPC also returns 0 for non-admins). */}
@@ -443,7 +885,7 @@ export default function GroupDetailScreen() {
           </Pressable>
         )}
 
-        {/* Admin invite panel */}
+        {/* Admin invite panel — MOVED below Members per D-09 (HIGH #4) */}
         {isAdmin && activeInvite && (
           <View
             style={{
@@ -477,45 +919,6 @@ export default function GroupDetailScreen() {
             </Pressable>
           </View>
         )}
-
-        {/* Members section */}
-        <View>
-          <Text
-            style={[
-              t.fonts.caption,
-              { color: t.colors.textMuted, marginBottom: t.spacing.md },
-            ]}
-          >
-            {`Members (${members.length})`}
-          </Text>
-          {members.map((m) => (
-            <MemberRowItem
-              key={m.user_id}
-              member={m}
-              isSelf={m.user_id === user?.id}
-            />
-          ))}
-          {soloAdmin && (
-            <Text
-              style={[
-                t.fonts.caption,
-                { color: t.colors.textMuted, marginTop: t.spacing.md },
-              ]}
-            >
-              Just you so far — share your code to bring friends in.
-            </Text>
-          )}
-          {memberAtCap && (
-            <Text
-              style={[
-                t.fonts.body,
-                { color: t.colors.textMuted, marginTop: t.spacing.md },
-              ]}
-            >
-              Your group&apos;s full — 10 is the cap for now.
-            </Text>
-          )}
-        </View>
 
         {/* Bottom destructive zone */}
         <View
@@ -554,6 +957,21 @@ export default function GroupDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* === Phase 4 (D-11) Fullscreen MediaViewer Modal === */}
+      {viewerState.open && viewerState.mediaPath && viewerState.mediaType && (
+        <MediaViewer
+          mediaPath={viewerState.mediaPath}
+          mediaType={viewerState.mediaType}
+          onClose={() =>
+            setViewerState({
+              open: false,
+              mediaPath: null,
+              mediaType: null,
+            })
+          }
+        />
+      )}
 
       {/* ── Modals ───────────────────────────────────────────────── */}
 
