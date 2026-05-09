@@ -34,6 +34,12 @@ import { useSession } from '../../src/features/auth/AuthProvider';
 import { useTodaySubmission } from '../../src/features/submissions/useTodaySubmission';
 import { useUploadQueue } from '../../src/features/submissions/useUploadQueue';
 import { useTodaySubmissionRealtime } from '../../src/features/submissions/useTodaySubmissionRealtime';
+// Phase 4 D-13/D-14/D-15: per-Today-card social-signal hooks. Called inside
+// GroupCardRow (one component instance per FlatList row) so the Rules of Hooks
+// stay clean — same set of hooks called per row in the same order.
+import { useGroupSocialCounts } from '../../src/features/groups/useGroupSocialCounts';
+import { useGroupLeaderboard } from '../../src/features/groups/useGroupLeaderboard';
+import { useGroupTodayCardRealtime } from '../../src/features/groups/useGroupTodayCardRealtime';
 import {
   cutoffStateFor,
   submittedAgoLabel,
@@ -47,6 +53,7 @@ import {
   PrimaryButton,
   ScreenContainer,
 } from '../../src/components';
+import type { GroupCardSocialProp } from '../../src/components/GroupCard';
 
 export default function TodayScreen() {
   const t = useTheme();
@@ -184,6 +191,12 @@ export default function TodayScreen() {
         renderItem={({ item }) => (
           <GroupCardRow
             group={item}
+            // MEDIUM (REVIEWS replan 2026-05-08): userId lifted from
+            // useSession at the screen level (above) and passed down so we
+            // do NOT call useSession() per row — avoids per-card session
+            // subscription churn. The parent already calls
+            // useTodaySubmissionRealtime(user?.id, ...) so user is in scope.
+            userId={user?.id}
             onSubmitPress={() => router.push(`/capture/${item.id}`)}
             onRejectedPillPress={(reason) => openRejectionModal(reason)}
             onQueueBadgeMorePress={() => setQueueSheetGroupId(item.id)}
@@ -286,15 +299,22 @@ function TodayHeader({
 
 function GroupCardRow({
   group,
+  userId,
   onSubmitPress,
   onRejectedPillPress,
   onQueueBadgeMorePress,
 }: {
   group: GroupsListRow;
+  // MEDIUM (REVIEWS replan 2026-05-08): userId lifted from useSession at the
+  // parent screen so we don't call useSession() per row. Undefined while
+  // auth is bootstrapping; the per-card Realtime hook short-circuits on
+  // undefined inputs (see useGroupTodayCardRealtime).
+  userId: string | undefined;
   onSubmitPress: () => void;
   onRejectedPillPress: (rejectionReason: string | null) => void;
   onQueueBadgeMorePress: () => void;
 }) {
+  // EXISTING (P3) — preserve order:
   const today = useMemo(
     () => todayLocalDate(group.timezone, new Date()),
     [group.timezone],
@@ -302,6 +322,38 @@ function GroupCardRow({
   const { data: submission } = useTodaySubmission(group.id, today);
   const { data: queueMap } = useUploadQueue();
   const queueSummary = queueMap?.get(group.id);
+
+  // NEW (P4 D-13/D-14/D-15) — fixed order, called unconditionally per
+  // Rules of Hooks. TanStack Query dedupes the network calls across rows
+  // sharing the same queryKey, so per-row hook calls are cheap once cached.
+  const { data: postedCount } = useGroupSocialCounts(group.id);
+  const { data: leaderboard } = useGroupLeaderboard(group.id);
+  // MEDIUM (REVIEWS replan 2026-05-08): GroupsListRow.member_count is
+  // already returned by useGroupsList (PostgREST aggregate), so we use it
+  // directly for `total` and skip the per-row useGroupMembers fetch
+  // entirely. The field is a `number` on the typed row.
+  const total = group.member_count;
+  // Per-card Realtime channel (D-15). Channel name `todaycard:{userId}:{groupId}`
+  // is namespaced inside the hook; useFocusEffect cleanup discipline
+  // preserved (Pitfall 11). Hook short-circuits on undefined groupId/userId.
+  useGroupTodayCardRealtime(group.id, userId);
+
+  // HIGH #10 (RESOLVED via REVIEWS replan 2026-05-08): STRICT social-prop
+  // derivation. social is undefined when ANY source is unavailable —
+  // leaderboard loading, postedCount null, OR total === 0 (single-member
+  // groups don't get a social line because there's no "X/M posted"
+  // comparison to make). The literal expression below is the gate spec'd
+  // in 04-06-PLAN.md: every source available, OR undefined.
+  const userRow = leaderboard?.find((r) => r.user_id === userId);
+  const social: GroupCardSocialProp | undefined =
+    leaderboard && postedCount != null && total > 0
+      ? {
+          posted: postedCount,
+          total,
+          points: userRow?.points ?? 0,
+          streak: userRow?.current_streak ?? 0,
+        }
+      : undefined;
 
   const cutoff = useMemo(
     () => cutoffStateFor({ timezone: group.timezone }),
@@ -330,6 +382,7 @@ function GroupCardRow({
       }
       rejectionReason={submission?.rejection_reason ?? null}
       queuedUploadSize={queueSummary?.sizeLabel}
+      social={social}
       onSubmitPress={onSubmitPress}
       onRejectedPillPress={
         submission?.rejection_reason || status === 'rejected'
