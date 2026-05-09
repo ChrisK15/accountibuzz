@@ -23,8 +23,18 @@ process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
 // scaffolded for typecheck-during-RED is removed in 04-03 once the real
 // production module lands.
 
+// 04-05 Task 3: useGroupLeaderboardRealtime imports LayoutAnimation from
+// 'react-native' to gate the row-reorder animation on reduceMotion. The
+// test mock now exposes a jest-spyable configureNext + the easeInEaseOut
+// preset.
 jest.mock('react-native', () => ({
   AppState: { addEventListener: jest.fn() },
+  LayoutAnimation: {
+    configureNext: jest.fn(),
+    Presets: {
+      easeInEaseOut: { duration: 250 },
+    },
+  },
 }));
 
 jest.mock('expo-router', () => {
@@ -167,5 +177,98 @@ describe('useGroupLeaderboardRealtime', () => {
     unmount();
 
     expect(removeChannel).toHaveBeenCalled();
+  });
+
+  // 04-05 Task 3: LayoutAnimation row-reorder gated on reduceMotion.
+  // jest.setup.ts patches react-native's LayoutAnimation with a mock whose
+  // configureNext is a jest.fn() — assertable here.
+  it('calls LayoutAnimation.configureNext on UPDATE when reduceMotion is false', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../../src/lib/supabase');
+    const { qc, wrapper, getHandler } = setupChannelMock(supabase);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const RN = require('react-native');
+    (RN.LayoutAnimation.configureNext as jest.Mock).mockClear();
+
+    qc.setQueryData(['groupLeaderboard', validGroupId], [
+      {
+        user_id: 'u-alice',
+        display_name: 'Alice',
+        avatar_path: null,
+        updated_at: null,
+        points: 5,
+        current_streak: 2,
+        longest_streak: 2,
+        last_rolled_date: null,
+        joined_at: '2026-01-01T00:00:00Z',
+      },
+    ]);
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useGroupLeaderboardRealtime } = require('../../../src/features/groups/useGroupLeaderboardRealtime');
+    renderHook(
+      () =>
+        useGroupLeaderboardRealtime(validGroupId, { reduceMotion: false }),
+      { wrapper },
+    );
+    const handler = getHandler()!;
+    act(() =>
+      handler({
+        new: {
+          group_id: validGroupId,
+          user_id: 'u-alice',
+          points: 6,
+          current_streak: 3,
+          longest_streak: 3,
+        },
+      }),
+    );
+
+    expect(RN.LayoutAnimation.configureNext).toHaveBeenCalled();
+  });
+
+  it('does NOT call LayoutAnimation.configureNext on UPDATE when reduceMotion is true', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('../../../src/lib/supabase');
+    const { qc, wrapper, getHandler } = setupChannelMock(supabase);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const RN = require('react-native');
+    (RN.LayoutAnimation.configureNext as jest.Mock).mockClear();
+
+    qc.setQueryData(['groupLeaderboard', validGroupId], [
+      {
+        user_id: 'u-alice',
+        display_name: 'Alice',
+        avatar_path: null,
+        updated_at: null,
+        points: 5,
+        current_streak: 2,
+        longest_streak: 2,
+        last_rolled_date: null,
+        joined_at: '2026-01-01T00:00:00Z',
+      },
+    ]);
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useGroupLeaderboardRealtime } = require('../../../src/features/groups/useGroupLeaderboardRealtime');
+    renderHook(
+      () =>
+        useGroupLeaderboardRealtime(validGroupId, { reduceMotion: true }),
+      { wrapper },
+    );
+    const handler = getHandler()!;
+    act(() =>
+      handler({
+        new: {
+          group_id: validGroupId,
+          user_id: 'u-alice',
+          points: 6,
+          current_streak: 3,
+          longest_streak: 3,
+        },
+      }),
+    );
+
+    expect(RN.LayoutAnimation.configureNext).not.toHaveBeenCalled();
   });
 });

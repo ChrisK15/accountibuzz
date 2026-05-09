@@ -23,13 +23,28 @@
 // @see 04-PATTERNS.md §"useGroupLeaderboardRealtime"
 
 import { useCallback } from 'react';
+import { LayoutAnimation } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import type { LeaderboardRow } from './useGroupLeaderboard';
 
-export function useGroupLeaderboardRealtime(groupId: string | undefined): void {
+/**
+ * Per-group leaderboard Realtime patcher.
+ *
+ * @param groupId — the group whose leaderboard cache to patch.
+ * @param options.reduceMotion — when true, skip LayoutAnimation.configureNext
+ *   on every cache patch. When false (default), configureNext is called with
+ *   LayoutAnimation.Presets.easeInEaseOut (250ms) so RN's UIManager animates
+ *   the row reorder. UI-SPEC line 786 (reduce-motion fallback) +
+ *   04-05 Task 3.
+ */
+export function useGroupLeaderboardRealtime(
+  groupId: string | undefined,
+  options?: { reduceMotion?: boolean },
+): void {
   const qc = useQueryClient();
+  const reduceMotion = options?.reduceMotion ?? false;
   useFocusEffect(
     useCallback(() => {
       if (!groupId) return;
@@ -55,6 +70,16 @@ export function useGroupLeaderboardRealtime(groupId: string | undefined): void {
                 }
               | undefined;
             if (!newRow || !newRow.user_id) return;
+
+            // 04-05 Task 3: gate row-reorder animation on reduceMotion.
+            // configureNext schedules the next layout pass (the setQueryData
+            // below triggers it) to animate via the easeInEaseOut preset.
+            // When reduceMotion is true, the layout pass is instant.
+            if (!reduceMotion) {
+              LayoutAnimation.configureNext(
+                LayoutAnimation.Presets.easeInEaseOut,
+              );
+            }
 
             qc.setQueryData<LeaderboardRow[] | undefined>(
               ['groupLeaderboard', groupId],
@@ -97,6 +122,6 @@ export function useGroupLeaderboardRealtime(groupId: string | undefined): void {
       return () => {
         supabase.removeChannel(channel);
       };
-    }, [groupId, qc]),
+    }, [groupId, qc, reduceMotion]),
   );
 }

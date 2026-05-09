@@ -16,7 +16,8 @@
 // Render-only in this plan; cross-fade animations + reduceMotion prop come in
 // 04-05 Task 3 (LeaderboardRow patch). NOT tappable in P4.
 
-import { Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Text, View } from 'react-native';
 import { Avatar } from '../Avatar';
 import { useTheme } from '../../theme/useTheme';
 
@@ -35,6 +36,11 @@ export interface LeaderboardRowProps {
   joinedAt?: string | null;
   /** Pre-formatted by caller (e.g. "Apr 3"). When provided, appended to meta. */
   joinedLabel?: string;
+  /**
+   * 04-05 Task 3: when true, skip the points + streak cross-fade animation.
+   * Default false. UI-SPEC line 786 (reduce-motion fallback).
+   */
+  reduceMotion?: boolean;
 }
 
 interface RankChipProps {
@@ -135,6 +141,7 @@ export function LeaderboardRow({
   points,
   currentStreak,
   joinedLabel,
+  reduceMotion = false,
 }: LeaderboardRowProps) {
   const t = useTheme();
 
@@ -148,6 +155,58 @@ export function LeaderboardRow({
 
   // Per UI-SPEC §Empty Behavior (line 493): empty-state row mutes the points number.
   const pointsColor = rank === 0 ? t.colors.textMuted : t.colors.text;
+
+  // 04-05 Task 3: 250ms total points + streak cross-fade (out 125ms, in 125ms),
+  // gated on reduceMotion. The Animated.Value pair lives in refs so the
+  // animation does not retrigger on unrelated parent re-renders. UI-SPEC line
+  // 786 (reduce-motion fallback) — when reduceMotion is true, skip the timing
+  // and force the opacity to 1 instantly.
+  const pointsOpacity = useRef(new Animated.Value(1)).current;
+  const streakOpacity = useRef(new Animated.Value(1)).current;
+  const prevPointsRef = useRef(points);
+  const prevStreakRef = useRef(currentStreak);
+
+  useEffect(() => {
+    if (prevPointsRef.current === points) return;
+    prevPointsRef.current = points;
+    if (reduceMotion) {
+      pointsOpacity.setValue(1);
+      return;
+    }
+    Animated.sequence([
+      Animated.timing(pointsOpacity, {
+        toValue: 0,
+        duration: 125,
+        useNativeDriver: true,
+      }),
+      Animated.timing(pointsOpacity, {
+        toValue: 1,
+        duration: 125,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [points, reduceMotion, pointsOpacity]);
+
+  useEffect(() => {
+    if (prevStreakRef.current === currentStreak) return;
+    prevStreakRef.current = currentStreak;
+    if (reduceMotion) {
+      streakOpacity.setValue(1);
+      return;
+    }
+    Animated.sequence([
+      Animated.timing(streakOpacity, {
+        toValue: 0,
+        duration: 125,
+        useNativeDriver: true,
+      }),
+      Animated.timing(streakOpacity, {
+        toValue: 1,
+        duration: 125,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [currentStreak, reduceMotion, streakOpacity]);
 
   return (
     <View
@@ -198,37 +257,45 @@ export function LeaderboardRow({
             </Text>
           ) : null}
         </View>
-        <Text
-          style={[
-            t.fonts.caption,
-            {
-              color: t.colors.textMuted,
-              fontWeight: '500',
-              fontVariant: ['tabular-nums'],
-              marginTop: 2,
-            },
-          ]}
-        >
-          {`🔥${currentStreak}${joinedLabel ? ` · joined ${joinedLabel}` : ''}`}
-        </Text>
+        {/* 04-05 Task 3: streak fragment in Animated.View for the 250ms
+            cross-fade on currentStreak prop change (gated on reduceMotion). */}
+        <Animated.View style={{ opacity: streakOpacity }}>
+          <Text
+            style={[
+              t.fonts.caption,
+              {
+                color: t.colors.textMuted,
+                fontWeight: '500',
+                fontVariant: ['tabular-nums'],
+                marginTop: 2,
+              },
+            ]}
+          >
+            {`🔥${currentStreak}${joinedLabel ? ` · joined ${joinedLabel}` : ''}`}
+          </Text>
+        </Animated.View>
       </View>
 
       {/* Right column: points (Heading-2/800) + "pts" caption */}
       <View style={{ alignItems: 'flex-end' }}>
-        <Text
-          numberOfLines={1}
-          style={{
-            fontFamily: 'Manrope_800ExtraBold',
-            fontSize: 20,
-            lineHeight: 26,
-            color: pointsColor,
-            fontVariant: ['tabular-nums'],
-            // 800-on-Heading-2 — UI-SPEC Locked Exception §1 (Typography).
-            fontWeight: '800',
-          }}
-        >
-          {String(points)}
-        </Text>
+        {/* 04-05 Task 3: points fragment in Animated.View for the 250ms
+            cross-fade on points prop change (gated on reduceMotion). */}
+        <Animated.View style={{ opacity: pointsOpacity }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontFamily: 'Manrope_800ExtraBold',
+              fontSize: 20,
+              lineHeight: 26,
+              color: pointsColor,
+              fontVariant: ['tabular-nums'],
+              // 800-on-Heading-2 — UI-SPEC Locked Exception §1 (Typography).
+              fontWeight: '800',
+            }}
+          >
+            {String(points)}
+          </Text>
+        </Animated.View>
         <Text
           style={[
             t.fonts.caption,
