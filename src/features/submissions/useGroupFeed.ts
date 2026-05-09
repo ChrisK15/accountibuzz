@@ -38,7 +38,12 @@ export function useGroupFeed(
       const { data, error } = await supabase
         .from('submissions')
         .select(
-          'id, user_id, caption, media_path, media_type, created_at, profiles(display_name, avatar_path, updated_at)',
+          // Disambiguate FK: submissions has two FKs to profiles
+          // (user_id + reviewed_by). Without the explicit !submissions_user_id_fkey
+          // hint, PostgREST returns PGRST201 (ambiguous embed) and the query fails
+          // silently, surfacing as an empty feed on screen. CK-04 inline fix
+          // 2026-05-09 during Phase 4 UAT.
+          'id, user_id, caption, media_path, media_type, created_at, profiles!submissions_user_id_fkey(display_name, avatar_path, updated_at)',
         )
         .eq('group_id', groupId!)
         .eq('local_date', today!)
