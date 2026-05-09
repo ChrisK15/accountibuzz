@@ -22,3 +22,19 @@ export * from './Shutter';
 export * from './StatusPill';
 export * from './SwipeCard';
 export * from './TypeChip';
+// Phase 4 primitives
+export {
+  LeaderboardRow,
+  type LeaderboardRowProps,
+} from './leaderboard/LeaderboardRow';
+export { FeedItem, type FeedItemProps } from './feed/FeedItem';
+export {
+  StillToPostAvatarRow,
+  type StillToPostAvatarRowProps,
+  type StillToPostMember,
+} from './feed/StillToPostAvatarRow';
+export {
+  MissedYesterdayRow,
+  type MissedYesterdayRowProps,
+  type MissedMember,
+} from './feed/MissedYesterdayRow';
