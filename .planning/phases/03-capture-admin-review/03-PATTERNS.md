@@ -16,7 +16,7 @@ This phase is **non-greenfield**. P1 + P2 are shipped; nearly every P3 file has 
 
 | New/Modified File | Role | Data Flow | Closest Analog | Match Quality |
 |-------------------|------|-----------|----------------|---------------|
-| `supabase/migrations/0006_phase3_capture_review.sql` | migration (3 RPCs + grants) | DDL + plpgsql | `supabase/migrations/0004_phase2_groups_invites.sql` | **exact** (same idiom — `create or replace function`, SECURITY DEFINER, `set search_path = public`, typed errors via `raise exception 'X' using errcode = 'P0001'`, revoke-from-public + grant-to-authenticated) |
+| `supabase/migrations/20260429173246_phase3_capture_review.sql` | migration (3 RPCs + grants) | DDL + plpgsql | `supabase/migrations/0004_phase2_groups_invites.sql` | **exact** (same idiom — `create or replace function`, SECURITY DEFINER, `set search_path = public`, typed errors via `raise exception 'X' using errcode = 'P0001'`, revoke-from-public + grant-to-authenticated) |
 
 ### pgTAP Tests
 
@@ -102,7 +102,7 @@ This phase is **non-greenfield**. P1 + P2 are shipped; nearly every P3 file has 
 
 ## Pattern Assignments
 
-### `supabase/migrations/0006_phase3_capture_review.sql` — Migration
+### `supabase/migrations/20260429173246_phase3_capture_review.sql` — Migration
 
 **Analog:** `supabase/migrations/0004_phase2_groups_invites.sql` — copy the migration idiom verbatim. Same header style, same `create or replace function`, same SECURITY DEFINER + `set search_path = public`, same `raise exception 'X' using errcode = 'P0001'` typed errors, same `revoke from public + grant to authenticated`.
 

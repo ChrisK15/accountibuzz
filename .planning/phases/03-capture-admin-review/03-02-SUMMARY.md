@@ -30,7 +30,7 @@ tech-stack:
 
 key-files:
   created:
-    - supabase/migrations/0006_phase3_capture_review.sql
+    - supabase/migrations/20260429173246_phase3_capture_review.sql
     - supabase/tests/submit_today.sql
     - supabase/tests/review_submission.sql
     - supabase/tests/get_pending_review_count.sql
@@ -76,7 +76,7 @@ completed: 2026-04-29
 
 ## Accomplishments (so far)
 
-- `supabase/migrations/0006_phase3_capture_review.sql` written with 4 RPCs + 1 composite type, all SECURITY DEFINER + revoke-from-public + grant-to-authenticated; all targeted Pitfalls + Threats addressed in body comments
+- `supabase/migrations/20260429173246_phase3_capture_review.sql` written with 4 RPCs + 1 composite type, all SECURITY DEFINER + revoke-from-public + grant-to-authenticated; all targeted Pitfalls + Threats addressed in body comments
 - 5 pgTAP files written, totaling **51 plan() assertions** across the 4 RPCs + 0003 trigger backfill
 - File-level shape verification (grep + count) passed for all 6 artifacts
 - Migration is APPEND-ONLY: no edits to 0001..0005, no new tables (CI rls-check.yml passes by construction), no policy drops, no `handle_submission_approval` body change
@@ -91,7 +91,7 @@ completed: 2026-04-29
 
 ## Files Created (so far)
 
-- `supabase/migrations/0006_phase3_capture_review.sql` — 4 SECURITY DEFINER RPCs:
+- `supabase/migrations/20260429173246_phase3_capture_review.sql` — 4 SECURITY DEFINER RPCs:
   - `submit_today(uuid, text, text, text) returns uuid` — typed errors: not_authenticated, not_member, invalid_media_type, wrong_media_type, caption_too_long, already_submitted_today
   - `review_submission(uuid, text, text) returns void` — typed errors: not_authenticated, invalid_decision, reason_too_long, submission_not_found, not_admin, not_pending
   - `get_pending_review_count(uuid) returns int` — non-admin returns 0 (D-17, no leak)
@@ -163,7 +163,7 @@ None — Task 3 already resolved via MCP migration apply. Plan 03-08 verificatio
 
 **Files committed:**
 
-- FOUND: `supabase/migrations/0006_phase3_capture_review.sql` (commit `a2eb712`)
+- FOUND: `supabase/migrations/20260429173246_phase3_capture_review.sql` (commit `a2eb712`)
 - FOUND: `supabase/tests/submit_today.sql` (commit `48d4038`)
 - FOUND: `supabase/tests/review_submission.sql` (commit `48d4038`)
 - FOUND: `supabase/tests/get_pending_review_count.sql` (commit `48d4038`)

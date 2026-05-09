@@ -1,5 +1,5 @@
 -- =============================================================================
--- 0007_phase3_realtime_publication.sql — Add submissions to Realtime publication
+-- 20260506165538_phase3_realtime_publication.sql — Add submissions to Realtime publication
 -- =============================================================================
 -- Discovered during Phase 3 manual UAT (#CK-5 cross-device hard gate):
 -- supabase_realtime publication was empty → postgres_changes events never

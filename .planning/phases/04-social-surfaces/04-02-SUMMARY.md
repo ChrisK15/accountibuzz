@@ -8,8 +8,8 @@ dependency-graph:
   requires:
     - "0001_foundation.sql (group_members counter columns + trigger STUB + group_members_leaderboard_idx)"
     - "0003_phase1_review_fixes_2.sql (admin-immutable trigger pattern; idempotency basis for D-03)"
-    - "0006_phase3_capture_review.sql (RPC shape, typed errors, revoke/grant patterns)"
-    - "0007_phase3_realtime_publication.sql (idempotent publication-add idiom)"
+    - "20260429173246_phase3_capture_review.sql (RPC shape, typed errors, revoke/grant patterns)"
+    - "20260506165538_phase3_realtime_publication.sql (idempotent publication-add idiom)"
   provides:
     - "Race-safe handle_submission_approval body (PTS-01..03 server contract)"
     - "group_members_counter_immutable trigger (D-19 defense-in-depth)"
@@ -35,7 +35,7 @@ tech-stack:
     - "Deterministic ORDER BY tiebreaker (joined_at ASC) on leaderboard ranking"
 key-files:
   created:
-    - supabase/migrations/0008_phase4_points_streaks_feed.sql
+    - supabase/migrations/20260508233129_phase4_points_streaks_feed.sql
   modified: []
 decisions:
   - "Single locked-row UPDATE with CASE replaces the SELECT-then-UPDATE form from 04-RESEARCH.md §Code Examples lines 681-713 (HIGH #1)"
@@ -57,7 +57,7 @@ All 3 tasks done. Task 2's blocking checkpoint resolved when the user attempted 
 
 ## Tasks Completed
 
-### Task 1 — Write `0008_phase4_points_streaks_feed.sql`
+### Task 1 — Write `20260508233129_phase4_points_streaks_feed.sql`
 
 **Status:** DONE
 **Commit:** `4e96b8f` — `feat(04-02): write migration 0008 (race-safe trigger + replica identity full + 4 RPCs)`
@@ -66,7 +66,7 @@ All 3 tasks done. Task 2's blocking checkpoint resolved when the user attempted 
 
 | Gate | Check | Result |
 |------|-------|--------|
-| File exists | `test -f supabase/migrations/0008_phase4_points_streaks_feed.sql` | OK |
+| File exists | `test -f supabase/migrations/20260508233129_phase4_points_streaks_feed.sql` | OK |
 | CGF-1 publication | `grep -c "alter publication supabase_realtime add table public.group_members"` | 1 |
 | CGF-2 / HIGH #2 replica identity | `grep -c "alter table public.submissions replica identity full"` | 1 |
 | Section ordering | publication (line 79) → replica identity (line 91) → trigger function (line 121) | OK |
@@ -87,7 +87,7 @@ All 3 tasks done. Task 2's blocking checkpoint resolved when the user attempted 
 
 **Status:** DONE — applied via Supabase MCP `apply_migration` (orchestrator inline; user-approved path)
 
-**What happened:** The user attempted `supabase db push` from a configured terminal, but the CLI rejected it because the remote migration history contains two MCP-applied migrations from Phase 3 (`20260429173246_phase3_capture_review`, `20260506165538_phase3_realtime_publication`) that have no corresponding local files (local has the same SQL under `0006_phase3_capture_review.sql` / `0007_phase3_realtime_publication.sql`). The CLI's suggestion to `supabase migration repair --status reverted` would have produced fictional history (the schema changes ARE on remote). User chose Option A from the orchestrator's checkpoint prompt: apply 0008 via Supabase MCP — same pattern Phase 3 used for those two earlier migrations. Filename normalization (renaming local files to match remote timestamp version IDs) is deferred to plan 04-07 closeout as a follow-up.
+**What happened:** The user attempted `supabase db push` from a configured terminal, but the CLI rejected it because the remote migration history contains two MCP-applied migrations from Phase 3 (`20260429173246_phase3_capture_review`, `20260506165538_phase3_realtime_publication`) that have no corresponding local files (local has the same SQL under `20260429173246_phase3_capture_review.sql` / `20260506165538_phase3_realtime_publication.sql`). The CLI's suggestion to `supabase migration repair --status reverted` would have produced fictional history (the schema changes ARE on remote). User chose Option A from the orchestrator's checkpoint prompt: apply 0008 via Supabase MCP — same pattern Phase 3 used for those two earlier migrations. Filename normalization (renaming local files to match remote timestamp version IDs) is deferred to plan 04-07 closeout as a follow-up.
 
 **Migration applied:** `20260508233129_phase4_points_streaks_feed` (registered on remote `baatomkgtgkrnapisoej` via `mcp__plugin_supabase_supabase__apply_migration`).
 
@@ -154,7 +154,7 @@ Why points use the same CASE: HIGH #12 belt-and-suspenders. Even though `uq_subm
 ## Self-Check: PASSED
 
 **Files claimed to exist:**
-- `supabase/migrations/0008_phase4_points_streaks_feed.sql` — FOUND
+- `supabase/migrations/20260508233129_phase4_points_streaks_feed.sql` — FOUND
 - `.planning/phases/04-social-surfaces/04-02-SUMMARY.md` — this file
 - `src/types/database.ts` — regenerated, 4 new RPCs typed
 

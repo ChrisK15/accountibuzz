@@ -175,7 +175,7 @@ pnpm list @supabase/supabase-js @tanstack/react-query expo-router expo-video exp
 ┌────────────────────────────────────────────────────────────────────────┐
 │                         SUPABASE (Postgres 15)                          │
 │                                                                         │
-│  Migration 0008_phase4_points_streaks_feed.sql                          │
+│  Migration 20260508233129_phase4_points_streaks_feed.sql                          │
 │   ├─ alter publication supabase_realtime add table public.group_members │
 │   ├─ replace handle_submission_approval body                            │
 │   │     [SECURITY DEFINER, AFTER UPDATE OF status WHEN approved]        │
@@ -224,7 +224,7 @@ src/features/
 └── (no new src/types files — `pnpm types:gen` updates database.ts)
 
 supabase/migrations/
-└── 0008_phase4_points_streaks_feed.sql  [NEW]
+└── 20260508233129_phase4_points_streaks_feed.sql  [NEW]
 
 supabase/tests/
 ├── handle_submission_approval_streak.sql       [NEW — pgTAP file 1]
@@ -617,7 +617,7 @@ Verified patterns from official sources / shipped code:
 
 ```sql
 -- =============================================================================
--- 0008_phase4_points_streaks_feed.sql — Phase 4 Social Surfaces (server contract)
+-- 20260508233129_phase4_points_streaks_feed.sql — Phase 4 Social Surfaces (server contract)
 -- =============================================================================
 -- Append-only follow-up to 0001..0007. Replaces the handle_submission_approval
 -- STUB shipped in 0001 §10 (lines 365-384) with the real body. Adds 3 (or 4)
@@ -883,8 +883,8 @@ export function useGroupLeaderboard(groupId: string | undefined) {
 ### Primary (HIGH confidence)
 - [VERIFIED: shipped migration] `supabase/migrations/0001_foundation.sql` lines 102-178 (group_members + RLS + index), lines 360-384 (counter trigger STUB + AFTER UPDATE wiring)
 - [VERIFIED: shipped migration] `supabase/migrations/0003_phase1_review_fixes_2.sql` (admin-immutable trigger pattern; idempotency basis for D-03)
-- [VERIFIED: shipped migration] `supabase/migrations/0006_phase3_capture_review.sql` (RPC shape, typed errors, revoke/grant pattern, the `review_submission` UPDATE that fires P4's trigger)
-- [VERIFIED: shipped migration] `supabase/migrations/0007_phase3_realtime_publication.sql` (publication-add idempotent pattern — 0008 mirrors verbatim for `group_members`)
+- [VERIFIED: shipped migration] `supabase/migrations/20260429173246_phase3_capture_review.sql` (RPC shape, typed errors, revoke/grant pattern, the `review_submission` UPDATE that fires P4's trigger)
+- [VERIFIED: shipped migration] `supabase/migrations/20260506165538_phase3_realtime_publication.sql` (publication-add idempotent pattern — 0008 mirrors verbatim for `group_members`)
 - [VERIFIED: shipped code] `src/features/submissions/useTodaySubmissionRealtime.ts` (the canonical Realtime hook shape P4 mirrors verbatim)
 - [VERIFIED: shipped code] `src/features/submissions/time.ts` (todayLocalDate, DST-safe addOneDay — reusable for D-21 client-narrowing)
 - [VERIFIED: shipped pgTAP] `supabase/tests/get_pending_review_count.sql` (the JWT-claims + `set local role authenticated` pattern P4's pgTAP files mirror)
