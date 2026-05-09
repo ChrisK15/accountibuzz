@@ -169,8 +169,11 @@ export default function GroupDetailScreen() {
     useGroupLeaderboard(id);
   const { data: feed, isPending: _feedPending } = useGroupFeed(id, today);
   const { pendingToday, missedYesterday } = useGroupTombstones(id);
-  // safe — reduceMotion is declared above (HIGH #3 TDZ-safe ordering)
-  useGroupLeaderboardRealtime(id);
+  // safe — reduceMotion is declared above (HIGH #3 TDZ-safe ordering).
+  // 04-05 Task 3 widens the hook to consume the options object; the
+  // LayoutAnimation.configureNext call inside the hook is gated on
+  // !options.reduceMotion.
+  useGroupLeaderboardRealtime(id, { reduceMotion });
   useGroupFeedRealtime(id, group?.timezone);
 
   const [leaderboardExpanded, setLeaderboardExpanded] = useState(false);
@@ -624,6 +627,7 @@ export default function GroupDetailScreen() {
                               }).format(new Date(row.joined_at))
                             : undefined
                         }
+                        reduceMotion={reduceMotion}
                       />
                     </View>
                   );
