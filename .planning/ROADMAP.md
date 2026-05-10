@@ -80,12 +80,12 @@
 **Goal**: Close the three follow-up items from `03-VERIFICATION.md` §"Phase 3.1 Follow-Up Items" that affect the shipped MVP experience: (1) restore capture-screen modal presentation regression introduced by commit 298fe64; (2) close the admin pending-review Realtime gap reproduced during P4 UAT CK-05 (Device A badge + queue do not auto-update on Device B submission); (3) replace the "blocky / square inside a circle" Shutter recording state with a Feather-icon-based design. Zero schema changes. Zero new requirements. Zero new dependencies.
 **Requirements**: (none — phase tracks CONTEXT.md decision IDs D-01..D-11; no requirement edits in this phase)
 **Depends on:** Phase 3
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 03.1-01-PLAN.md — useReviewQueueRealtime hook (Q1 distinct channel names per mountPoint) + 6 unit tests + 2 mount points (admin-gated badge on group-detail; list on review-screen) — closes VERIFICATION item 2 (D-01..D-04)
-- [ ] 03.1-02-PLAN.md — Capture nested Stack layout (presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: false) + capture screen cleanup (strip 5+12-line commentary blocks + inert stackScreen const + 5 JSX refs) — closes VERIFICATION item 1 (D-05..D-07)
-- [ ] 03.1-03-PLAN.md — Shutter visual rewrite (Feather camera/video glyphs + uniform 52pt inner circle for all variants; outer ring + pulse preserved; ShutterProps API unchanged) + 4 component tests — closes 2026-05-06 user complaint (D-08..D-10)
+- [x] 03.1-01-PLAN.md — useReviewQueueRealtime hook (Q1 distinct channel names per mountPoint) + 6 unit tests + 2 mount points (admin-gated badge on group-detail; list on review-screen) — closes VERIFICATION item 2 (D-01..D-04)
+- [x] 03.1-02-PLAN.md — Capture nested Stack layout (presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: false) + capture screen cleanup (strip 5+12-line commentary blocks + inert stackScreen const + 5 JSX refs) — closes VERIFICATION item 1 (D-05..D-07)
+- [x] 03.1-03-PLAN.md — Shutter visual rewrite (Feather camera/video glyphs + uniform 52pt inner circle for all variants; outer ring + pulse preserved; ShutterProps API unchanged) + 4 component tests — closes 2026-05-06 user complaint (D-08..D-10)
 
 ### Phase 4: Social Surfaces
 **Goal**: Verified submissions convert into visible social pressure — points, streaks, leaderboard, and today's group feed.
