@@ -24,12 +24,6 @@
 //   resolves successfully. Network/queued path: NO haptic (the dismissal IS
 //   the feedback). Typed-error path: NO haptic.
 //
-// PER Plan 03-06 note (modal-style presentation):
-//   The Tabs.Screen registration in app/(app)/_layout.tsx only carries
-//   `href: null` — the Tabs navigator type rejects `presentation`,
-//   `animation`, and `gestureEnabled`. This file owns its own <Stack> wrapper
-//   that applies those modal-style options.
-
 import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -153,20 +147,6 @@ export default function CaptureScreen() {
     return () => sub.remove();
   }, [camPerm, micPerm, isVideoGroup, requestCamPerm, requestMicPerm]);
 
-  // ── Stack-modal options removed (Phase 3 inline UAT fix) ──────────────
-  // The capture route is registered as a Tabs.Screen (not a Stack.Screen) in
-  // app/(app)/_layout.tsx. `<Stack.Screen options={{ animation:
-  // 'slide_from_bottom', ... }}>` declared here was leaking those Stack-only
-  // options into the Tabs navigator's options bag, which crashed the bottom-
-  // tabs v7 animation registry (`sceneStyleInterpolator` undefined) on every
-  // navigation to /capture/[groupId].
-  //
-  // Restoring proper modal-style presentation (slide-from-bottom + gesture
-  // disabled) requires moving the capture route OUT of the Tabs and into the
-  // root Stack — tracked as a Phase 3.1 / 03-08 gap-closure item, not a
-  // blocking regression.
-  const stackScreen: React.ReactNode = null;
-
   // Safe-back: capture/[groupId] is a Tabs.Screen with no Stack history above
   // it (modal-presentation deferred to Phase 3.1). dismissCapture() fires a POP
   // action that React Navigation can't resolve, surfacing a dev warning toast.
@@ -183,7 +163,6 @@ export default function CaptureScreen() {
   if (groupPending || !group) {
     return (
       <>
-        {stackScreen}
         <ScreenContainer>
           <View
             style={{
@@ -203,7 +182,6 @@ export default function CaptureScreen() {
   if (camPerm && !camPerm.granted) {
     return (
       <>
-        {stackScreen}
         <PermissionDeniedScreen
           icon="camera"
           title="We need camera access"
@@ -218,7 +196,6 @@ export default function CaptureScreen() {
   if (isVideoGroup && micPerm && !micPerm.granted) {
     return (
       <>
-        {stackScreen}
         <PermissionDeniedScreen
           icon="mic"
           title="We need mic access too"
@@ -343,7 +320,6 @@ export default function CaptureScreen() {
     const isPhoto = group.submission_type === 'photo';
     return (
       <>
-        {stackScreen}
         <View style={{ flex: 1, backgroundColor: '#000000' }}>
           {isPhoto ? (
             <Image
@@ -467,7 +443,6 @@ export default function CaptureScreen() {
   // ── Capture state (viewfinder) ─────────────────────────────────────────
   return (
     <>
-      {stackScreen}
       <View style={{ flex: 1, backgroundColor: '#000000' }}>
         <CameraView
           ref={cameraRef}
