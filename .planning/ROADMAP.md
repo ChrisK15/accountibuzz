@@ -75,6 +75,16 @@
 - [x] 03-08-PLAN.md — Phase verification: full test suite + typecheck + expo-doctor + 11-checkpoint iOS UAT walkthrough + REQUIREMENTS/ROADMAP rewording for terminal-rejection per D-12
 **UI hint**: yes
 
+### Phase 03.1: P3 Polish & Realtime Hardening (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 3
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 03.1 to break down)
+
 ### Phase 4: Social Surfaces
 **Goal**: Verified submissions convert into visible social pressure — points, streaks, leaderboard, and today's group feed.
 **Depends on**: Phase 3

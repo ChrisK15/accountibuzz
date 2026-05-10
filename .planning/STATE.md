@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
+status: planning
 stopped_at: Phase 4 UI-SPEC approved
-last_updated: "2026-05-08T23:22:07.617Z"
+last_updated: "2026-05-09T21:23:26.541Z"
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 4
   total_plans: 28
-  completed_plans: 23
-  percent: 67
+  completed_plans: 28
+  percent: 100
 ---
 
 # State: Accountibuzz
@@ -58,6 +58,10 @@ Plan: 1 of 7
   - Phase 3: 11 of 11 (SUB-01..06, ADM-01..04, PLAT-03) — verified via UAT walkthrough (7 PASS + 2 DEFERRED + 2 RESCOPED, 4/4 hard gates cleared) + 240/240 Jest + 107/107 pgTAP. See `.planning/phases/03-capture-admin-review/03-VERIFICATION.md` for the authoritative report.
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 3.1 inserted after Phase 3: P3 Polish & Realtime Hardening (URGENT)
 
 ### Key Decisions (from PROJECT.md)
 
