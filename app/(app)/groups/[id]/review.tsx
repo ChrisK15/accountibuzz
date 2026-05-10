@@ -42,6 +42,7 @@ import { Feather } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
 import { useReviewQueue } from '../../../../src/features/submissions/useReviewQueue';
+import { useReviewQueueRealtime } from '../../../../src/features/submissions/useReviewQueueRealtime';
 import { useReviewSubmission } from '../../../../src/features/submissions/useReviewSubmission';
 import { useGroup } from '../../../../src/features/groups/useGroup';
 import { labelFor } from '../../../../src/features/groups/timezones';
@@ -81,6 +82,13 @@ export default function ReviewQueueScreen() {
   const { data: pending, isPending: queueLoading } = useReviewQueue(
     isAdmin ? groupId : undefined,
   );
+  // 03.1-01 Task 4 — list mountPoint. The defensive `isAdmin ? groupId :
+  // undefined` gate matches the existing useReviewQueue precedent above
+  // and covers the brief loading window before the non-admin redirect at
+  // lines 72-77 fires. Distinct mountPoint ('list') from the group-detail
+  // badge mount ('badge') per Q1 — avoids supabase-js "subscribe can only
+  // be called a single time" error during native-stack push.
+  useReviewQueueRealtime(isAdmin ? groupId : undefined, 'list');
   const reviewMutation = useReviewSubmission(groupId);
 
   // Swipe gestures + reduced-motion handling were removed when the
