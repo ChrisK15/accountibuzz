@@ -60,6 +60,9 @@ jest.mock('../../src/features/submissions/useGroupFeed', () => ({
 jest.mock('../../src/features/submissions/useGroupFeedRealtime', () => ({
   useGroupFeedRealtime: jest.fn(),
 }));
+jest.mock('../../src/features/submissions/useReviewQueueRealtime', () => ({
+  useReviewQueueRealtime: jest.fn(),
+}));
 jest.mock('../../src/features/groups/useGroupTombstones', () => ({
   useGroupTombstones: jest.fn(() => ({
     pendingToday: [],

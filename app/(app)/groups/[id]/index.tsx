@@ -65,6 +65,7 @@ import { useGroupLeaderboard } from '../../../../src/features/groups/useGroupLea
 import { useGroupLeaderboardRealtime } from '../../../../src/features/groups/useGroupLeaderboardRealtime';
 import { useGroupFeed } from '../../../../src/features/submissions/useGroupFeed';
 import { useGroupFeedRealtime } from '../../../../src/features/submissions/useGroupFeedRealtime';
+import { useReviewQueueRealtime } from '../../../../src/features/submissions/useReviewQueueRealtime';
 import { useGroupTombstones } from '../../../../src/features/groups/useGroupTombstones';
 import { todayLocalDate } from '../../../../src/features/submissions/time';
 import { applyAlpha } from '../../../../src/theme/applyAlpha';
@@ -205,6 +206,12 @@ export default function GroupDetailScreen() {
   // Server-side RPC returns 0 for non-admins (D-17 0-leak invariant), so even if
   // a non-admin somehow lands here, count === 0 hides the row. Defense in depth.
   const { data: pendingCount } = usePendingReviewCount(id);
+  // 03.1-01 Task 4 — admin-gated badge mountPoint. Non-admins must NEVER
+  // subscribe; the hook's `if (!groupId) return;` short-circuit handles
+  // `undefined` cleanly. Distinct mountPoint ('badge') from the review-
+  // screen mount ('list') per Q1 — supabase-js does NOT auto-de-dup
+  // identical channel names.
+  useReviewQueueRealtime(isAdmin ? id : undefined, 'badge');
   const showPendingRow = isAdmin && (pendingCount ?? 0) > 0;
   const countLabel =
     (pendingCount ?? 0) > 9 ? '9+' : String(pendingCount ?? 0);
