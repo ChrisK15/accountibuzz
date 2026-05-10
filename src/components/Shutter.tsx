@@ -1,10 +1,16 @@
 // Shutter — 3-variant camera shutter primitive.
-// Spec: 03-UI-SPEC.md §6b Shutter (lines 636-652).
-// Variants: 'photo' | 'video-idle' (yellow circle) | 'video-recording' (red square + pulsing ring).
+// Spec: 03.1-03-PLAN.md Task 2 (D-08..D-10) supersedes 03-UI-SPEC.md §6b.
+// Variants share a 72pt outer 4pt white ring (opacity-pulses while recording)
+// + 52pt inner circle. Photo/video-idle add a Feather glyph; video-recording
+// is a clean filled red circle (the original "square inside a circle"
+// geometry was logged as "blocky" by the user on 2026-05-06).
 
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
+
+const ICON_SIZE = 30;
 
 export interface ShutterProps {
   variant: 'photo' | 'video-idle' | 'video-recording';
@@ -73,26 +79,26 @@ export function Shutter({ variant, onPress }: ShutterProps) {
           opacity: pulseOpacity,
         }}
       />
-      {/* Inner fill — primary yellow OR destructive red. Becomes a square
-          (borderRadius 0) while recording per UI-SPEC §6b.
-          Recording variant: 44pt so the square's diagonal (62.2pt) stays
-          inside the outer ring's inner diameter (64pt). 52pt would clip the
-          ring at the corners (52*sqrt(2) = 73.5pt > 64pt). */}
+      {/* Inner fill — uniform 52pt circle for all variants. Per D-09 +
+          Pitfall 5, 52pt keeps a comfortable visual gap to the 64pt usable
+          inner diameter (72pt outer - 4pt ring × 2). */}
       <View
         style={{
-          width: isRecording ? 44 : 52,
-          height: isRecording ? 44 : 52,
-          borderRadius: isRecording ? 0 : 26,
+          width: 52,
+          height: 52,
+          borderRadius: 26,
           backgroundColor: innerColor,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        {isRecording && (
-          <View
-            style={{ width: 16, height: 16, backgroundColor: '#FFFFFF' }}
-          />
+        {variant === 'photo' && (
+          <Feather name="camera" size={ICON_SIZE} color="#FFFFFF" />
         )}
+        {variant === 'video-idle' && (
+          <Feather name="video" size={ICON_SIZE} color="#FFFFFF" />
+        )}
+        {/* video-recording: clean filled red circle, no glyph */}
       </View>
     </Pressable>
   );
