@@ -79,21 +79,12 @@ export default function AppLayout() {
       <Tabs.Screen name="groups/join" options={{ href: null }} />
       <Tabs.Screen name="groups/[id]/index" options={{ href: null }} />
       <Tabs.Screen name="groups/[id]/review" options={{ href: null }} />
-      <Tabs.Screen
-        name="capture/[groupId]"
-        options={{
-          href: null,
-          // UI-SPEC line 786 — modal-style presentation 'fullScreenModal' +
-          // animation 'slide_from_bottom' + gestureEnabled: false (UI-SPEC line
-          // 951 — swipe-to-dismiss disabled so accidental gestures don't lose a
-          // captured take) are Stack/native-stack-only options that the Tabs
-          // navigator type does NOT accept here. Plan 03-07 owns the capture
-          // screen file (app/(app)/capture/[groupId].tsx) and is responsible for
-          // wrapping its own Stack with those options. For now we register the
-          // route + hide it from the tab bar so navigation to /capture/[groupId]
-          // resolves cleanly when Plan 03-07 ships.
-        }}
-      />
+      {/* Phase 03.1-02 added app/(app)/capture/_layout.tsx (nested Stack with
+          modal presentation). Once the folder has its own _layout, Expo Router
+          treats `capture` as a single nested route group — `href: null` must
+          target the folder name, not the inner [groupId] file, otherwise a
+          phantom "Capture" tab appears in the bar. */}
+      <Tabs.Screen name="capture" options={{ href: null }} />
     </Tabs>
   );
 }
