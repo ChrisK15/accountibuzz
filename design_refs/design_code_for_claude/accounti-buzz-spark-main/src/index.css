@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Accountibuzz design system — all colors HSL.
+   Primary #FFDE42 sunshine yellow, accent #53CBF3 sky blue.
+   Light: white base. Dark: carbon base. */
+
+@layer base {
+  :root {
+    /* surfaces */
+    --background: 40 33% 98%;        /* soft off-white */
+    --surface: 0 0% 100%;             /* pure white card */
+    --foreground: 220 15% 12%;        /* near-black ink */
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 12%;
+
+    /* brand */
+    --primary: 51 100% 63%;           /* #FFDE42 */
+    --primary-foreground: 220 18% 10%;
+    --primary-pressed: 51 90% 55%;
+
+    --accent: 197 86% 64%;            /* #53CBF3 */
+    --accent-foreground: 220 18% 10%;
+    --accent-pressed: 197 78% 54%;
+
+    /* status */
+    --success: 145 55% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 95% 55%;
+    --warning-foreground: 220 18% 10%;
+    --destructive: 4 78% 56%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* neutrals */
+    --neutral-low: 220 14% 92%;       /* dividers, disabled bg */
+    --neutral-mid: 220 10% 60%;       /* muted icons */
+    --neutral-high: 220 15% 28%;      /* secondary text */
+
+    --secondary: 220 14% 95%;
+    --secondary-foreground: 220 15% 18%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 10% 46%;
+
+    --border: 220 14% 90%;
+    --input: 220 14% 88%;
+    --ring: 197 86% 64%;
+
+    /* radii */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-pill: 999px;
+    --radius: 12px;
+
+    /* elevation — subtle, mobile-appropriate */
+    --elev-1: 0 1px 2px 0 hsl(220 30% 12% / 0.06), 0 1px 3px 0 hsl(220 30% 12% / 0.04);
+    --elev-2: 0 4px 12px -2px hsl(220 30% 12% / 0.10), 0 2px 4px -1px hsl(220 30% 12% / 0.06);
+
+    /* sidebar — keep defaults to satisfy shadcn */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 14% 8%;         /* carbon */
+    --surface: 220 14% 12%;            /* lifted */
+    --foreground: 40 20% 96%;
+
+    --card: 220 14% 12%;
+    --card-foreground: 40 20% 96%;
+
+    --popover: 220 14% 12%;
+    --popover-foreground: 40 20% 96%;
+
+    --primary: 51 100% 63%;
+    --primary-foreground: 220 18% 10%;
+    --primary-pressed: 51 95% 58%;
+
+    --accent: 197 86% 64%;
+    --accent-foreground: 220 18% 10%;
+    --accent-pressed: 197 80% 58%;
+
+    --success: 145 55% 50%;
+    --success-foreground: 220 18% 10%;
+    --warning: 35 95% 60%;
+    --warning-foreground: 220 18% 10%;
+    --destructive: 4 80% 62%;
+    --destructive-foreground: 220 18% 10%;
+
+    --neutral-low: 220 12% 20%;
+    --neutral-mid: 220 8% 55%;
+    --neutral-high: 220 10% 78%;
+
+    --secondary: 220 12% 18%;
+    --secondary-foreground: 40 20% 94%;
+    --muted: 220 12% 18%;
+    --muted-foreground: 220 8% 65%;
+
+    --border: 220 12% 20%;
+    --input: 220 12% 22%;
+    --ring: 197 86% 64%;
+
+    --elev-1: 0 1px 2px 0 hsl(0 0% 0% / 0.4), 0 1px 3px 0 hsl(0 0% 0% / 0.3);
+    --elev-2: 0 6px 16px -2px hsl(0 0% 0% / 0.55), 0 2px 6px -1px hsl(0 0% 0% / 0.35);
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html, body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
+  body { @apply bg-background text-foreground antialiased; }
+}
+
+@layer components {
+  /* Phone frame for the mockup gallery */
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    border-radius: 44px;
+    padding: 12px;
+    background: hsl(220 15% 14%);
+    box-shadow: var(--elev-2);
+    flex-shrink: 0;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  .phone-status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+}

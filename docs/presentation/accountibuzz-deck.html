@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Accountibuzz — Technical Report</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bz-yellow: #FFDE42;
+    --bz-cyan:   #53CBF3;
+    --bz-bg:     #14110F;
+    --bz-bg-2:   #1C1916;
+    --bz-fg:     #F4F1EC;
+    --bz-muted:  #9A958D;
+    --bz-line:   #2A2622;
+    --bz-good:   #5BC97C;
+    --bz-bad:    #E55A4B;
+  }
+
+  .reveal {
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    font-weight: 500;
+    color: var(--bz-fg);
+    background: var(--bz-bg);
+  }
+  .reveal-viewport { background: var(--bz-bg) !important; }
+
+  .reveal h1, .reveal h2, .reveal h3 {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    text-transform: none;
+    letter-spacing: -0.02em;
+    color: var(--bz-fg);
+    margin-bottom: 0.5em;
+  }
+  .reveal h1 { font-size: 2.6em; line-height: 1.05; }
+  .reveal h2 { font-size: 1.8em; line-height: 1.1; }
+  .reveal h3 { font-size: 1.2em; color: var(--bz-yellow); font-weight: 700; }
+
+  .reveal p, .reveal li { font-size: 0.78em; line-height: 1.45; }
+  .reveal .slides section { text-align: left; }
+  .reveal .slides section.center { text-align: center; }
+
+  .reveal a { color: var(--bz-cyan); text-decoration: none; }
+
+  /* Accent bar under section titles */
+  .reveal h2::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    background: var(--bz-yellow);
+    border-radius: 4px;
+    margin-top: 12px;
+  }
+
+  /* Code blocks */
+  .reveal pre {
+    box-shadow: none;
+    background: var(--bz-bg-2);
+    border: 1px solid var(--bz-line);
+    border-radius: 12px;
+    font-size: 0.55em;
+  }
+  .reveal pre code {
+    padding: 18px;
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    line-height: 1.45;
+  }
+  .reveal code { color: var(--bz-yellow); font-family: 'JetBrains Mono', monospace; }
+
+  /* Tables */
+  .reveal table {
+    font-size: 0.65em;
+    border-collapse: collapse;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .reveal table th {
+    background: var(--bz-bg-2);
+    color: var(--bz-yellow);
+    font-weight: 700;
+    border-bottom: 2px solid var(--bz-yellow);
+    padding: 8px 12px;
+    text-align: left;
+  }
+  .reveal table td {
+    border-bottom: 1px solid var(--bz-line);
+    padding: 8px 12px;
+    vertical-align: top;
+  }
+
+  /* Brand artifacts */
+  .brand-mark {
+    display: inline-block;
+    background: var(--bz-yellow);
+    color: var(--bz-bg);
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 0.6em;
+    letter-spacing: 0.04em;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.7em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .pill.done { background: rgba(91,201,124,0.15); color: var(--bz-good); border: 1px solid var(--bz-good); }
+  .pill.wip  { background: rgba(255,222,66,0.15); color: var(--bz-yellow); border: 1px solid var(--bz-yellow); }
+  .pill.todo { background: rgba(154,149,141,0.15); color: var(--bz-muted); border: 1px solid var(--bz-muted); }
+
+  .kicker {
+    color: var(--bz-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.55em;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  /* Cover */
+  .cover {
+    height: 100%;
+  }
+  .cover .title {
+    font-size: 4.2em;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    margin: 0;
+  }
+  .cover .title .accent { color: var(--bz-yellow); }
+  .cover .tagline {
+    font-size: 1.4em;
+    color: var(--bz-fg);
+    margin-top: 18px;
+    font-weight: 500;
+  }
+  .cover .meta {
+    margin-top: 60px;
+    color: var(--bz-muted);
+    font-size: 0.8em;
+    line-height: 1.6;
+  }
+
+  /* The loop diagram */
+  .loop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 36px 0 16px;
+  }
+  .loop .node {
+    background: var(--bz-bg-2);
+    border: 2px solid var(--bz-yellow);
+    border-radius: 16px;
+    padding: 18px 24px;
+    text-align: center;
+    min-width: 160px;
+  }
+  .loop .node .icon { font-size: 2em; }
+  .loop .node .label { font-weight: 800; color: var(--bz-yellow); margin-top: 6px; font-size: 0.95em; }
+  .loop .node .sub { color: var(--bz-muted); font-size: 0.7em; margin-top: 2px; }
+  .loop .arrow { font-size: 1.8em; color: var(--bz-cyan); font-weight: 800; }
+
+  /* Two-column */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .cols.three { grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+  .card {
+    background: var(--bz-bg-2);
+    border: 1px solid var(--bz-line);
+    border-radius: 14px;
+    padding: 18px 22px;
+  }
+  .card h3 { margin-top: 0; }
+  .card.accent { border-color: var(--bz-yellow); }
+
+  /* Stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px; }
+  .tile {
+    background: var(--bz-bg-2);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+  }
+  .tile .num {
+    font-size: 2em;
+    font-weight: 800;
+    color: var(--bz-yellow);
+    line-height: 1;
+  }
+  .tile .lab { color: var(--bz-muted); font-size: 0.7em; margin-top: 6px; line-height: 1.3; }
+
+  /* Phase ribbon */
+  .phases { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 18px; }
+  .phase {
+    background: var(--bz-bg-2);
+    border: 1px solid var(--bz-line);
+    border-radius: 12px;
+    padding: 14px 10px;
+    position: relative;
+  }
+  .phase.done { border-color: var(--bz-good); }
+  .phase.wip  { border-color: var(--bz-yellow); }
+  .phase .pn { color: var(--bz-cyan); font-size: 0.65em; font-weight: 800; letter-spacing: 0.1em; }
+  .phase .pt { font-weight: 800; font-size: 0.78em; margin-top: 4px; line-height: 1.2; }
+  .phase .ps { font-size: 0.6em; margin-top: 8px; color: var(--bz-muted); }
+
+  /* Architecture flow */
+  .arch {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6em;
+    background: var(--bz-bg-2);
+    border: 1px solid var(--bz-line);
+    border-radius: 12px;
+    padding: 22px;
+    line-height: 1.5;
+    color: var(--bz-fg);
+    white-space: pre;
+  }
+  .arch .key { color: var(--bz-yellow); }
+  .arch .acc { color: var(--bz-cyan); }
+  .arch .mut { color: var(--bz-muted); }
+
+  /* Footer brand */
+  .footer-brand {
+    position: fixed;
+    bottom: 18px;
+    left: 24px;
+    color: var(--bz-muted);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    z-index: 30;
+  }
+  .footer-brand .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--bz-yellow);
+    border-radius: 50%;
+    margin-right: 8px;
+    transform: translateY(-1px);
+  }
+
+  /* Print: tighter */
+  @media print {
+    .footer-brand { display: none; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="footer-brand"><span class="dot"></span>ACCOUNTIBUZZ · COMP586 · v1.0 MVP</div>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ============ COVER ============ -->
+    <section class="center cover">
+      <span class="brand-mark">COMP586 — Technical Report</span>
+      <h1 class="title">Account<span class="accent">i</span>buzz</h1>
+      <div class="tagline">Friends watching. <span style="color:var(--bz-yellow)">Daily.</span></div>
+      <div class="meta">
+        Mobile accountability through small-group social pressure<br/>
+        Chris Kelamyan &amp; Timothy Do · May 8, 2026
+      </div>
+    </section>
+
+    <!-- ============ THE PROBLEM ============ -->
+    <section>
+      <div class="kicker">The problem</div>
+      <h2>Most people miss their goals — and it isn't an information problem.</h2>
+      <div class="cols">
+        <div class="card">
+          <h3>Habit trackers</h3>
+          <p>Habitica, streak apps. Run on the honor system. <strong>You are the only audience.</strong></p>
+        </div>
+        <div class="card">
+          <h3>Commitment contracts</h3>
+          <p>StickK, Beeminder. Manufacture stakes with money or anti-charities. <strong>Financial, not social.</strong></p>
+        </div>
+      </div>
+      <p style="margin-top:28px; font-size:0.9em; color:var(--bz-yellow)">
+        Neither model captures what actually works in real friend groups —
+        where stakes are <em>social</em> and verification is <em>human</em>.
+      </p>
+    </section>
+
+    <!-- ============ THE OPPORTUNITY ============ -->
+    <section>
+      <div class="kicker">The opportunity</div>
+      <h2>A small-group, friend-shaped accountability app.</h2>
+      <ul>
+        <li>Strict-streak mechanic taken seriously — <strong>no grace days, no freezes</strong></li>
+        <li>Daily <strong>photo or video proof</strong> required</li>
+        <li>Verification routes through a <strong>single human admin</strong></li>
+        <li>No public discovery, no leaderboard arms race</li>
+        <li>Groups arrive via invite link, not marketing spend</li>
+      </ul>
+      <p style="margin-top:24px; color:var(--bz-cyan); font-size:0.85em">
+        The bet: a tightly-scoped product with one clear opinion lands harder than a feature-rich generalist.
+      </p>
+    </section>
+
+    <!-- ============ VISION ============ -->
+    <section class="center">
+      <div class="kicker">Vision</div>
+      <p style="font-size:1.15em; line-height:1.5; max-width: 900px; margin: 0 auto;">
+        For people who follow through when friends are watching but not when only they are,
+        <span style="color:var(--bz-yellow); font-weight:800">Accountibuzz</span>
+        turns a small group into the audience.
+      </p>
+      <p style="font-size:0.95em; color:var(--bz-muted); max-width: 800px; margin: 32px auto 0;">
+        Every day, each member submits a short photo or video as proof of their commitment.
+        An admin verifies it. Points and streaks update for everyone to see.<br/><br/>
+        <span style="color:var(--bz-cyan)">A missed day is visible to the rest of the group within hours — and that visibility is the whole point.</span>
+      </p>
+    </section>
+
+    <!-- ============ THE CORE LOOP ============ -->
+    <section>
+      <div class="kicker">The core loop</div>
+      <h2>Capture → Review → Streak.</h2>
+      <div class="loop">
+        <div class="node">
+          <div class="icon">📸</div>
+          <div class="label">CAPTURE</div>
+          <div class="sub">In-app camera<br/>2-phase upload</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <div class="icon">✅</div>
+          <div class="label">REVIEW</div>
+          <div class="sub">Single admin<br/>Approve or reject</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <div class="icon">🔥</div>
+          <div class="label">STREAK</div>
+          <div class="sub">+1 point, +1 day<br/>Reset on miss</div>
+        </div>
+      </div>
+      <p style="margin-top:24px; font-size:0.8em; color:var(--bz-muted); text-align:center">
+        Local-date semantics derived <strong>server-side</strong> from each group's IANA timezone.
+        The client never sends a date.
+      </p>
+    </section>
+
+    <!-- ============ WHAT WE WON'T BUILD ============ -->
+    <section>
+      <div class="kicker">Discipline</div>
+      <h2>What we deliberately exclude.</h2>
+      <table>
+        <thead><tr><th>Excluded</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Public group discovery</td><td>Invite-only leverages existing trust; no moderation surface</td></tr>
+          <tr><td>Streak freezes / grace days</td><td>Softening kills the social pressure that makes it work</td></tr>
+          <tr><td>Rotating admins / AI verification</td><td>Human admin <em>is</em> the trust anchor — it's the differentiation</td></tr>
+          <tr><td>Auto-approval timeouts</td><td>Pending-until-reviewed keeps the human in the loop</td></tr>
+          <tr><td>Camera-roll uploads</td><td>Proof credibility depends on in-the-moment capture</td></tr>
+          <tr><td>In-app chat / DMs</td><td>Friend groups already have group chats. Quiet positioning.</td></tr>
+          <tr><td>Web or desktop client</td><td>Daily capture is a phone-native behavior</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ TECH STACK ============ -->
+    <section>
+      <div class="kicker">Stack</div>
+      <h2>Two platforms. One database. Zero ops cost.</h2>
+      <div class="cols">
+        <div class="card accent">
+          <h3>Mobile client</h3>
+          <ul>
+            <li><strong>Expo SDK 55</strong> · RN 0.83.1 · React 19.2</li>
+            <li>New Architecture, Hermes v1</li>
+            <li>TypeScript, TanStack Query v5</li>
+            <li>Zod + react-hook-form, Zustand</li>
+            <li>Manrope variable font, Feather icons</li>
+            <li>SecureStore-encrypted session</li>
+          </ul>
+        </div>
+        <div class="card accent">
+          <h3>Backend (Supabase)</h3>
+          <ul>
+            <li>Postgres 15 + RLS on every table</li>
+            <li>Auth (GoTrue), Storage, Realtime</li>
+            <li>Edge Functions (Deno)</li>
+            <li><code>pg_cron</code> for daily rollover</li>
+            <li>Expo Push Service → APNs / FCM</li>
+            <li>Append-only migrations</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ARCHITECTURE FLOW ============ -->
+    <section>
+      <div class="kicker">Architecture</div>
+      <h2>Postgres is the system of record. Everything else is a cache.</h2>
+<pre class="arch"><span class="acc">[Mobile · Expo SDK 55]</span>
+        │  HTTPS / WSS
+        ▼
+<span class="key">supabase-js</span> ──► <span class="acc">Auth</span>     <span class="mut">// JWT, persisted in SecureStore</span>
+            ──► <span class="acc">PostgREST</span>   <span class="mut">// reads (RLS-gated) + SECURITY DEFINER RPCs</span>
+            ──► <span class="acc">Realtime</span>    <span class="mut">// per-group WSS channel, torn down on blur</span>
+            ──► <span class="acc">Storage</span>     <span class="mut">// avatars (public) + submissions (private + signed URL)</span>
+                  │
+                  ▼
+            <span class="key">Postgres 15</span>
+              ├─ trigger: handle_submission_approval  <span class="mut">// points + streak</span>
+              ├─ pg_cron: handle_daily_rollover()     <span class="mut">// DST-safe, idempotent</span>
+              └─ DB Webhook: notifications_outbox ──► <span class="acc">push-dispatch</span> (Edge Fn)
+                                                          │
+                                                          ▼
+                                                <span class="key">Expo Push Service</span>
+                                                          │
+                                                  APNs / FCM</pre>
+    </section>
+
+    <!-- ============ DATA MODEL ============ -->
+    <section>
+      <div class="kicker">Data model</div>
+      <h2>One unique constraint does most of the work.</h2>
+<pre><code class="language-sql">-- The canonical race guard for the entire app.
+CREATE TABLE submissions (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  group_id    uuid NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  user_id     uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  local_date  date NOT NULL,            -- derived server-side, never client-sent
+  status      text NOT NULL CHECK (status IN ('pending','approved','rejected')),
+  media_path  text NOT NULL,            -- private bucket, signed-URL gated
+  caption     text CHECK (length(caption) <= 140),
+  reviewed_by uuid REFERENCES profiles(id),
+  reviewed_at timestamptz,
+  created_at  timestamptz DEFAULT now(),
+
+  UNIQUE (group_id, user_id, local_date)  -- ← stops double-submit forever
+);
+ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;</code></pre>
+      <p style="font-size:0.7em; color:var(--bz-muted); margin-top:12px">
+        Two-phase commit: storage upload first, row insert second. Orphans swept by a planned cleanup job.
+      </p>
+    </section>
+
+    <!-- ============ ROADMAP / PHASES ============ -->
+    <section>
+      <div class="kicker">Roadmap</div>
+      <h2>Six phases, one solo builder.</h2>
+      <div class="phases">
+        <div class="phase done">
+          <div class="pn">PHASE 01</div>
+          <div class="pt">Foundation</div>
+          <div class="ps">Auth · profile · RLS · theme</div>
+          <div style="margin-top:8px"><span class="pill done">Done</span></div>
+        </div>
+        <div class="phase done">
+          <div class="pn">PHASE 02</div>
+          <div class="pt">Groups &amp; Invites</div>
+          <div class="ps">7 RPCs · 8-char codes · TZ picker</div>
+          <div style="margin-top:8px"><span class="pill done">Done</span></div>
+        </div>
+        <div class="phase done">
+          <div class="pn">PHASE 03</div>
+          <div class="pt">Capture &amp; Review</div>
+          <div class="ps">Camera · 2-phase upload · admin queue</div>
+          <div style="margin-top:8px"><span class="pill done">Done</span></div>
+        </div>
+        <div class="phase wip">
+          <div class="pn">PHASE 04</div>
+          <div class="pt">Social Surfaces</div>
+          <div class="ps">Points · streaks · feed · realtime</div>
+          <div style="margin-top:8px"><span class="pill wip">In flight</span></div>
+        </div>
+        <div class="phase">
+          <div class="pn">PHASE 05</div>
+          <div class="pt">Push &amp; Rollover</div>
+          <div class="ps">EAS build · pg_cron · outbox</div>
+          <div style="margin-top:8px"><span class="pill todo">Pending</span></div>
+        </div>
+        <div class="phase">
+          <div class="pn">PHASE 06</div>
+          <div class="pt">Hardening</div>
+          <div class="ps">Re-entry · health · final RLS audit</div>
+          <div style="margin-top:8px"><span class="pill todo">Pending</span></div>
+        </div>
+      </div>
+      <p style="margin-top:28px; font-size:0.78em; color:var(--bz-muted); text-align:center">
+        As of <strong>2026-05-08</strong> · Phases 1–3 verified · Phase 4 wave 2 complete (hooks + components)
+      </p>
+    </section>
+
+    <!-- ============ USE CASES ============ -->
+    <section>
+      <div class="kicker">Use cases</div>
+      <h2>Five flows, one per phase.</h2>
+      <table>
+        <thead><tr><th>UC</th><th>Phase</th><th>Title</th><th>Owns requirements</th></tr></thead>
+        <tbody>
+          <tr><td><strong>UC-001</strong></td><td>1</td><td>Sign Up, Sign In, Complete Profile</td><td>AUTH-01..04, PLAT-01..02</td></tr>
+          <tr><td><strong>UC-002</strong></td><td>2</td><td>Create a Group, Bring Friends In</td><td>GRP-01..05, INV-01..03</td></tr>
+          <tr><td><strong>UC-003</strong></td><td>3</td><td>Submit Daily Proof &amp; Get It Reviewed</td><td>SUB-01..06, ADM-01..04, PLAT-03</td></tr>
+          <tr><td><strong>UC-004</strong></td><td>4</td><td>View Live Leaderboard &amp; Group Feed</td><td>PTS-01..03, LB-01..02, FEED-01..03</td></tr>
+          <tr><td><strong>UC-005</strong></td><td>5</td><td>Receive Push &amp; Trigger Daily Rollover</td><td>NOTIF-01..05, ROLL-01..02</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:18px; font-size:0.7em; color:var(--bz-muted); text-align:center">
+        Each use case maps 1:1 to a roadmap phase, a JIRA epic, and a set of REQUIREMENTS.md IDs.
+      </p>
+    </section>
+
+    <!-- ============ SECURITY DEEP DIVE ============ -->
+    <section>
+      <div class="kicker">Security</div>
+      <h2>Row-Level Security is the only authorization boundary.</h2>
+      <div class="cols">
+        <div class="card">
+          <h3>Boundaries</h3>
+          <ul>
+            <li>RLS enabled on every public table</li>
+            <li><code>rls-check.yml</code> CI fails build if disabled</li>
+            <li><code>service_role</code> never in the mobile bundle</li>
+            <li><code>anon</code> key treated as public — RLS protects, not secrecy</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>RPC hardening</h3>
+          <ul>
+            <li><code>SECURITY DEFINER</code> + <code>set search_path = public</code></li>
+            <li>Re-resolve <code>group_id</code> server-side (cross-group attack)</li>
+            <li>Row lock + status guard for double-approve</li>
+            <li>Uniform <code>invite_not_found</code> blocks enumeration</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:22px; font-size:0.75em; color:var(--bz-cyan); text-align:center">
+        Defense in depth: RLS · RPC check · client check.
+        Any one fails — the other two still hold.
+      </p>
+    </section>
+
+    <!-- ============ SUCCESS METRICS ============ -->
+    <section>
+      <div class="kicker">Alpha success metrics</div>
+      <h2>Group-level, not individual-level.</h2>
+      <div class="tiles">
+        <div class="tile">
+          <div class="num">≥ 70%</div>
+          <div class="lab">Group weekly active rate<br/>(members posting ≥ 5 days)</div>
+        </div>
+        <div class="tile">
+          <div class="num">≤ 6h</div>
+          <div class="lab">Median admin time-to-review</div>
+        </div>
+        <div class="tile">
+          <div class="num">≤ 1%</div>
+          <div class="lab">Submissions lost to upload failure</div>
+        </div>
+        <div class="tile">
+          <div class="num">≥ 95%</div>
+          <div class="lab">Push delivery within 60s of trigger</div>
+        </div>
+        <div class="tile">
+          <div class="num">0</div>
+          <div class="lab">Critical RLS / auth bugs post-rollout</div>
+        </div>
+        <div class="tile">
+          <div class="num">≥ 50%</div>
+          <div class="lab">Day-14 group retention</div>
+        </div>
+        <div class="tile">
+          <div class="num">3</div>
+          <div class="lab">Friend groups holding 2 weeks</div>
+        </div>
+        <div class="tile">
+          <div class="num">$0</div>
+          <div class="lab">Operating cost through alpha<br/>(Supabase + Expo free tiers)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PERFORMANCE TARGETS ============ -->
+    <section>
+      <div class="kicker">Performance</div>
+      <h2>Tuned for the dominant case.</h2>
+      <table>
+        <thead><tr><th>Metric</th><th>Target</th></tr></thead>
+        <tbody>
+          <tr><td>Cold-start to Today screen</td><td>≤ 2s on a mid-tier 2024 phone, Wi-Fi</td></tr>
+          <tr><td>Capture screen ready (preview live)</td><td>≤ 1s from tap</td></tr>
+          <tr><td>Photo upload (80% JPEG, default res)</td><td>≤ 5s on stable Wi-Fi</td></tr>
+          <tr><td>Video upload (15s, 720p, ~2 Mbps)</td><td>≤ 20s on stable LTE</td></tr>
+          <tr><td>Leaderboard refresh after approval (Realtime)</td><td>≤ 3s end-to-end on Wi-Fi</td></tr>
+          <tr><td>Admin queue load (<code>get_pending_review_queue</code>)</td><td>≤ 500ms server time, 50-row cap</td></tr>
+          <tr><td>Push delivery (trigger → device)</td><td>≤ 60s, p95</td></tr>
+          <tr><td>Daily rollover sweep</td><td>Every 5 min · &lt; 1s per group</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ RISKS ============ -->
+    <section>
+      <div class="kicker">Risks</div>
+      <h2>What could kill it — and what we did about it.</h2>
+      <table>
+        <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Week-2 death spiral</strong><br/><span style="color:var(--bz-muted); font-size:0.85em">One miss → others disengage → group dies</span></td>
+            <td>Encourage 7–10 invitees for a target of 5–6 · re-engagement prompt in Phase 6 · track group-level rate, not DAU</td>
+          </tr>
+          <tr>
+            <td><strong>Admin bottleneck</strong></td>
+            <td>Optimistic pending UI · swipe-stack queue · push pings · planned daily-digest</td>
+          </tr>
+          <tr>
+            <td><strong>Strict streak feels punitive</strong></td>
+            <td>Communicate at onboarding · re-entry prompt without violating the rule · hold the line</td>
+          </tr>
+          <tr>
+            <td><strong>Push drops silently (Android)</strong></td>
+            <td><code>notifications_outbox</code> + <code>push-dispatch</code> · EAS dev clients from day one · real-device testing</td>
+          </tr>
+          <tr>
+            <td><strong>Upload fails on flaky cellular</strong></td>
+            <td>Two-phase commit · AsyncStorage offline queue · explicit progress UI · no silent success toasts</td>
+          </tr>
+          <tr>
+            <td><strong>RLS misconfigured, anon key leaks</strong></td>
+            <td>RLS on by default · <code>rls-check.yml</code> CI gate · pgTAP coverage of every policy</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ TODAY ============ -->
+    <section>
+      <div class="kicker">Where we are · 2026-05-08</div>
+      <h2>Phases 1–3 shipped. Phase 4 in flight.</h2>
+      <div class="cols three">
+        <div class="card accent">
+          <h3 style="color:var(--bz-good)">✓ Done</h3>
+          <ul style="font-size:0.8em">
+            <li>Auth + profile + RLS</li>
+            <li>Groups, invites, deep links</li>
+            <li>Camera capture + offline queue</li>
+            <li>Admin swipe-stack review</li>
+            <li>Append-only migrations 0001–0007</li>
+          </ul>
+        </div>
+        <div class="card accent">
+          <h3 style="color:var(--bz-yellow)">▶ In flight</h3>
+          <ul style="font-size:0.8em">
+            <li>Points + streak triggers</li>
+            <li>Live leaderboard via Realtime</li>
+            <li>Group feed + still-to-post + tombstones</li>
+            <li>4 RN component primitives</li>
+            <li>Wave 2 of Phase 4 just merged</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--bz-muted)">○ Next</h3>
+          <ul style="font-size:0.8em">
+            <li>EAS dev/prod build cutover</li>
+            <li>Push outbox + edge function</li>
+            <li><code>pg_cron</code> daily rollover</li>
+            <li>Re-entry prompt</li>
+            <li>Final RLS audit → friend-group alpha</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ THE WAY WE WORK ============ -->
+    <section>
+      <div class="kicker">Process</div>
+      <h2>Traceability from requirement → commit.</h2>
+      <pre style="font-size:0.65em; line-height:1.55; background:var(--bz-bg-2); border:1px solid var(--bz-line); border-radius:12px; padding:22px;"><code>REQUIREMENTS.md     SUB-03  Upload is resilient to flaky networks
+        │
+        ▼
+ROADMAP.md          Phase 03 — Capture &amp; Admin Review
+        │
+        ▼
+.planning/phases/03-capture-admin-review/03-PLAN.md
+        │
+        ▼
+JIRA SCRUM-XX       In Progress → In Review → Done
+        │
+        ▼
+git commit          feat(03-04): two-phase commit pipeline + offline queue
+                    Co-Authored-By: Claude</code></pre>
+      <p style="margin-top:18px; font-size:0.75em; color:var(--bz-muted); text-align:center">
+        A commit touching a phase scope without a JIRA update is treated as a process defect.
+        The <strong>SCRUM-25–30 audit on 2026-04-28</strong> is the canonical example.
+      </p>
+    </section>
+
+    <!-- ============ THANKS ============ -->
+    <section class="center">
+      <span class="brand-mark">Q &amp; A</span>
+      <h1 style="margin-top:24px; font-size:3.4em;">Thanks.</h1>
+      <p style="font-size:1.1em; color:var(--bz-yellow); margin-top:12px">Friends watching. Daily.</p>
+      <p style="margin-top:48px; color:var(--bz-muted); font-size:0.8em">
+        Source: <code>docs/technical-report.md</code> · <code>docs/technical-report.pdf</code><br/>
+        Repository: <code>.planning/</code> · <code>app/</code> · <code>src/</code> · <code>supabase/</code>
+      </p>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'slide',
+    controls: true,
+    progress: true,
+    width: 1280,
+    height: 800,
+    margin: 0.06,
+    plugins: [ RevealHighlight, RevealNotes ],
+  });
+</script>
+</body>
+</html>
